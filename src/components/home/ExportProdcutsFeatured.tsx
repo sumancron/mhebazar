@@ -25,7 +25,7 @@ export default function ExportProductsFeatured() {
         if (!res.ok) throw new Error("Failed to fetch data");
         const data: ExportProduct[] = await res.json();
         setExportProducts(data || []);
-      } catch (_error) {
+      } catch {
         setExportProducts([]); // in case of error or empty
       } finally {
         setLoading(false);

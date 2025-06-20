@@ -22,16 +22,18 @@ export default function BannerCarousel() {
   const [isDefault, setIsDefault] = useState(true);
   const [loaded, setLoaded] = useState<boolean[]>([false, false, false]);
 
+  type BannerItem = { image?: string; alt?: string };
+
   useEffect(() => {
     const fetchBanners = async () => {
       try {
         const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/craousels`);
         if (!res.ok) throw new Error(`Error: ${res.status}`);
-        const data = await res.json();
+        const data: BannerItem[] = await res.json();
 
         if (Array.isArray(data) && data.length > 0) {
           setBanners(
-            data.map((item: any, index: number) => ({
+            data.map((item: BannerItem, index: number) => ({
               image: item.image || "/default_carousel.png",
               alt: item.alt || `Banner ${index + 1}`,
             }))

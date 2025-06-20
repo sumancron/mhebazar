@@ -3,6 +3,7 @@
 import { Menu, ShoppingCart, X, Search, Mic, Phone, User, ChevronDown } from "lucide-react";
 import React, { useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 
 const Navbar = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -70,7 +71,7 @@ const Navbar = () => {
 
             {/* Logo */}
             <div className="flex items-center">
-              <a href="/" className="flex items-center">
+              <Link href="/" className="flex items-center">
                 <Image
                   src="/mhe-logo.png"
                   alt="MHE BAZAR Logo"
@@ -78,9 +79,9 @@ const Navbar = () => {
                   height={40}
                   className="h-10 w-auto object-contain"
                   style={{ maxWidth: 140 }}
+                  priority
                 />
-    
-              </a>
+              </Link>
             </div>
 
             {/* Search Bar - Desktop */}
@@ -220,14 +221,17 @@ const Navbar = () => {
           <div className="fixed top-0 left-0 w-80 max-w-[85vw] h-full bg-white shadow-xl">
             {/* Mobile Menu Header */}
             <div className="flex items-center justify-between p-4 border-b border-gray-200">
-              <a href="/" className="flex items-center">
-                <img
+              <Link href="/" className="flex items-center">
+                <Image
                   src="/mhe-logo.png"
                   alt="MHE BAZAR Logo"
+                  width={120}
+                  height={32}
                   className="h-8 w-auto object-contain"
                   style={{ maxWidth: 120 }}
+                  priority
                 />
-              </a>
+              </Link>
               <button
                 onClick={() => setMobileMenuOpen(false)}
                 className="p-2 text-gray-500 hover:text-gray-700"
