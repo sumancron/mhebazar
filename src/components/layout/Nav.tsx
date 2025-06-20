@@ -2,6 +2,7 @@
 
 import { Menu, ShoppingCart, X, Search, Mic, Phone, User, ChevronDown } from "lucide-react";
 import React, { useState } from "react";
+import Image from "next/image";
 
 const Navbar = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -70,9 +71,11 @@ const Navbar = () => {
             {/* Logo */}
             <div className="flex items-center">
               <a href="/" className="flex items-center">
-                <img
+                <Image
                   src="/mhe-logo.png"
                   alt="MHE BAZAR Logo"
+                  width={140}
+                  height={40}
                   className="h-10 w-auto object-contain"
                   style={{ maxWidth: 140 }}
                 />

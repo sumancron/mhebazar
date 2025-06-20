@@ -25,7 +25,7 @@ export default function SparePartsFeatured() {
         if (!res.ok) throw new Error("Failed to fetch data");
         const data: SparePart[] = await res.json();
         setSpareParts(data || []);
-      } catch (error) {
+      } catch (_error) {
         setSpareParts([]); // in case of error or empty
       } finally {
         setLoading(false);

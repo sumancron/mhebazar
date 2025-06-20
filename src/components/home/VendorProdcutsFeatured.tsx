@@ -25,7 +25,7 @@ export default function VendorProductsFeatured() {
         if (!res.ok) throw new Error("Failed to fetch data");
         const data: VendorProduct[] = await res.json();
         setVendorProducts(data || []);
-      } catch (error) {
+      } catch (_error) {
         setVendorProducts([]); // in case of error or empty
       } finally {
         setLoading(false);
