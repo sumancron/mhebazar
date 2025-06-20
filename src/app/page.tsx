@@ -1,5 +1,6 @@
 import Navbar from "@/components/layout/Nav";
 import HomeBanner from "@/components/layout/HomeBanner";
+import Footer from "@/components/layout/Footer";
 import CategooryButtons from "@/components/home/CategoryButtons";
 import MostPopular from "@/components/home/MostPopular";
 import NewArrivalsAndTopSearches from "@/components/home/NewArrivalsAndTopSearches";
@@ -41,7 +42,12 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           {children}
         </main>
 
+
         {/* Footer */}
+        <Footer />
+
+        {/* Optional: Add any global scripts or analytics here */}
+
       </body>
     </html>
   );

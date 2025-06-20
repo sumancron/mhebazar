@@ -183,10 +183,10 @@ export default function NewArrivalsAndTopSearches() {
   );
 
   return (
-    <div className="space-y-8 w-full max-w-md">
+    <div className="space-y-8 w-full max-w-md mx-auto sm:max-w-xl md:max-w-2xl lg:max-w-4xl xl:max-w-6xl px-2">
       {/* New Arrivals */}
-      <div className="p-6 bg-white rounded-xl shadow-sm border border-gray-100">
-        <div className="flex justify-between items-center mb-4">
+      <div className="p-4 sm:p-6 bg-white rounded-xl shadow-sm border border-gray-100">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
           <h2 className="font-semibold text-lg text-gray-900">New Arrivals</h2>
           <Link 
             href="#" 
@@ -196,7 +196,7 @@ export default function NewArrivalsAndTopSearches() {
           </Link>
         </div>
 
-        <div className="flex items-center mb-6">
+        <div className="flex items-center mb-4 sm:mb-6">
           <p className="font-medium text-gray-900">
             {newArrivalsCount}+ products added today
           </p>
@@ -205,7 +205,7 @@ export default function NewArrivalsAndTopSearches() {
         {isLoadingNewArrivals ? (
           <div className="flex gap-4 overflow-x-auto">
             {[...Array(3)].map((_, i) => (
-              <div key={i} className="w-32 h-32 bg-gray-200 rounded-lg animate-pulse flex-shrink-0"></div>
+              <div key={i} className="w-24 h-24 sm:w-32 sm:h-32 bg-gray-200 rounded-lg animate-pulse flex-shrink-0"></div>
             ))}
           </div>
         ) : (
@@ -213,14 +213,14 @@ export default function NewArrivalsAndTopSearches() {
             {newArrivals.slice(0, 3).map((item, i) => (
               <div
                 key={item.id || i}
-                className="relative w-32 h-32 flex-shrink-0 rounded-lg overflow-hidden bg-gray-50 border border-gray-100 hover:shadow-md transition-shadow cursor-pointer"
+                className="relative w-24 h-24 sm:w-32 sm:h-32 flex-shrink-0 rounded-lg overflow-hidden bg-gray-50 border border-gray-100 hover:shadow-md transition-shadow cursor-pointer"
               >
                 <Image
                   src={item.image}
                   alt={item.alt || item.title || `New Arrival ${i + 1}`}
                   fill
                   className="object-contain p-2"
-                  sizes="128px"
+                  sizes="(max-width: 640px) 96px, 128px"
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;
                     target.src = "/placeholder-image.png";
@@ -239,8 +239,8 @@ export default function NewArrivalsAndTopSearches() {
       </div>
 
       {/* Top Searched Products */}
-      <div className="p-6 bg-white rounded-xl shadow-sm border border-gray-100">
-        <div className="flex justify-between items-center mb-6">
+      <div className="p-4 sm:p-6 bg-white rounded-xl shadow-sm border border-gray-100">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-6 gap-2">
           <h2 className="font-semibold text-lg text-gray-900">Top Searched Products</h2>
           <Link 
             href="#" 
@@ -251,32 +251,32 @@ export default function NewArrivalsAndTopSearches() {
         </div>
 
         {isLoadingTopSearched ? (
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             {[...Array(3)].map((_, i) => (
-              <LoadingSkeleton key={i} className="flex items-center gap-4 p-3" />
+              <LoadingSkeleton key={i} className="flex items-center gap-4 p-2 sm:p-3" />
             ))}
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             {topSearched.map((item, i) => (
               <div
                 key={item.id || i}
-                className="flex items-center gap-4 bg-gray-50 p-4 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer border border-gray-100"
+                className="flex items-center gap-3 sm:gap-4 bg-gray-50 p-3 sm:p-4 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer border border-gray-100"
               >
-                <div className="relative w-16 h-16 rounded-lg overflow-hidden bg-white border border-gray-200 flex-shrink-0">
+                <div className="relative w-12 h-12 sm:w-16 sm:h-16 rounded-lg overflow-hidden bg-white border border-gray-200 flex-shrink-0">
                   <Image
                     src={item.image}
                     alt={item.alt || item.label}
                     fill
                     className="object-contain p-1"
-                    sizes="64px"
+                    sizes="(max-width: 640px) 48px, 64px"
                     onError={(e) => {
                       const target = e.target as HTMLImageElement;
                       target.src = "/placeholder-image.png";
                     }}
                   />
                 </div>
-                <p className="font-medium text-gray-900 flex-1">{item.label}</p>
+                <p className="font-medium text-gray-900 flex-1 text-sm sm:text-base">{item.label}</p>
               </div>
             ))}
           </div>
