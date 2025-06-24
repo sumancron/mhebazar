@@ -1,6 +1,4 @@
-import Navbar from "@/components/layout/Nav";
 import HomeBanner from "@/components/layout/HomeBanner";
-import Footer from "@/components/layout/Footer";
 import CategooryButtons from "@/components/home/CategoryButtons";
 import MostPopular from "@/components/home/MostPopular";
 import NewArrivalsAndTopSearches from "@/components/home/NewArrivalsAndTopSearches";
@@ -11,8 +9,7 @@ import ExportProductsFeatured from "@/components/home/ExportProdcutsFeatured";
 export default function HomePage() {
   return (
     <>
-      {/* Sticky header */}
-      <Navbar />
+     
 
       {/* Home page hero/banner */}
       <HomeBanner />
@@ -37,8 +34,7 @@ export default function HomePage() {
       <h1 className="text-3xl font-bold mb-6 text-center">Export Products</h1>
       <ExportProductsFeatured />
 
-      {/* Footer */}
-      <Footer />
+   
     </>
   );
 }
