@@ -11,6 +11,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select'
 import { Checkbox } from '@/components/ui/checkbox'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
+import { X } from 'lucide-react'
 
 type FieldOption = {
   label: string
@@ -81,6 +82,8 @@ export default function ProductForm() {
   const [warning, setWarning] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [message, setMessage] = useState('')
+  const [brochureFile, setBrochureFile] = useState<File | null>(null)
+  const [imageFiles, setImageFiles] = useState<File[]>([])
 
   useEffect(() => {
     axios.get('http://localhost:8000/api/categories/').then((res) => setCategories(res.data))
@@ -134,6 +137,26 @@ export default function ProductForm() {
     }))
   }
 
+  const handleBrochureChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setBrochureFile(e.target.files[0])
+    }
+  }
+
+  const removeBrochure = () => {
+    setBrochureFile(null)
+  }
+
+  const handleImagesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      setImageFiles(Array.from(e.target.files))
+    }
+  }
+
+  const removeImage = (idx: number) => {
+    setImageFiles(files => files.filter((_, i) => i !== idx))
+  }
+
   const onSubmit = async (data: ProductFormData) => {
     const formData = new FormData()
     formData.append('category', data.category)
@@ -147,10 +170,8 @@ export default function ProductForm() {
     formData.append('price', data.price.toString())
     formData.append('type', data.type)
     formData.append('product_details', JSON.stringify(dynamicValues))
-    if (data.brochure?.[0]) formData.append('brochure', data.brochure[0])
-    if (data.images?.length) {
-      Array.from(data.images).forEach((img) => formData.append('images', img))
-    }
+    if (brochureFile) formData.append('brochure', brochureFile)
+    imageFiles.forEach((img) => formData.append('images', img))
 
     try {
       setIsSubmitting(true)
@@ -371,12 +392,71 @@ export default function ProductForm() {
           {/* File Uploads */}
           <div>
             <Label>Brochure (PDF)</Label>
-            <Input type="file" accept=".pdf" {...register('brochure')} />
+            <input
+              id="brochure-input"
+              type="file"
+              accept=".pdf"
+              style={{ display: 'none' }}
+              onChange={handleBrochureChange}
+            />
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => document.getElementById('brochure-input')?.click()}
+            >
+              Select Brochure
+            </Button>
+            {brochureFile && (
+              <div className="flex items-center gap-2 mt-2">
+                <span className="text-sm">{brochureFile.name}</span>
+                <button
+                  type="button"
+                  className="bg-white rounded-full p-1 shadow"
+                  onClick={removeBrochure}
+                  aria-label="Remove brochure"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+            )}
           </div>
 
           <div>
             <Label>Product Images</Label>
-            <Input type="file" accept="image/*" {...register('images')} multiple />
+            <input
+              id="images-input"
+              type="file"
+              accept="image/*"
+              multiple
+              style={{ display: 'none' }}
+              onChange={handleImagesChange}
+            />
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => document.getElementById('images-input')?.click()}
+            >
+              Select Images
+            </Button>
+            <div className="flex gap-2 mt-2 flex-wrap">
+              {imageFiles.map((file, idx) => (
+                <div key={idx} className="relative w-20 h-20">
+                  <img
+                    src={URL.createObjectURL(file)}
+                    alt="Preview"
+                    className="object-cover w-full h-full rounded"
+                  />
+                  <button
+                    type="button"
+                    className="absolute top-0 right-0 bg-white rounded-full p-1 shadow"
+                    onClick={() => removeImage(idx)}
+                    aria-label="Remove image"
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+              ))}
+            </div>
           </div>
 
           {/* Submit */}

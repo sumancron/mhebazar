@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { X } from 'lucide-react'
 
 type FieldOption = {
   label: string
@@ -63,11 +64,35 @@ export default function SubcategoryForm() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [message, setMessage] = useState('')
 
+  // Add local state for images
+  const [subImageFiles, setSubImageFiles] = useState<File[]>([])
+  const [subBannerFiles, setSubBannerFiles] = useState<File[]>([])
+
   useEffect(() => {
     axios.get('http://localhost:8000/api/categories/').then((res) => {
       setCategories(res.data)
     })
   }, [])
+
+  // Handle file input change
+  const handleSubImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      setSubImageFiles(Array.from(e.target.files))
+    }
+  }
+  const handleSubBannerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      setSubBannerFiles(Array.from(e.target.files))
+    }
+  }
+
+  // Remove image by index
+  const removeSubImage = (idx: number) => {
+    setSubImageFiles((files) => files.filter((_, i) => i !== idx))
+  }
+  const removeSubBanner = (idx: number) => {
+    setSubBannerFiles((files) => files.filter((_, i) => i !== idx))
+  }
 
   const onSubmit = async (data: SubcategoryFormData) => {
     const formData = new FormData()
@@ -76,8 +101,9 @@ export default function SubcategoryForm() {
     if (data.description) formData.append('description', data.description)
     if (data.meta_title) formData.append('meta_title', data.meta_title)
     if (data.meta_description) formData.append('meta_description', data.meta_description)
-    if (data.sub_image?.[0]) formData.append('sub_image', data.sub_image[0])
-    if (data.sub_banner?.[0]) formData.append('sub_banner', data.sub_banner[0])
+    // Use local state for images
+    if (subImageFiles[0]) formData.append('sub_image', subImageFiles[0])
+    if (subBannerFiles[0]) formData.append('sub_banner', subBannerFiles[0])
     formData.append('product_details', JSON.stringify(data.product_details))
 
     try {
@@ -94,7 +120,6 @@ export default function SubcategoryForm() {
     }
   }
 
-
   const addOption = (fieldIndex: number) => {
     const newOption = { label: '', value: '' }
     const currentOptions = watch(`product_details.${fieldIndex}.options`) || []
@@ -102,7 +127,7 @@ export default function SubcategoryForm() {
     // We need to update the entire field to trigger a re-render
     const updatedField = {
       ...watch(`product_details.${fieldIndex}`),
-      options: updatedOptions
+      options: updatedOptions,
     }
     // Replace the field with the updated version
     remove(fieldIndex)
@@ -114,7 +139,7 @@ export default function SubcategoryForm() {
     const updatedOptions = currentOptions.filter((_, idx) => idx !== optionIndex)
     const updatedField = {
       ...watch(`product_details.${fieldIndex}`),
-      options: updatedOptions
+      options: updatedOptions,
     }
     remove(fieldIndex)
     append(updatedField)
@@ -166,11 +191,79 @@ export default function SubcategoryForm() {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label>Subcategory Image</Label>
-              <Input type="file" {...register('sub_image')} />
+              <div>
+                <input
+                  id="sub-image-input"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleSubImageChange}
+                  style={{ display: 'none' }}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => document.getElementById('sub-image-input')?.click()}
+                >
+                  Select Image
+                </Button>
+              </div>
+              <div className="flex gap-2 mt-2">
+                {subImageFiles.map((file, idx) => (
+                  <div key={idx} className="relative w-20 h-20">
+                    <img
+                      src={URL.createObjectURL(file)}
+                      alt="Preview"
+                      className="object-cover w-full h-full rounded"
+                    />
+                    <button
+                      type="button"
+                      className="absolute top-0 right-0 bg-white rounded-full p-1 shadow"
+                      onClick={() => removeSubImage(idx)}
+                      aria-label="Remove image"
+                    >
+                      <X size={16} />
+                    </button>
+                  </div>
+                ))}
+              </div>
             </div>
             <div>
               <Label>Subcategory Banner</Label>
-              <Input type="file" {...register('sub_banner')} />
+              <div>
+                <input
+                  id="sub-banner-input"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleSubBannerChange}
+                  style={{ display: 'none' }}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => document.getElementById('sub-banner-input')?.click()}
+                >
+                  Select Banner
+                </Button>
+              </div>
+              <div className="flex gap-2 mt-2">
+                {subBannerFiles.map((file, idx) => (
+                  <div key={idx} className="relative w-20 h-20">
+                    <img
+                      src={URL.createObjectURL(file)}
+                      alt="Preview"
+                      className="object-cover w-full h-full rounded"
+                    />
+                    <button
+                      type="button"
+                      className="absolute top-0 right-0 bg-white rounded-full p-1 shadow"
+                      onClick={() => removeSubBanner(idx)}
+                      aria-label="Remove image"
+                    >
+                      <X size={16} />
+                    </button>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 
@@ -217,7 +310,7 @@ export default function SubcategoryForm() {
                           // Update the field type
                           const updatedField = {
                             ...watch(`product_details.${fieldIndex}`),
-                            type: value
+                            type: value,
                           }
                           remove(fieldIndex)
                           append(updatedField)

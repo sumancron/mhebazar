@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { X } from 'lucide-react' // Add this for a delete icon (optional)
 
 type FieldOption = {
   label: string
@@ -55,14 +56,39 @@ export default function CategoryForm() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [message, setMessage] = useState('')
 
+  // Add local state for images
+  const [catImageFiles, setCatImageFiles] = useState<File[]>([])
+  const [catBannerFiles, setCatBannerFiles] = useState<File[]>([])
+
+  // Handle file input change
+  const handleCatImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      setCatImageFiles(Array.from(e.target.files))
+    }
+  }
+  const handleCatBannerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      setCatBannerFiles(Array.from(e.target.files))
+    }
+  }
+
+  // Remove image by index
+  const removeCatImage = (idx: number) => {
+    setCatImageFiles(files => files.filter((_, i) => i !== idx))
+  }
+  const removeCatBanner = (idx: number) => {
+    setCatBannerFiles(files => files.filter((_, i) => i !== idx))
+  }
+
   const onSubmit = async (data: CategoryFormData) => {
     const formData = new FormData()
     formData.append('name', data.name)
     if (data.description) formData.append('description', data.description)
     if (data.meta_title) formData.append('meta_title', data.meta_title)
     if (data.meta_description) formData.append('meta_description', data.meta_description)
-    if (data.cat_image?.[0]) formData.append('cat_image', data.cat_image[0])
-    if (data.cat_banner?.[0]) formData.append('cat_banner', data.cat_banner[0])
+    // Use local state for images
+    if (catImageFiles[0]) formData.append('cat_image', catImageFiles[0])
+    if (catBannerFiles[0]) formData.append('cat_banner', catBannerFiles[0])
     formData.append('product_details', JSON.stringify(data.product_details))
 
     try {
@@ -83,12 +109,10 @@ export default function CategoryForm() {
     const newOption = { label: '', value: '' }
     const currentOptions = watch(`product_details.${fieldIndex}.options`) || []
     const updatedOptions = [...currentOptions, newOption]
-    // We need to update the entire field to trigger a re-render
     const updatedField = {
       ...watch(`product_details.${fieldIndex}`),
       options: updatedOptions
     }
-    // Replace the field with the updated version
     remove(fieldIndex)
     append(updatedField, { focusName: `product_details.${fieldIndex}.options.${updatedOptions.length - 1}.label` })
   }
@@ -133,11 +157,79 @@ export default function CategoryForm() {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label>Category Image</Label>
-              <Input type="file" {...register('cat_image')} />
+              <div>
+                <input
+                  id="cat-image-input"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleCatImageChange}
+                  style={{ display: 'none' }}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => document.getElementById('cat-image-input')?.click()}
+                >
+                  Select Image
+                </Button>
+              </div>
+              <div className="flex gap-2 mt-2">
+                {catImageFiles.map((file, idx) => (
+                  <div key={idx} className="relative w-20 h-20">
+                    <img
+                      src={URL.createObjectURL(file)}
+                      alt="Preview"
+                      className="object-cover w-full h-full rounded"
+                    />
+                    <button
+                      type="button"
+                      className="absolute top-0 right-0 bg-white rounded-full p-1 shadow"
+                      onClick={() => removeCatImage(idx)}
+                      aria-label="Remove image"
+                    >
+                      <X size={16} />
+                    </button>
+                  </div>
+                ))}
+              </div>
             </div>
             <div>
               <Label>Category Banner</Label>
-              <Input type="file" {...register('cat_banner')} />
+              <div>
+                <input
+                  id="cat-banner-input"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleCatBannerChange}
+                  style={{ display: 'none' }}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => document.getElementById('cat-banner-input')?.click()}
+                >
+                  Select Banner
+                </Button>
+              </div>
+              <div className="flex gap-2 mt-2">
+                {catBannerFiles.map((file, idx) => (
+                  <div key={idx} className="relative w-20 h-20">
+                    <img
+                      src={URL.createObjectURL(file)}
+                      alt="Preview"
+                      className="object-cover w-full h-full rounded"
+                    />
+                    <button
+                      type="button"
+                      className="absolute top-0 right-0 bg-white rounded-full p-1 shadow"
+                      onClick={() => removeCatBanner(idx)}
+                      aria-label="Remove image"
+                    >
+                      <X size={16} />
+                    </button>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 
