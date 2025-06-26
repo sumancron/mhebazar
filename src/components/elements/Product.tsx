@@ -5,28 +5,50 @@ import { Heart, BarChart3, RefreshCw } from "lucide-react";
 import Image from "next/image";
 
 interface ProductCardProps {
+  id: number; // Added product ID
   image: string;
   title: string;
   subtitle: string;
   price: string | number;
   currency: string;
-  onAddToCart?: () => void;
-  onWishlist?: () => void;
+  onAddToCart?: (productId: number, quantity?: number) => Promise<void>;
+  onWishlist?: (productId: number) => Promise<void>;
   onCompare?: () => void;
   onShare?: () => void;
 }
 
 const ProductCard = ({
+  id,
   image,
   title,
   subtitle,
   price,
   currency,
-  onAddToCart = () => {},
-  onWishlist = () => {},
-  onCompare = () => {},
-  onShare = () => {},
+  onAddToCart = async () => { },
+  onWishlist = async () => { },
+  onCompare = () => { },
+  onShare = () => { },
 }: ProductCardProps) => {
+  const handleAddToCart = async () => {
+    try {
+      await onAddToCart(id, 1);
+      // Optionally show a success message
+    } catch (error) {
+      console.error("Failed to add to cart:", error);
+      // Optionally show an error message
+    }
+  };
+
+  const handleWishlist = async () => {
+    try {
+      await onWishlist(id);
+      // Optionally show a success message
+    } catch (error) {
+      console.error("Failed to add to wishlist:", error);
+      // Optionally show an error message
+    }
+  };
+
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden w-64">
       {/* Image Container */}
@@ -34,18 +56,21 @@ const ProductCard = ({
         {/* Action Icons */}
         <div className="absolute top-3 left-3 flex flex-col gap-2">
           <button
-            onClick={onWishlist}
-            className="w-8 h-8 bg-white rounded-md shadow-sm flex items-center justify-center hover:bg-gray-50 transition-colors">
+            onClick={handleWishlist}
+            className="w-8 h-8 bg-white rounded-md shadow-sm flex items-center justify-center hover:bg-gray-50 transition-colors"
+          >
             <Heart className="w-4 h-4 text-gray-600" />
           </button>
           <button
             onClick={onCompare}
-            className="w-8 h-8 bg-white rounded-md shadow-sm flex items-center justify-center hover:bg-gray-50 transition-colors">
+            className="w-8 h-8 bg-white rounded-md shadow-sm flex items-center justify-center hover:bg-gray-50 transition-colors"
+          >
             <BarChart3 className="w-4 h-4 text-gray-600" />
           </button>
           <button
             onClick={onShare}
-            className="w-8 h-8 bg-white rounded-md shadow-sm flex items-center justify-center hover:bg-gray-50 transition-colors">
+            className="w-8 h-8 bg-white rounded-md shadow-sm flex items-center justify-center hover:bg-gray-50 transition-colors"
+          >
             <RefreshCw className="w-4 h-4 text-gray-600" />
           </button>
         </div>
@@ -78,8 +103,9 @@ const ProductCard = ({
 
         {/* Add to Cart Button */}
         <button
-          onClick={onAddToCart}
-          className="w-full bg-green-500 hover:bg-green-600 text-white font-medium py-2.5 px-4 rounded-md transition-colors">
+          onClick={handleAddToCart}
+          className="w-full bg-green-500 hover:bg-green-600 text-white font-medium py-2.5 px-4 rounded-md transition-colors"
+        >
           Add to Cart
         </button>
       </div>
@@ -88,6 +114,7 @@ const ProductCard = ({
 };
 
 interface ProductCardContainerProps {
+  id: number;
   image: string;
   title: string;
   subtitle: string;
@@ -96,18 +123,62 @@ interface ProductCardContainerProps {
 }
 
 export const ProductCardContainer = ({
+  id,
   image,
   title,
   subtitle,
   price,
   currency,
 }: ProductCardContainerProps) => {
-  const handleAddToCart = () => {
-    console.log("Added to cart");
+  const handleAddToCart = async (productId: number, quantity = 1) => {
+    try {
+      const response = await fetch(`/api/products/${productId}/add_to_cart/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+        },
+        body: JSON.stringify({ quantity })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to add to cart');
+      }
+
+      const data = await response.json();
+      console.log("Added to cart:", data);
+      // You might want to update your cart state here or show a success message
+      return data;
+    } catch (error) {
+      console.error("Error adding to cart:", error);
+      // Handle error (show error message to user, etc.)
+      throw error;
+    }
   };
 
-  const handleWishlist = () => {
-    console.log("Added to wishlist");
+  const handleWishlist = async (productId: number) => {
+    try {
+      const response = await fetch(`/api/products/${productId}/add_to_wishlist/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to add to wishlist');
+      }
+
+      const data = await response.json();
+      console.log("Added to wishlist:", data);
+      // Update wishlist state or show success message
+      return data;
+    } catch (error) {
+      console.error("Error adding to wishlist:", error);
+      // Handle error
+      throw error;
+    }
   };
 
   const handleCompare = () => {
@@ -120,6 +191,7 @@ export const ProductCardContainer = ({
 
   return (
     <ProductCard
+      id={id}
       image={image}
       title={title}
       subtitle={subtitle}

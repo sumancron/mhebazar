@@ -12,8 +12,7 @@ import ProductForm from "@/components/forms/uploadForm/ProductForm";
 export default function HomePage() {
   return (
     <>
-     
-
+    
       {/* Home page hero/banner */}
       <HomeBanner />
 
