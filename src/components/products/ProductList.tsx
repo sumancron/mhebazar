@@ -1,58 +1,31 @@
 "use client";
 
-import React, { useState } from 'react';
-import { Grid, List, X } from 'lucide-react';
-import { ProductCardContainer } from '@/components/elements/Product';
-import FilterSidebar from '@/components/products/SideFilter';
+import React, { useState } from "react";
+import { Grid, List, X } from "lucide-react";
+import { ProductCardContainer } from "@/components/elements/Product";
+import FilterSidebar from "@/components/products/SideFilter";
 import Image from "next/image";
 
 // Types
-interface Product {
+export interface Product {
   id: string;
   image: string;
   title: string;
   subtitle: string;
   price: number;
   currency: string;
+  category?: string;
+  subcategory?: string;
 }
 
-// Enhanced dummy products for demonstration
-const dummyProducts: Product[] = [
-  {
-    id: '1',
-    image: '/api/placeholder/300/300',
-    title: 'She Forklift Tyres Oil Non-marking Solid Tyre',
-    subtitle: 'Premium quality non-marking solid tyre for forklifts',
-    price: 4500,
-    currency: '₹'
-  },
-  {
-    id: '2',
-    image: '/api/placeholder/300/300',
-    title: 'Mhe Bazar Engine Oil Filter 0-414589 - Fits Doosan',
-    subtitle: 'High-performance engine oil filter for industrial vehicles',
-    price: 2018,
-    currency: '₹'
-  },
-  {
-    id: '3',
-    image: '/api/placeholder/300/300',
-    title: 'Mhe Bazar Forklift Forks Chains Conex 1070-54004',
-    subtitle: 'Durable forklift fork chains for heavy-duty operations',
-    price: 12000,
-    currency: '₹'
-  },
-
-];
-
-// Product Grid Component
-interface ProductGridProps {
+interface ProductListPageProps {
   products: Product[];
-  viewMode?: 'grid' | 'list';
+  category?: string;
+  subcategory?: string;
 }
 
-function ProductGrid({ products, viewMode = 'grid' }: ProductGridProps) {
-  if (viewMode === 'list') {
+function ProductGrid({ products, viewMode = "grid" }: { products: Product[]; viewMode?: "grid" | "list" }) {
+  if (viewMode === "list") {
     return (
       <div className="space-y-4">
         {products.map((product) => (
@@ -67,12 +40,8 @@ function ProductGrid({ products, viewMode = 'grid' }: ProductGridProps) {
               />
             </div>
             <div className="flex-1 p-4">
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                {product.title}
-              </h3>
-              <p className="text-sm text-gray-600 mb-2">
-                {product.subtitle}
-              </p>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">{product.title}</h3>
+              <p className="text-sm text-gray-600 mb-2">{product.subtitle}</p>
               <div className="flex items-center justify-between">
                 <span className="text-2xl font-bold text-green-600">
                   {product.currency} {product.price.toLocaleString()}
@@ -104,45 +73,24 @@ function ProductGrid({ products, viewMode = 'grid' }: ProductGridProps) {
   );
 }
 
-// Loading Component
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function ProductGridSkeleton() {
-  return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-      {[...Array(8)].map((_, i) => (
-        <div key={i} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden animate-pulse">
-          <div className="bg-gray-200 h-48"></div>
-          <div className="p-4">
-            <div className="h-4 bg-gray-200 rounded mb-2"></div>
-            <div className="h-3 bg-gray-200 rounded mb-3 w-3/4"></div>
-            <div className="h-5 bg-gray-200 rounded mb-4 w-1/2"></div>
-            <div className="h-10 bg-gray-200 rounded"></div>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-// Main Products Page Component
-export default function ProductsPage() {
-  const [currentView, setCurrentView] = useState<'grid' | 'list'>('grid');
+export default function ProductListPage({ products, category, subcategory }: ProductListPageProps) {
+  const [currentView, setCurrentView] = useState<"grid" | "list">("grid");
   const [selectedFilters, setSelectedFilters] = useState<Set<string>>(new Set());
-  const [products] = useState<Product[]>(dummyProducts);
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
 
-  const handleViewChange = (view: 'grid' | 'list') => {
-    setCurrentView(view);
-  };
+  // Filter products by category/subcategory if provided
+  const filteredProducts = products.filter((p) => {
+    if (subcategory) return p.subcategory === subcategory;
+    if (category) return p.category === category;
+    return true;
+  });
+
+  const handleViewChange = (view: "grid" | "list") => setCurrentView(view);
 
   const handleFilterChange = (filterId: string) => {
     const newSelected = new Set(selectedFilters);
-    if (newSelected.has(filterId)) {
-      newSelected.delete(filterId);
-    } else {
-      newSelected.add(filterId);
-    }
+    if (newSelected.has(filterId)) newSelected.delete(filterId);
+    else newSelected.add(filterId);
     setSelectedFilters(newSelected);
   };
 
@@ -151,12 +99,8 @@ export default function ProductsPage() {
       <div className="flex flex-col lg:flex-row">
         {/* Sidebar Desktop */}
         <div className="hidden lg:block flex-shrink-0 w-72">
-          <FilterSidebar
-            selectedFilters={selectedFilters}
-            onFilterChange={handleFilterChange}
-          />
+          <FilterSidebar selectedFilters={selectedFilters} onFilterChange={handleFilterChange} />
         </div>
-
         {/* Sidebar Mobile Drawer */}
         <div
           className={`fixed inset-0 z-50 bg-black/40 transition-opacity duration-300 lg:hidden ${
@@ -168,7 +112,7 @@ export default function ProductsPage() {
             className={`absolute left-0 top-0 h-full w-full max-w-xs sm:max-w-sm bg-white shadow-xl transition-transform duration-300 ${
               mobileFilterOpen ? "translate-x-0" : "-translate-x-full"
             }`}
-            onClick={e => e.stopPropagation()}
+            onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between p-4 border-b">
               <span className="font-semibold text-lg">Filter</span>
@@ -180,13 +124,9 @@ export default function ProductsPage() {
                 <X className="w-5 h-5" />
               </button>
             </div>
-            <FilterSidebar
-              selectedFilters={selectedFilters}
-              onFilterChange={handleFilterChange}
-            />
+            <FilterSidebar selectedFilters={selectedFilters} onFilterChange={handleFilterChange} />
           </aside>
         </div>
-
         {/* Main Content */}
         <div className="flex-1 lg:ml-0">
           {/* Top Controls */}
@@ -194,16 +134,16 @@ export default function ProductsPage() {
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <div className="bg-orange-100 text-orange-800 px-3 py-1 rounded-full text-sm font-medium inline-block mb-1">
-                  New Arrivals
+                  {subcategory || category || "New Arrivals"}
                 </div>
-                <p className="text-xs text-gray-500">Showing 1-24 of 94</p>
+                <p className="text-xs text-gray-500">
+                  Showing {filteredProducts.length} products
+                </p>
               </div>
               <div className="flex flex-wrap items-center gap-2">
                 {/* Sort By */}
                 <div className="flex items-center gap-2">
-                  <label className="text-sm font-medium text-gray-700">
-                    Sort By
-                  </label>
+                  <label className="text-sm font-medium text-gray-700">Sort By</label>
                   <select className="p-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white">
                     <option>Relevance</option>
                     <option>Price: Low to High</option>
@@ -215,22 +155,22 @@ export default function ProductsPage() {
                 {/* View Toggle */}
                 <div className="flex items-center border border-gray-300 rounded-md overflow-hidden">
                   <button
-                    onClick={() => handleViewChange('grid')}
+                    onClick={() => handleViewChange("grid")}
                     className={`p-2 transition ${
-                      currentView === 'grid'
-                        ? 'bg-green-500 text-white'
-                        : 'text-gray-500 hover:bg-gray-100'
+                      currentView === "grid"
+                        ? "bg-green-500 text-white"
+                        : "text-gray-500 hover:bg-gray-100"
                     }`}
                     aria-label="Grid View"
                   >
                     <Grid className="w-4 h-4" />
                   </button>
                   <button
-                    onClick={() => handleViewChange('list')}
+                    onClick={() => handleViewChange("list")}
                     className={`p-2 transition ${
-                      currentView === 'list'
-                        ? 'bg-green-500 text-white'
-                        : 'text-gray-500 hover:bg-gray-100'
+                      currentView === "list"
+                        ? "bg-green-500 text-white"
+                        : "text-gray-500 hover:bg-gray-100"
                     }`}
                     aria-label="List View"
                   >
@@ -250,13 +190,11 @@ export default function ProductsPage() {
               </div>
             </div>
           </div>
-
           {/* Products Grid */}
           <div className="p-2 sm:p-4 md:p-6">
-            <ProductGrid products={products} viewMode={currentView} />
-
+            <ProductGrid products={filteredProducts} viewMode={currentView} />
             {/* Pagination */}
-            {products.length > 0 && (
+            {filteredProducts.length > 0 && (
               <div className="mt-8 flex flex-wrap justify-center gap-2">
                 <button className="px-3 py-2 text-xs sm:text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed">
                   Previous
