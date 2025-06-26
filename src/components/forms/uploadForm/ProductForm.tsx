@@ -12,6 +12,7 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@
 import { Checkbox } from '@/components/ui/checkbox'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { X } from 'lucide-react'
+import Image from 'next/image';
 
 type FieldOption = {
   label: string
@@ -112,7 +113,7 @@ export default function ProductForm() {
       setDynamicFields([])
       setWarning('Select a subcategory to load product details.')
     }
-  }, [selectedCategoryId, categories])
+  }, [selectedCategoryId, categories, resetField])
 
   useEffect(() => {
     if (!selectedSubcategoryId) return
@@ -441,10 +442,12 @@ export default function ProductForm() {
             <div className="flex gap-2 mt-2 flex-wrap">
               {imageFiles.map((file, idx) => (
                 <div key={idx} className="relative w-20 h-20">
-                  <img
-                    src={URL.createObjectURL(file)}
+                  <Image
+                    src={file ? URL.createObjectURL(file) : '/placeholder.png'}
                     alt="Preview"
                     className="object-cover w-full h-full rounded"
+                    width={400} // Set appropriate width
+                    height={400} // Set appropriate height
                   />
                   <button
                     type="button"

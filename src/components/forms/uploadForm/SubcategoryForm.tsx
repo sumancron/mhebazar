@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { X } from 'lucide-react'
+import Image from 'next/image'
 
 type FieldOption = {
   label: string
@@ -101,7 +102,6 @@ export default function SubcategoryForm() {
     if (data.description) formData.append('description', data.description)
     if (data.meta_title) formData.append('meta_title', data.meta_title)
     if (data.meta_description) formData.append('meta_description', data.meta_description)
-    // Use local state for images
     if (subImageFiles[0]) formData.append('sub_image', subImageFiles[0])
     if (subBannerFiles[0]) formData.append('sub_banner', subBannerFiles[0])
     formData.append('product_details', JSON.stringify(data.product_details))
@@ -112,7 +112,7 @@ export default function SubcategoryForm() {
         headers: { 'Content-Type': 'multipart/form-data' },
       })
       setMessage('Subcategory created successfully!')
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error(error)
       setMessage('Failed to create subcategory.')
     } finally {
@@ -210,10 +210,13 @@ export default function SubcategoryForm() {
               <div className="flex gap-2 mt-2">
                 {subImageFiles.map((file, idx) => (
                   <div key={idx} className="relative w-20 h-20">
-                    <img
+                    <Image
                       src={URL.createObjectURL(file)}
                       alt="Preview"
-                      className="object-cover w-full h-full rounded"
+                      fill
+                      className="object-cover rounded"
+                      unoptimized
+                      style={{ objectFit: 'cover' }}
                     />
                     <button
                       type="button"
@@ -248,10 +251,13 @@ export default function SubcategoryForm() {
               <div className="flex gap-2 mt-2">
                 {subBannerFiles.map((file, idx) => (
                   <div key={idx} className="relative w-20 h-20">
-                    <img
+                    <Image
                       src={URL.createObjectURL(file)}
                       alt="Preview"
-                      className="object-cover w-full h-full rounded"
+                      fill
+                      className="object-cover rounded"
+                      unoptimized
+                      style={{ objectFit: 'cover' }}
                     />
                     <button
                       type="button"
