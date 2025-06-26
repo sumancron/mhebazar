@@ -1,6 +1,5 @@
-"use client";
 import ProductListPage, { Product } from "@/components/products/ProductList";
-import { useEffect, useState } from "react";
+
 
 const fallbackProducts: Product[] = [
   {
@@ -25,27 +24,21 @@ const fallbackProducts: Product[] = [
   },
 ];
 
-export default function SubCategoryPage({
+// Server Component
+export default async function SubCategoryPage({
   params,
 }: {
   params: { category: string; subcategory: string };
-  searchParams?: { [key: string]: string | string[] | undefined };
 }) {
-  const { category, subcategory } = params;
-  const [products, setProducts] = useState<Product[]>(fallbackProducts);
-
-  useEffect(() => {
-    fetch(`/api/products?category=${category}&subcategory=${subcategory}`)
-      .then((res) => (res.ok ? res.json() : Promise.reject()))
-      .then((data) => setProducts(data))
-      .catch(() => setProducts(fallbackProducts));
-  }, [category, subcategory]);
+  // You can fetch data here using params
+  // For now, just pass fallbackProducts
+  // If you want to fetch from your API, use fetch() here (not useEffect)
 
   return (
     <ProductListPage
-      products={products}
-      category={category}
-      subcategory={subcategory}
+      products={fallbackProducts}
+      category={params.category}
+      subcategory={params.subcategory}
     />
   );
 }
