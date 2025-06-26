@@ -6,7 +6,12 @@ const fallbackProducts: Product[] = [
   // ...same as above
 ];
 
-export default function SubCategoryPage({ params }: { params: { category: string; subcategory: string } }) {
+export interface SubCategoryPageProps {
+  params: { category: string; subcategory: string };
+  searchParams?: { [key: string]: string | string[] | undefined };
+}
+
+export default function SubCategoryPage({ params }: SubCategoryPageProps) {
   const { category, subcategory } = params;
   const [products, setProducts] = useState<Product[]>(fallbackProducts);
 
