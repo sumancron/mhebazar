@@ -8,6 +8,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 
 export default function Footer() {
   return (
@@ -41,7 +42,7 @@ export default function Footer() {
       </div>
 
       {/* Main footer grid */}
-      <div className="max-w-7xl mx-auto px-4 py-10 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
+      <div className="max-w-7xl mx-auto px-4 py-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
         {/* Address & Contact */}
         <div>
           <Image
@@ -71,49 +72,49 @@ export default function Footer() {
           <h3 className="font-bold mb-2">Company</h3>
           <ul className="space-y-1 text-sm">
             <li>
-              <a href="#" className="hover:text-blue-700 transition">
+              <Link href="/about" className="hover:text-blue-700 transition">
                 About
-              </a>
+              </Link>
             </li>
             <li>
-              <a href="#" className="hover:text-blue-700 transition">
+              <Link href="/used-mhe" className="hover:text-blue-700 transition">
                 Used MHE
-              </a>
+              </Link>
             </li>
             <li>
-              <a href="#" className="hover:text-blue-700 transition">
+              <Link href="/rental" className="hover:text-blue-700 transition">
                 MHE Rental
-              </a>
+              </Link>
             </li>
             <li>
-              <a href="#" className="hover:text-blue-700 transition">
+              <Link href="/services" className="hover:text-blue-700 transition">
                 CMC & AMC Services
-              </a>
+              </Link>
             </li>
             <li>
-              <a href="#" className="hover:text-blue-700 transition">
+              <Link href="/training" className="hover:text-blue-700 transition">
                 Training
-              </a>
+              </Link>
             </li>
             <li>
-              <a href="#" className="hover:text-blue-700 transition">
+              <Link href="/testimonials" className="hover:text-blue-700 transition">
                 Testimonials
-              </a>
+              </Link>
             </li>
             <li>
-              <a href="#" className="hover:text-blue-700 transition">
+              <Link href="/contact" className="hover:text-blue-700 transition">
                 Contact Us
-              </a>
+              </Link>
             </li>
             <li>
-              <a href="#" className="hover:text-blue-700 transition">
+              <Link href="/vendors" className="hover:text-blue-700 transition">
                 Vendors
-              </a>
+              </Link>
             </li>
             <li>
-              <a href="#" className="hover:text-blue-700 transition">
+              <Link href="/blog" className="hover:text-blue-700 transition">
                 Blog
-              </a>
+              </Link>
             </li>
           </ul>
         </div>
@@ -122,21 +123,51 @@ export default function Footer() {
         <div>
           <h3 className="font-bold mb-2">Category</h3>
           <ul className="space-y-1 text-sm columns-2 gap-x-6">
-            <li>Battery</li>
-            <li>Pallet Truck</li>
-            <li>Stacker</li>
-            <li>Platform Truck</li>
-            <li>Tow Truck</li>
-            <li>Dock Leveller</li>
-            <li>Scissors Lift</li>
-            <li>Reach Truck</li>
-            <li>Racking System</li>
-            <li>Forklift</li>
-            <li>Container Handler</li>
-            <li>Explosionproof MHE</li>
-            <li>Solution</li>
-            <li>Order Picker</li>
-            <li>AGV (Automated Guided Vehicle)</li>
+            <li>
+              <Link href="/category/battery" className="hover:text-blue-700 transition">Battery</Link>
+            </li>
+            <li>
+              <Link href="/category/pallet-truck" className="hover:text-blue-700 transition">Pallet Truck</Link>
+            </li>
+            <li>
+              <Link href="/category/stacker" className="hover:text-blue-700 transition">Stacker</Link>
+            </li>
+            <li>
+              <Link href="/category/platform-truck" className="hover:text-blue-700 transition">Platform Truck</Link>
+            </li>
+            <li>
+              <Link href="/category/tow-truck" className="hover:text-blue-700 transition">Tow Truck</Link>
+            </li>
+            <li>
+              <Link href="/category/dock-leveller" className="hover:text-blue-700 transition">Dock Leveller</Link>
+            </li>
+            <li>
+              <Link href="/category/scissors-lift" className="hover:text-blue-700 transition">Scissors Lift</Link>
+            </li>
+            <li>
+              <Link href="/category/reach-truck" className="hover:text-blue-700 transition">Reach Truck</Link>
+            </li>
+            <li>
+              <Link href="/category/racking-system" className="hover:text-blue-700 transition">Racking System</Link>
+            </li>
+            <li>
+              <Link href="/category/forklift" className="hover:text-blue-700 transition">Forklift</Link>
+            </li>
+            <li>
+              <Link href="/category/container-handler" className="hover:text-blue-700 transition">Container Handler</Link>
+            </li>
+            <li>
+              <Link href="/category/explosionproof-mhe" className="hover:text-blue-700 transition">Explosionproof MHE</Link>
+            </li>
+            <li>
+              <Link href="/category/solution" className="hover:text-blue-700 transition">Solution</Link>
+            </li>
+            <li>
+              <Link href="/category/order-picker" className="hover:text-blue-700 transition">Order Picker</Link>
+            </li>
+            <li>
+              <Link href="/category/agv" className="hover:text-blue-700 transition">AGV (Automated Guided Vehicle)</Link>
+            </li>
           </ul>
         </div>
 
@@ -145,29 +176,29 @@ export default function Footer() {
           <h3 className="font-bold mb-2">Get support</h3>
           <ul className="space-y-1 text-sm">
             <li>
-              <a href="#" className="hover:text-blue-700 transition">
+              <Link href="/help" className="hover:text-blue-700 transition">
                 Help Center
-              </a>
+              </Link>
             </li>
             <li>
-              <a href="#" className="hover:text-blue-700 transition">
+              <Link href="/live-chat" className="hover:text-blue-700 transition">
                 Live chat
-              </a>
+              </Link>
             </li>
             <li>
-              <a href="#" className="hover:text-blue-700 transition">
+              <Link href="/order-status" className="hover:text-blue-700 transition">
                 Check order status
-              </a>
+              </Link>
             </li>
             <li>
-              <a href="#" className="hover:text-blue-700 transition">
+              <Link href="/refunds" className="hover:text-blue-700 transition">
                 Refunds
-              </a>
+              </Link>
             </li>
             <li>
-              <a href="#" className="hover:text-blue-700 transition">
+              <Link href="/report-abuse" className="hover:text-blue-700 transition">
                 Report abuse
-              </a>
+              </Link>
             </li>
           </ul>
         </div>
@@ -177,33 +208,33 @@ export default function Footer() {
       <div className="bg-gray-50 border-t py-6">
         <div className="max-w-7xl mx-auto flex flex-wrap justify-center gap-8 text-center text-sm">
           <div className="flex flex-col items-center min-w-[120px] mb-4 sm:mb-0">
-            <Globe className="w-7 h-7 mb-2 text-blue-700" />
+            <Globe className="w-8 h-8 mb-2 text-blue-700" />
             <span className="font-semibold">Worldwide Delivery</span>
             <span className="text-xs text-gray-500">
               MHEBazar delivers products globally.
             </span>
           </div>
           <div className="flex flex-col items-center min-w-[120px] mb-4 sm:mb-0">
-            <Headphones className="w-7 h-7 mb-2 text-blue-700" />
+            <Headphones className="w-8 h-8 mb-2 text-blue-700" />
             <span className="font-semibold">Support 24/7</span>
             <span className="text-xs text-gray-500">
               Reach our experts today!
             </span>
           </div>
           <div className="flex flex-col items-center min-w-[120px] mb-4 sm:mb-0">
-            <ShoppingCart className="w-7 h-7 mb-2 text-blue-700" />
+            <ShoppingCart className="w-8 h-8 mb-2 text-blue-700" />
             <span className="font-semibold">First Purchase Discount</span>
             <span className="text-xs text-gray-500">Up to 10% discount</span>
           </div>
           <div className="flex flex-col items-center min-w-[120px] mb-4 sm:mb-0">
-            <RotateCcw className="w-7 h-7 mb-2 text-blue-700" />
+            <RotateCcw className="w-8 h-8 mb-2 text-blue-700" />
             <span className="font-semibold">Easy Returns</span>
             <span className="text-xs text-gray-500">
               Read our return policy
             </span>
           </div>
           <div className="flex flex-col items-center min-w-[120px]">
-            <ShieldCheck className="w-7 h-7 mb-2 text-blue-700" />
+            <ShieldCheck className="w-8 h-8 mb-2 text-blue-700" />
             <span className="font-semibold">Secure payment</span>
             <span className="text-xs text-gray-500">100% Protected</span>
           </div>
@@ -212,7 +243,7 @@ export default function Footer() {
 
       {/* Copyright */}
       <div className="text-center text-sm py-4 border-t text-gray-600">
-        Copyright © 2022 MHE Bazar. All rights reserved.
+        Copyright © {new Date().getFullYear()} MHE Bazar. All rights reserved.
       </div>
     </footer>
   );

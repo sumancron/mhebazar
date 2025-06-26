@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { X } from 'lucide-react' // Add this for a delete icon (optional)
+import Image from 'next/image'
 
 type FieldOption = {
   label: string
@@ -86,7 +87,6 @@ export default function CategoryForm() {
     if (data.description) formData.append('description', data.description)
     if (data.meta_title) formData.append('meta_title', data.meta_title)
     if (data.meta_description) formData.append('meta_description', data.meta_description)
-    // Use local state for images
     if (catImageFiles[0]) formData.append('cat_image', catImageFiles[0])
     if (catBannerFiles[0]) formData.append('cat_banner', catBannerFiles[0])
     formData.append('product_details', JSON.stringify(data.product_details))
@@ -97,7 +97,7 @@ export default function CategoryForm() {
         headers: { 'Content-Type': 'multipart/form-data' },
       })
       setMessage('Category created successfully!')
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error(error)
       setMessage('Failed to create category.')
     } finally {
@@ -176,10 +176,13 @@ export default function CategoryForm() {
               <div className="flex gap-2 mt-2">
                 {catImageFiles.map((file, idx) => (
                   <div key={idx} className="relative w-20 h-20">
-                    <img
+                    <Image
                       src={URL.createObjectURL(file)}
                       alt="Preview"
-                      className="object-cover w-full h-full rounded"
+                      fill
+                      className="object-cover rounded"
+                      unoptimized
+                      style={{ objectFit: 'cover' }}
                     />
                     <button
                       type="button"
@@ -214,10 +217,13 @@ export default function CategoryForm() {
               <div className="flex gap-2 mt-2">
                 {catBannerFiles.map((file, idx) => (
                   <div key={idx} className="relative w-20 h-20">
-                    <img
+                    <Image
                       src={URL.createObjectURL(file)}
                       alt="Preview"
-                      className="object-cover w-full h-full rounded"
+                      fill
+                      className="object-cover rounded"
+                      unoptimized
+                      style={{ objectFit: 'cover' }}
                     />
                     <button
                       type="button"

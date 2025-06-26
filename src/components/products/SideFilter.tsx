@@ -43,12 +43,12 @@ const SideFilter = ({
   );
 
   return (
-    <aside className="w-64 min-h-screen bg-white border-r border-gray-200 flex flex-col">
-      <div className="p-4 pb-2">
+    <aside className="sticky top-0 w-full max-w-xs min-h-screen bg-white border-r border-gray-200 flex flex-col overflow-y-auto z-20">
+      <div className="p-3 sm:p-4 pb-2">
         <h1 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
           Filter
         </h1>
-        <div className="flex items-center gap-2 mb-4">
+        <div className="flex items-center gap-2 mb-4 relative">
           <Search className="w-4 h-4 text-gray-400" />
           <input
             type="text"
@@ -57,9 +57,22 @@ const SideFilter = ({
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
+          {search && (
+            <button
+              className="absolute right-2 text-gray-400 hover:text-red-500 text-xs"
+              onClick={() => setSearch("")}
+              aria-label="Clear search"
+              tabIndex={0}
+            >
+              ×
+            </button>
+          )}
         </div>
         <h2 className="text-base font-semibold mb-2 text-gray-800">Categories</h2>
         <div className="space-y-1">
+          {filteredCategories.length === 0 && (
+            <div className="text-gray-400 text-xs px-2 py-2">No categories found.</div>
+          )}
           {filteredCategories.map((category) => (
             <div key={category.id} className="border-b border-gray-100 last:border-b-0">
               <button
@@ -68,12 +81,16 @@ const SideFilter = ({
                     expandedCategory === category.id ? null : category.id
                   )
                 }
-                className="w-full flex items-center justify-between px-2 py-2 hover:bg-gray-50 rounded-md transition-colors duration-200"
+                className={`w-full flex items-center justify-between px-2 py-2 rounded-md transition-colors duration-200 ${
+                  expandedCategory === category.id ? "bg-green-50" : "hover:bg-gray-50"
+                }`}
+                aria-expanded={expandedCategory === category.id}
+                aria-controls={`cat-panel-${category.id}`}
               >
                 <span className="text-gray-700 text-sm">{category.name}</span>
                 {category.subcategories.length > 0 ? (
                   expandedCategory === category.id ? (
-                    <ChevronDown className="w-4 h-4 text-gray-500" />
+                    <ChevronDown className="w-4 h-4 text-green-600" />
                   ) : (
                     <ChevronRight className="w-4 h-4 text-gray-500" />
                   )
@@ -83,6 +100,7 @@ const SideFilter = ({
                 {expandedCategory === category.id &&
                   category.subcategories.length > 0 && (
                     <motion.div
+                      id={`cat-panel-${category.id}`}
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: "auto" }}
                       exit={{ opacity: 0, height: 0 }}
@@ -98,8 +116,8 @@ const SideFilter = ({
                             transition={{ delay: index * 0.05 }}
                             className={`w-full text-left p-2 text-xs rounded-md transition-colors duration-200 ${
                               selectedFilters?.has(subcategory)
-                                ? "bg-green-100 text-green-700 font-semibold"
-                                : "text-gray-600 hover:bg-gray-50"
+                                ? "bg-green-100 text-green-700 font-semibold ring-2 ring-green-300"
+                                : "text-gray-600 hover:bg-green-50"
                             }`}
                             onClick={() =>
                               onFilterChange && onFilterChange(subcategory)
@@ -117,13 +135,13 @@ const SideFilter = ({
         </div>
       </div>
       {/* Banner Image */}
-      <div className="p-4 mt-auto">
+      <div className="p-3 sm:p-4 mt-auto">
         <Image
           src="/sidebar.png"
           alt="Forklift Service"
-          width={220}
+          width={400}
           height={300}
-          className="rounded-lg object-cover w-full"
+          className="rounded-lg object-cover w-full h-auto"
           priority
         />
       </div>
