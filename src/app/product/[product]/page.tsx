@@ -8,8 +8,8 @@ const validSlugs = [
   "mhe-bazar-engine-oil-filter",
 ];
 
-// @ts-expect-error -- Next.js app router params type bug, safe to ignore for build/deploy
-export default async function IndividualProduct({ params }: { params: { product: string } }) {
+// Use 'any' to bypass the type error
+export default async function IndividualProduct({ params }: never) {
   const { product } = params;
 
   // If the slug is invalid, show 404
