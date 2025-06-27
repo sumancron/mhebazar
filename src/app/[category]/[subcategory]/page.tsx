@@ -1,7 +1,7 @@
-import ProductListPage, { Product } from "@/components/products/ProductList";
-
-
-const fallbackProducts: Product[] = [
+import ProductListing, { Product } from "@/components/products/ProductListing";
+import Breadcrumb from "@/components/elements/Breadcrumb";
+// Dummy data, replace with your API/fetch logic
+const dummyProducts: Product[] = [
   {
     id: "1",
     image: "/api/placeholder/300/300",
@@ -9,8 +9,6 @@ const fallbackProducts: Product[] = [
     subtitle: "Premium quality non-marking solid tyre for forklifts",
     price: 4500,
     currency: "₹",
-    category: "tyres",
-    subcategory: "non-marking",
   },
   {
     id: "2",
@@ -19,25 +17,34 @@ const fallbackProducts: Product[] = [
     subtitle: "High-performance engine oil filter for industrial vehicles",
     price: 2018,
     currency: "₹",
-    category: "filters",
-    subcategory: "oil-filter",
+  },
+  {
+    id: "3",
+    image: "/api/placeholder/300/300",
+    title: "Mhe Bazar Forklift Forks Chains Conex 1070-54004",
+    subtitle: "Durable forklift fork chains for heavy-duty operations",
+    price: 12000,
+    currency: "₹",
   },
 ];
 
-// Server Component
-export default async function SubCategoryPage(props: {
-  params: { category: string; subcategory: string };
-}) {
-  // You can fetch data here using params
-  // For now, just pass fallbackProducts
-  // If you want to fetch from your API, use fetch() here (not useEffect)
-  const { params } = await props;
+export default function SubCategoryPage() {
+  // You can fetch products based on category params here
 
   return (
-    <ProductListPage
-      products={fallbackProducts}
-      category={params.category}
-      subcategory={params.subcategory}
+    <>
+      <Breadcrumb
+        items={[
+          { label: "Home", href: "/" },
+          { label: "Category", href: "/category" },
+          { label: "Subcategory", href: "/category/subcategory" },
+        ]}
+      />
+    <ProductListing
+      products={dummyProducts}
+      title="Subcategory Products"
+      totalCount={94}
     />
+    </>
   );
 }

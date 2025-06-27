@@ -1,9 +1,8 @@
-"use client";
-import ProductListPage, { Product } from "@/components/products/ProductList";
-import { useEffect, useState } from "react";
+import ProductListing, { Product } from "@/components/products/ProductListing";
+import Breadcrumb from "@/components/elements/Breadcrumb";
 
-const fallbackProducts: Product[] = [
-  // ...same as above
+// Dummy data, replace with your API/fetch logic
+const dummyProducts: Product[] = [
   {
     id: "1",
     image: "/api/placeholder/300/300",
@@ -11,8 +10,6 @@ const fallbackProducts: Product[] = [
     subtitle: "Premium quality non-marking solid tyre for forklifts",
     price: 4500,
     currency: "₹",
-    category: "tyres",
-    subcategory: "non-marking",
   },
   {
     id: "2",
@@ -21,23 +18,33 @@ const fallbackProducts: Product[] = [
     subtitle: "High-performance engine oil filter for industrial vehicles",
     price: 2018,
     currency: "₹",
-    category: "filters",
-    subcategory: "oil-filter",
   },
-  
+  {
+    id: "3",
+    image: "/api/placeholder/300/300",
+    title: "Mhe Bazar Forklift Forks Chains Conex 1070-54004",
+    subtitle: "Durable forklift fork chains for heavy-duty operations",
+    price: 12000,
+    currency: "₹",
+  },
 ];
 
-export default function CategoryPage({ params }: { params: { category: string } }) {
-  const { category } = params;
-  const [products, setProducts] = useState<Product[]>(fallbackProducts);
-
-  useEffect(() => {
-    // Replace this URL with your real API endpoint
-    fetch(`/api/products?category=${category}`)
-      .then((res) => res.ok ? res.json() : Promise.reject())
-      .then((data) => setProducts(data))
-      .catch(() => setProducts(fallbackProducts)); // fallback on error
-  }, [category]);
-
-  return <ProductListPage products={products} category={category} />;
+export default function CategoryPage() {
+  // You can fetch products based on category params here
+  return (
+    <>
+      <Breadcrumb
+        items={[
+          { label: "Home", href: "/" },
+          { label: "Category", href: "/category" },
+          { label: "Subcategory", href: "/category/subcategory" },
+        ]}
+      />
+    <ProductListing
+      products={dummyProducts}
+      title="Category Products"
+      totalCount={94}
+    />
+    </>
+  );
 }
