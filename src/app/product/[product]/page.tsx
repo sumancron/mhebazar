@@ -8,10 +8,10 @@ const validSlugs = [
   "mhe-bazar-engine-oil-filter",
 ];
 
-export default function IndividualProduct({ params }: { params: { product: string } }) {
+export default async function IndividualProduct({ params }: { params: { product: string } }) {
   const { product } = params;
 
-  // Agar slug valid nahi hai toh 404 dikhao
+  // If the slug is invalid, show 404
   if (!validSlugs.includes(product)) {
     notFound();
   }
