@@ -5,10 +5,11 @@ import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
+import CategoryMenu from "./NavOptions";
 
 const categories = [
   "Forklifts",
-  "Pallet Trucks", 
+  "Pallet Trucks",
   "Stackers",
   "Reach Trucks",
   "Order Pickers",
@@ -102,8 +103,8 @@ export default function Navbar() {
               </Link>
               <Link href="/notifications" className="flex items-center text-gray-600 hover:text-green-600 transition" aria-label="Notifications">
                 <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"/>
-                  <path d="M13.73 21a2 2 0 01-3.46 0"/>
+                  <path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
+                  <path d="M13.73 21a2 2 0 01-3.46 0" />
                 </svg>
               </Link>
             </div>
@@ -134,45 +135,17 @@ export default function Navbar() {
           <div className="flex items-center justify-between">
             {/* Left Navigation */}
             <div className="flex items-center">
-              {/* All Categories Dropdown */}
+              {/* Categories Dropdown */}
               <div className="relative">
-                <button 
+                <button
                   className="flex items-center gap-2 px-4 py-3 text-gray-700 hover:text-green-600 text-sm font-medium transition"
-                  onMouseEnter={() => setCategoriesOpen(true)}
-                  onMouseLeave={() => setCategoriesOpen(false)}
-                  onFocus={() => setCategoriesOpen(true)}
-                  onBlur={() => setCategoriesOpen(false)}
+                  onClick={() => setCategoriesOpen(!categoriesOpen)}
                 >
                   <Menu className="w-4 h-4" />
                   All Categories
                   <ChevronDown className="w-4 h-4" />
                 </button>
-                <AnimatePresence>
-                  {categoriesOpen && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 10 }}
-                      transition={{ duration: 0.18 }}
-                      className="absolute left-0 top-full w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-50"
-                      onMouseEnter={() => setCategoriesOpen(true)}
-                      onMouseLeave={() => setCategoriesOpen(false)}
-                    >
-                      <div className="py-2">
-                        {categories.map((category, index) => (
-                          <Link
-                            key={index}
-                            href={`/app/${category.toLowerCase().replace(/\s+/g, '-')}`}
-                            className="block px-4 py-2 text-sm text-gray-700 hover:bg-green-50 hover:text-green-700 transition"
-                            onClick={() => setCategoriesOpen(false)}
-                          >
-                            {category}
-                          </Link>
-                        ))}
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                <CategoryMenu isOpen={categoriesOpen} />
               </div>
 
               {/* Navigation Links */}

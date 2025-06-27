@@ -25,14 +25,13 @@ const fallbackProducts: Product[] = [
 ];
 
 // Server Component
-export default async function SubCategoryPage({
-  params,
-}: {
+export default async function SubCategoryPage(props: {
   params: { category: string; subcategory: string };
 }) {
   // You can fetch data here using params
   // For now, just pass fallbackProducts
   // If you want to fetch from your API, use fetch() here (not useEffect)
+  const { params } = await props;
 
   return (
     <ProductListPage
