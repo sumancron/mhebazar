@@ -75,8 +75,7 @@ function ProductGrid({
           title={product.title}
           subtitle={product.subtitle}
           price={product.price}
-          currency={product.currency}
-        />
+          currency={product.currency} id={0}        />
       ))}
     </div>
   );
