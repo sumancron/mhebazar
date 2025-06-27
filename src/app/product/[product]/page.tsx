@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 import { notFound } from "next/navigation";
 import ProductSection from "@/components/products/IndividualProduct";
 import ReviewSection from "@/components/products/Reviews";
