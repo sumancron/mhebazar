@@ -43,7 +43,7 @@ const SideFilter = ({
   );
 
   return (
-    <aside className="sticky top-0 w-full max-w-xs min-h-screen bg-white border-r border-gray-200 flex flex-col overflow-y-auto z-20">
+    <aside className="sticky top-0 w-full max-w-xs min-h-screen bg-white flex flex-col overflow-y-auto z-20">
       <div className="p-3 sm:p-4 pb-2">
         <h1 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
           Filter

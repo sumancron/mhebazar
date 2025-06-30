@@ -150,7 +150,7 @@ export default function ProductListing({
         {/* Main Content */}
         <div className="flex-1 lg:ml-0">
           {/* Top Controls */}
-          <div className="bg-white border-b border-gray-200 px-2 sm:px-4 py-2 sm:py-3 sticky top-0 z-30">
+          <div className="bg-white border-b border-gray-200 px-2 sm:px-4 py-2 sm:py-3 sticky top-0">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <div className="bg-orange-100 text-orange-800 px-3 py-1 rounded-full text-sm font-medium inline-block mb-1">

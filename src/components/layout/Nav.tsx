@@ -1,7 +1,7 @@
 "use client";
 
 import { Menu, ShoppingCart, X, Search, Mic, Phone, ChevronDown, Tag } from "lucide-react";
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState,JSX, useEffect } from "react";
 import React from "react";
 import Image from "next/image";
 import Link from "next/link";
@@ -9,6 +9,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import CategoryMenu from "./NavOptions";
 import VendorRegistrationDrawer from "@/components/forms/publicforms/VendorRegistrationForm";
 import { User, Package, Heart, LogOut } from "lucide-react";
+// import React, { , useState } from "react";
+
 
 const categories = [
   "Forklifts",
@@ -30,7 +32,7 @@ const navigationLinks = [
   { name: "Training", href: "/training" }
 ];
 
-export default function Navbar() {
+export default function Navbar(): JSX.Element {
   const [searchQuery, setSearchQuery] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [categoriesOpen, setCategoriesOpen] = useState(false);

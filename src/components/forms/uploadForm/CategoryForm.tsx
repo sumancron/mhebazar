@@ -2,7 +2,7 @@
 
 import { useForm, useFieldArray } from 'react-hook-form'
 import axios from 'axios'
-import { useState } from 'react'
+import { JSX, useState } from 'react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
@@ -36,7 +36,7 @@ type CategoryFormData = {
   product_details: ProductDetailField[]
 }
 
-export default function CategoryForm() {
+export default function CategoryForm(): JSX.Element {
   const {
     register,
     control,
@@ -81,7 +81,7 @@ export default function CategoryForm() {
     setCatBannerFiles(files => files.filter((_, i) => i !== idx))
   }
 
-  const onSubmit = async (data: CategoryFormData) => {
+  const onSubmit = async (data: CategoryFormData): Promise<void> => {
     const formData = new FormData()
     formData.append('name', data.name)
     if (data.description) formData.append('description', data.description)
@@ -98,8 +98,13 @@ export default function CategoryForm() {
       })
       setMessage('Category created successfully!')
     } catch (error: unknown) {
-      console.error(error)
-      setMessage('Failed to create category.')
+      if (error instanceof Error) {
+        console.error('Error creating category:', error.message);
+        setMessage(`Failed to create category: ${error.message}`);
+      } else {
+        console.error('Unknown error occurred');
+        setMessage('Failed to create category due to an unknown error.');
+      }
     } finally {
       setIsSubmitting(false)
     }

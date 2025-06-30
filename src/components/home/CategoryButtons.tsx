@@ -23,7 +23,7 @@ const fallbackCategories: Category[] = [
   { label: "Order Picker" },
 ];
 
-function CategoryItem({ image, label }: Category) {
+function CategoryItem({ image, label }: Category): JSX.Element {
   const initials = label
     .split(" ")
     .map((w) => w[0])
@@ -53,7 +53,7 @@ function CategoryItem({ image, label }: Category) {
   );
 }
 
-export default function CategoriesSection() {
+export default function CategoriesSection(): JSX.Element {
   const [categories, setCategories] = useState<Category[]>(fallbackCategories); // default is dummy
   const [showAll, setShowAll] = useState(false);
 
