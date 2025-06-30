@@ -12,7 +12,7 @@ const validSlugs = [
 export default async function IndividualProduct({ params }: never) {
   const { product } = params;
 
-  // If the slug is invalid, show 404
+  // If the slug is invalid, show 404 
   if (!validSlugs.includes(product)) {
     notFound();
   }
