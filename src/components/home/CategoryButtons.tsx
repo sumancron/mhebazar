@@ -2,7 +2,7 @@
 
 import { LayoutGrid } from "lucide-react";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { JSX,useEffect, useState } from "react";
 
 interface Category {
   image?: string;
