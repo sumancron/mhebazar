@@ -50,7 +50,7 @@ const ProductCard = ({
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden w-64">
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden w-72 hover:shadow-md transition-shadow duration-200">
       {/* Image Container */}
       <div className="relative bg-gray-50 p-4">
         {/* Action Icons */}

@@ -1,5 +1,5 @@
 import HomeBanner from "@/components/layout/HomeBanner";
-import CategooryButtons from "@/components/home/CategoryButtons";
+import CategoryButtons from "@/components/home/CategoryButtons";
 import MostPopular from "@/components/home/MostPopular";
 import NewArrivalsAndTopSearches from "@/components/home/NewArrivalsAndTopSearches";
 import SpareParts from "@/components/home/SparepartsFeatured";
@@ -17,7 +17,7 @@ export default function HomePage() {
       <HomeBanner />
 
       {/* Category buttons section */}
-      <CategooryButtons />
+      <CategoryButtons />
 
       <div className="flex flex-col md:flex-row gap-4 w-full px-4 py-8 max-w-7xl mx-auto justify-center items-start">
         <div className="flex-1">

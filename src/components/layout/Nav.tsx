@@ -1,7 +1,7 @@
 "use client";
 
 import { Menu, ShoppingCart, X, Search, Mic, Phone, User, ChevronDown, Tag } from "lucide-react";
-import React, { useState } from "react";
+import React, { JSX, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
@@ -27,7 +27,7 @@ const navigationLinks = [
   { name: "Training", href: "/training" }
 ];
 
-export default function Navbar() {
+export default function Navbar(): JSX.Element {
   const [searchQuery, setSearchQuery] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [categoriesOpen, setCategoriesOpen] = useState(false);
