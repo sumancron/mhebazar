@@ -48,6 +48,7 @@ export default function ExportProductsFeatured() {
         exportProducts.map((export_product) => (
           <ProductCard
             key={export_product.id}
+            id={Number(export_product.id)} // ✅ id prop भेजें
             image={export_product.image}
             title={export_product.title}
             subtitle={export_product.subtitle}
@@ -57,13 +58,14 @@ export default function ExportProductsFeatured() {
         ))
       ) : (
         <ProductCard
-          image="/no-product.png"          // put your placeholder image in `public/no-product.png`
+          id={0} // ✅ placeholder के लिए id भेजें
+          image="/no-product.png"
           title="No product"
           subtitle="There are no export products available at the moment."
           price={0}
-          currency=""                       // hide the currency since price is 0
-          onAddToCart={() => {}}           // empty handlers to disable actions
-          onWishlist={() => {}}
+          currency=""
+          onAddToCart={async () => {}} // empty handlers
+          onWishlist={async () => {}}
           onCompare={() => {}}
           onShare={() => {}}
         />

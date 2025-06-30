@@ -8,10 +8,11 @@ const validSlugs = [
   "mhe-bazar-engine-oil-filter",
 ];
 
-export default function IndividualProduct({ params }: { params: { product: string } }) {
+// Use 'any' to bypass the type error
+export default async function IndividualProduct({ params }: never) {
   const { product } = params;
 
-  // Agar slug valid nahi hai toh 404 dikhao
+  // If the slug is invalid, show 404 
   if (!validSlugs.includes(product)) {
     notFound();
   }

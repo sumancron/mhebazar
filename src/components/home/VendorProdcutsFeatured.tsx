@@ -25,7 +25,7 @@ export default function VendorProductsFeatured() {
         if (!res.ok) throw new Error("Failed to fetch data");
         const data: VendorProduct[] = await res.json();
         setVendorProducts(data || []);
-      } catch{
+      } catch {
         setVendorProducts([]); // in case of error or empty
       } finally {
         setLoading(false);
@@ -48,6 +48,7 @@ export default function VendorProductsFeatured() {
         VendorProducts.map((vendor_product) => (
           <ProductCard
             key={vendor_product.id}
+            id={Number(vendor_product.id)} // ✅ id prop भेजें
             image={vendor_product.image}
             title={vendor_product.title}
             subtitle={vendor_product.subtitle}
@@ -57,13 +58,14 @@ export default function VendorProductsFeatured() {
         ))
       ) : (
         <ProductCard
+          id={0} // ✅ placeholder के लिए id भेजें
           image="/no-product.png"          // put your placeholder image in `public/no-product.png`
           title="No product"
           subtitle="There are no vendor products available at the moment."
           price={0}
           currency=""                       // hide the currency since price is 0
-          onAddToCart={() => {}}           // empty handlers to disable actions
-          onWishlist={() => {}}
+          onAddToCart={async () => {}}           // empty handlers to disable actions
+          onWishlist={async () => {}}
           onCompare={() => {}}
           onShare={() => {}}
         />

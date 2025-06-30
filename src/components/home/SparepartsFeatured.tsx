@@ -25,7 +25,7 @@ export default function SparePartsFeatured() {
         if (!res.ok) throw new Error("Failed to fetch data");
         const data: SparePart[] = await res.json();
         setSpareParts(data || []);
-      } catch{
+      } catch {
         setSpareParts([]); // in case of error or empty
       } finally {
         setLoading(false);
@@ -48,6 +48,7 @@ export default function SparePartsFeatured() {
         spareParts.map((spare) => (
           <ProductCard
             key={spare.id}
+            id={Number(spare.id)} // ✅ id prop भेजें
             image={spare.image}
             title={spare.title}
             subtitle={spare.subtitle}
@@ -57,13 +58,14 @@ export default function SparePartsFeatured() {
         ))
       ) : (
         <ProductCard
+          id={0} // ✅ placeholder के लिए id भेजें
           image="/no-product.png"          // put your placeholder image in `public/no-product.png`
           title="No product"
           subtitle="There are no spare parts available at the moment."
           price={0}
           currency=""                       // hide the currency since price is 0
-          onAddToCart={() => {}}           // empty handlers to disable actions
-          onWishlist={() => {}}
+          onAddToCart={async () => {}}           // empty handlers to disable actions
+          onWishlist={async () => {}}
           onCompare={() => {}}
           onShare={() => {}}
         />
