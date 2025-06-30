@@ -51,9 +51,9 @@ export const handleApiResponse = <T>(
 };
 
 // Helper function to handle API errors
-export const handleApiError = (error: unknown): ApiResponse<null> => {
+export const handleApiError = <T = null>(error: unknown): ApiResponse<T> => {
   if (axios.isAxiosError(error)) {
-    const axiosError = error as AxiosError<ApiResponse<null>>;
+    const axiosError = error as AxiosError<ApiResponse<T>>;
     
     if (axiosError.response?.data) {
       return axiosError.response.data;
@@ -63,6 +63,7 @@ export const handleApiError = (error: unknown): ApiResponse<null> => {
       success: false,
       message: axiosError.message || 'Network error occurred',
       error: axiosError.code || 'NETWORK_ERROR',
+      data: null as T, // <-- add this to satisfy ApiResponse<T>
     };
   }
   
@@ -71,6 +72,7 @@ export const handleApiError = (error: unknown): ApiResponse<null> => {
       success: false,
       message: error.message,
       error: 'UNKNOWN_ERROR',
+      data: null as T,
     };
   }
   
@@ -78,6 +80,7 @@ export const handleApiError = (error: unknown): ApiResponse<null> => {
     success: false,
     message: 'An unknown error occurred',
     error: 'UNKNOWN_ERROR',
+    data: null as T,
   };
 };
 
