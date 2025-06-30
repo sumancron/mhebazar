@@ -27,7 +27,7 @@ export default function HomePage() {
           <NewArrivalsAndTopSearches />
         </div>
       </div>
-      <h1 className="text-3xl font-bold mb-6 text-center">Spare Parts</h1>
+      
       <SpareParts />
 
       <h1 className="text-3xl font-bold mb-6 text-center">Vendor Products</h1>
