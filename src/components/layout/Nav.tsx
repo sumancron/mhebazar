@@ -1,11 +1,14 @@
 "use client";
 
-import { Menu, ShoppingCart, X, Search, Mic, Phone, User, ChevronDown, Tag } from "lucide-react";
-import React, { useState } from "react";
+import { Menu, ShoppingCart, X, Search, Mic, Phone, ChevronDown, Tag } from "lucide-react";
+import { useRef, useState, useEffect } from "react";
+import React from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import CategoryMenu from "./NavOptions";
+import VendorRegistrationDrawer from "@/components/forms/publicforms/VendorRegistrationForm";
+import { User, Package, Heart, LogOut } from "lucide-react";
 
 const categories = [
   "Forklifts",
@@ -31,6 +34,25 @@ export default function Navbar() {
   const [searchQuery, setSearchQuery] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [categoriesOpen, setCategoriesOpen] = useState(false);
+  const [vendorDrawerOpen, setVendorDrawerOpen] = useState(false);
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const profileMenuRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (
+        profileMenuRef.current &&
+        !profileMenuRef.current.contains(e.target as Node)
+      ) {
+        setProfileMenuOpen(false);
+      }
+    }
+    if (profileMenuOpen) {
+      document.addEventListener("mousedown", handleClick);
+    }
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [profileMenuOpen]);
 
   return (
     <header className="bg-white shadow-sm z-50 sticky top-0">
@@ -43,9 +65,9 @@ export default function Navbar() {
               <span>+91 97456 81234</span>
             </div>
             <div className="flex items-center gap-4 text-sm">
-              <Link href="/signin" className="hover:text-green-200 transition-colors duration-200">Sign in</Link>
+              <Link href="/login" className="hover:text-green-200 transition-colors duration-200">Sign in</Link>
               <span className="text-green-300">|</span>
-              <Link href="/signup" className="hover:text-green-200 transition-colors duration-200">Sign up</Link>
+              <Link href="/register" className="hover:text-green-200 transition-colors duration-200">Sign up</Link>
             </div>
           </div>
         </div>
@@ -107,6 +129,63 @@ export default function Navbar() {
                   <path d="M13.73 21a2 2 0 01-3.46 0" />
                 </svg>
               </Link>
+              {/* Profile Dropdown */}
+              <div className="relative" ref={profileMenuRef}>
+                <button
+                  onClick={() => setProfileMenuOpen((v) => !v)}
+                  className="focus:outline-none"
+                  aria-label="Open profile menu"
+                >
+                  <Image
+                    src="https://randomuser.me/api/portraits/men/32.jpg" // <-- apni profile image ka url lagao
+                    alt="Profile"
+                    width={40}
+                    height={40}
+                    className="w-10 h-10 rounded-full border-2 border-white shadow-sm object-cover"
+                  />
+                </button>
+                {profileMenuOpen && (
+                  <div className="absolute right-0 mt-3 w-64 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 z-50 animate-fade-in">
+                    <Link
+                      href="/account"
+                      className="flex items-center gap-3 px-6 py-4 text-gray-800 hover:bg-gray-50 transition text-base"
+                      onClick={() => setProfileMenuOpen(false)}
+                    >
+                      <User className="w-5 h-5 text-green-600" />
+                      My Account
+                    </Link>
+                    <div className="border-t border-gray-100" />
+                    <Link
+                      href="/orders"
+                      className="flex items-center gap-3 px-6 py-4 text-gray-800 hover:bg-gray-50 transition text-base"
+                      onClick={() => setProfileMenuOpen(false)}
+                    >
+                      <Package className="w-5 h-5 text-green-600" />
+                      My Orders
+                    </Link>
+                    <div className="border-t border-gray-100" />
+                    <Link
+                      href="/wishlist"
+                      className="flex items-center gap-3 px-6 py-4 text-gray-800 hover:bg-gray-50 transition text-base"
+                      onClick={() => setProfileMenuOpen(false)}
+                    >
+                      <Heart className="w-5 h-5 text-green-600" />
+                      Wishlist
+                    </Link>
+                    <div className="border-t border-gray-100" />
+                    <button
+                      className="flex items-center gap-3 px-6 py-4 text-gray-800 hover:bg-gray-50 transition text-base w-full text-left"
+                      onClick={() => {
+                        setProfileMenuOpen(false);
+                        // logout logic yahan lagao
+                      }}
+                    >
+                      <LogOut className="w-5 h-5 text-green-600" />
+                      Logout
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
@@ -161,7 +240,7 @@ export default function Navbar() {
                 ))}
                 {/* Brand Store Badge */}
                 <Link
-                  href="/brand-store"
+                  href="/vendor-listing"
                   className="ml-2 px-3 py-1 rounded bg-gradient-to-r from-orange-400 to-rose-400 text-white text-xs font-semibold flex items-center gap-1 shadow-sm hover:scale-105 transition-transform"
                 >
                   <span className="w-2 h-2 rounded-full bg-white/80 inline-block animate-pulse"></span>
@@ -172,17 +251,21 @@ export default function Navbar() {
 
             {/* Right Navigation */}
             <div className="flex items-center">
-              <Link href="/help" className="flex items-center gap-2 text-gray-600 px-4 py-3 hover:text-green-600 transition">
+              <Link href="/contact" className="flex items-center gap-2 text-gray-600 px-4 py-3 hover:text-green-600 transition">
                 <div className="w-4 h-4 rounded-full bg-gray-400 flex items-center justify-center">
                   <span className="text-xs text-white">?</span>
                 </div>
                 <span className="text-sm">Help</span>
               </Link>
-              <Link href="/become-vendor" className="flex items-center gap-2 text-gray-600 px-4 py-3 hover:text-green-600 transition">
+              <button
+                type="button"
+                onClick={() => setVendorDrawerOpen(true)}
+                className="flex items-center gap-2 text-gray-600 px-4 py-3 hover:text-green-600 transition bg-transparent border-0 cursor-pointer"
+              >
                 <User className="w-4 h-4" />
                 <span className="text-sm">Become a Vendor</span>
-              </Link>
-              <Link href="/price-plan" className="flex items-center gap-2 text-gray-600 px-4 py-3 hover:text-green-600 transition">
+              </button>
+              <Link href="/subscription-plan" className="flex items-center gap-2 text-gray-600 px-4 py-3 hover:text-green-600 transition">
                 <Tag className="w-4 h-4" />
                 <span className="text-sm">Price Plan</span>
               </Link>
@@ -261,7 +344,7 @@ export default function Navbar() {
                     </Link>
                   ))}
                   <Link
-                    href="/brand-store"
+                    href="/vendor-listing"
                     className="block px-4 py-3 text-white bg-gradient-to-r from-orange-400 to-rose-400 font-semibold border-b border-gray-100 transition"
                     onClick={() => setMobileMenuOpen(false)}
                   >
@@ -269,7 +352,7 @@ export default function Navbar() {
                     Brand Store
                   </Link>
                   <Link
-                    href="/help"
+                    href="/contact"
                     className="block px-4 py-3 text-gray-700 hover:bg-green-50 border-b border-gray-100 font-medium transition"
                     onClick={() => setMobileMenuOpen(false)}
                   >
@@ -283,7 +366,7 @@ export default function Navbar() {
                     Become a Vendor
                   </Link>
                   <Link
-                    href="/price-plan"
+                    href="/subscription-plan"
                     className="block px-4 py-3 text-gray-700 hover:bg-green-50 border-b border-gray-100 font-medium transition"
                     onClick={() => setMobileMenuOpen(false)}
                   >
@@ -295,6 +378,12 @@ export default function Navbar() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Drawer Component */}
+      <VendorRegistrationDrawer
+        open={vendorDrawerOpen}
+        onClose={() => setVendorDrawerOpen(false)}
+      />
     </header>
   );
 }
