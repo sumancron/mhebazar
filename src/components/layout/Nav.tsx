@@ -158,7 +158,7 @@ export default function Navbar(): JSX.Element {
                     </Link>
                     <div className="border-t border-gray-100" />
                     <Link
-                      href="/orders"
+                      href="/account/orders"
                       className="flex items-center gap-3 px-6 py-4 text-gray-800 hover:bg-gray-50 transition text-base"
                       onClick={() => setProfileMenuOpen(false)}
                     >
@@ -167,7 +167,7 @@ export default function Navbar(): JSX.Element {
                     </Link>
                     <div className="border-t border-gray-100" />
                     <Link
-                      href="/wishlist"
+                      href="/account/wishlist"
                       className="flex items-center gap-3 px-6 py-4 text-gray-800 hover:bg-gray-50 transition text-base"
                       onClick={() => setProfileMenuOpen(false)}
                     >
