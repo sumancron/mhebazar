@@ -1,9 +1,10 @@
 "use client";
-
+import { useState } from "react";
 import { ShoppingCart, Download, FileText } from "lucide-react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import AddProductForm from "@/components/forms/product/AddProduct";
 import React from "react";
 
 const products = [
@@ -70,8 +71,14 @@ function getImageSrc(src?: string) {
 }
 
 export default function DashboardStats() {
+  const [open, setOpen] = useState(false);
   return (
+    <>
+    
+    <AddProductForm open={open} onClose={() => setOpen(false)} />
+   
     <div className="space-y-8 px-2 sm:px-6 py-6 max-w-7xl mx-auto">
+        
       {/* Stats */}
       <div className="grid gap-6 md:grid-cols-3">
         <Card className="p-6 bg-gradient-to-r from-green-50 to-green-100 border-0 shadow-none">
@@ -136,6 +143,7 @@ export default function DashboardStats() {
             <div className="flex items-center justify-between">
               <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Product List</h2>
               <Button
+              onClick={() => setOpen(true)}
                 variant="default"
                 className="bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded flex items-center gap-2"
               >
@@ -229,6 +237,7 @@ export default function DashboardStats() {
         </div>
       </div>
     </div>
+     </>
   );
 }
 

@@ -14,6 +14,8 @@ import {
 import Image from "next/image";
 import { useState } from "react";
 import { ChevronDown, SlidersHorizontal, X } from "lucide-react";
+import AddProductForm from "@/components/forms/product/AddProduct";
+
 
 interface Product {
   id: number;
@@ -162,12 +164,13 @@ export default function ProductList() {
       prev.includes(status) ? prev.filter((s) => s !== status) : [...prev, status]
     );
   };
-
+const [open, setOpen] = useState(false);
   return (
     <div className="max-w-5xl mx-auto px-2 sm:px-4 py-8">
+        <AddProductForm open={open} onClose={() => setOpen(false)} />
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
         <h1 className="text-lg sm:text-xl font-bold text-gray-900">Product List</h1>
-        <Button variant="default" className="bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded">
+        <Button onClick={() => setOpen(true)} variant="default" className="bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded">
           + Add Product
         </Button>
       </div>
