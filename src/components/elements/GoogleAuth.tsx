@@ -2,22 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import axios from "axios";
-
-interface GoogleLoginButtonProps {
-  onSuccess?: (data: unknown) => void;
-  onError?: (error: unknown) => void;
-  // Customization props
-  variant?: "default" | "custom";
-  buttonText?: string;
-  className?: string;
-  style?: React.CSSProperties;
-  loading?: boolean;
-  disabled?: boolean;
-  size?: "small" | "medium" | "large";
-  theme?: "light" | "dark";
-  showIcon?: boolean;
-}
-
+import {GoogleLoginButtonProps} from "@/types";
 // Extend Window interface to include google
 declare global {
   interface Window {

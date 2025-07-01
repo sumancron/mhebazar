@@ -147,3 +147,19 @@ export interface MHEProduct extends Omit<Product, 'specifications'> {
   operatorManual?: string;
   safetyFeatures?: string[];
 }
+
+export interface GoogleLoginButtonProps {
+  onSuccess?: (data: unknown) => void;
+  onError?: (error: unknown) => void;
+  // Customization props
+  variant?: "default" | "custom";
+  buttonText?: string;
+  className?: string;
+  style?: React.CSSProperties;
+  loading?: boolean;
+  disabled?: boolean;
+  size?: "small" | "medium" | "large";
+  theme?: "light" | "dark";
+  showIcon?: boolean;
+  fallbackMessage?: React.ReactNode;
+}
