@@ -1,7 +1,39 @@
 "use client";
 import Link from "next/link";
+import axios from "axios";
+import { useState } from "react";
+import GoogleLoginButton from "@/components/elements/GoogleAuth";
 
 const LoginPage = () => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    try {
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/login`,
+        { email, password },
+        {
+          headers: {
+            "X_API_KEY": process.env.X_API_KEY,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      // handle success (e.g., save token, redirect)
+      console.log(response.data);
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err)) {
+        setError(err.response?.data?.message || "Login failed");
+      } else {
+        setError("Login failed");
+      }
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-white px-2">
       <div className="w-full max-w-lg mx-auto">
@@ -11,10 +43,7 @@ const LoginPage = () => {
         </h1>
         <form
           className="flex flex-col gap-5"
-          onSubmit={e => {
-            e.preventDefault();
-            // handle login here
-          }}
+          onSubmit={handleLogin}
         >
           <div>
             <label className="block font-medium mb-1">Username</label>
@@ -23,6 +52,8 @@ const LoginPage = () => {
               required
               placeholder="Enter you email Id!"
               className="w-full bg-gray-50 border border-gray-200 rounded px-4 py-3 outline-none focus:ring-2 focus:ring-green-500 text-base"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
             />
           </div>
           <div>
@@ -32,6 +63,8 @@ const LoginPage = () => {
               required
               placeholder="************"
               className="w-full bg-gray-50 border border-gray-200 rounded px-4 py-3 outline-none focus:ring-2 focus:ring-green-500 text-base"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
             />
           </div>
           <div className="flex items-center justify-between">
@@ -49,6 +82,9 @@ const LoginPage = () => {
               Forgot Password?
             </Link>
           </div>
+          {error && (
+            <div className="text-red-500 text-sm text-center">{error}</div>
+          )}
           <button
             type="submit"
             className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold rounded py-3 text-lg transition-colors"
@@ -61,13 +97,19 @@ const LoginPage = () => {
           <span className="mx-4 text-gray-400 font-semibold">OR</span>
           <div className="flex-grow border-t border-gray-200"></div>
         </div>
-        <button
-          type="button"
-          className="w-full flex items-center justify-center gap-3 bg-white border border-gray-200 rounded py-3 text-base font-medium hover:bg-gray-50 transition"
-        >
-          <span className="text-xl">🌐</span>
-          Login with Google
-        </button>
+        <GoogleLoginButton
+          variant="custom"
+          buttonText="Continue with Google Account"
+          className="bg-white w-full "
+          size="large"
+          showIcon={true}
+          onSuccess={(data) => {
+            console.log('Success:', data)
+            const accessToken = (data as { access: string }).access;
+            localStorage.setItem("access_token", accessToken);
+          }}
+          onError={(error) => console.log('Error:', error)}
+        />
         <div className="mt-8 text-center text-base">
           Do not have an account{" "}
           <Link href="/register" className="text-green-600 hover:underline font-medium">

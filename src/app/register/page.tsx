@@ -1,4 +1,5 @@
 "use client";
+import GoogleLoginButton from "@/components/elements/GoogleAuth";
 import Link from "next/link";
 
 const RegisterPage = () => {
@@ -66,7 +67,25 @@ const RegisterPage = () => {
           >
             Sign Up
           </button>
+          <div className="flex items-center my-6">
+            <div className="flex-grow border-t border-gray-200"></div>
+            <span className="mx-4 text-gray-400 font-semibold">OR</span>
+            <div className="flex-grow border-t border-gray-200"></div>
+          </div>
         </form>
+        <GoogleLoginButton
+          variant="custom"
+          buttonText="Continue with Google Account"
+          className="bg-white w-full "
+          size="large"
+          showIcon={true}
+          onSuccess={(data) => {
+            console.log('Success:', data)
+            const accessToken = (data as { access: string }).access;
+            localStorage.setItem("access_token", accessToken);
+          }}
+          onError={(error) => console.log('Error:', error)}
+        />
         <div className="mt-4 text-center text-base">
           Already have an account?{" "}
           <Link href="/login" className="text-green-600 hover:underline font-medium">
