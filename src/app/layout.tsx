@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import Navbar from "@/components/layout/Nav";
-import Footer from "@/components/layout/Footer";
+import SiteLayout from "@/components/layout/SiteLayout";
 
 
 
@@ -28,14 +27,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        {/* Sticky header */}
-        {typeof window !== "undefined" && window.location.pathname !== "/admin" && <Navbar />}
-        {children}
-           {/* Footer */}
-        {typeof window !== "undefined" && window.location.pathname !== "/admin" && <Footer />}
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <SiteLayout>
+          {children}
+        </SiteLayout>
       </body>
     </html>
   );
