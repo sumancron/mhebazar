@@ -3,7 +3,7 @@
 import React from 'react';
 import { FileText, ShoppingCart, Tag } from 'lucide-react';
 import { StatsCardProps } from '@/types'; 
-import AnalyticsDashboard from '@/components/admin/graph';
+import AnalyticsDashboard from '@/components/admin/Graph';
 
 const StatsCard: React.FC<StatsCardProps> = ({ icon: Icon, number, label, color = "green" }) => (
   <div className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow duration-200 cursor-pointer relative overflow-hidden">
