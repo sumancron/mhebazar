@@ -2,7 +2,7 @@
 import Link from "next/link";
 
 const ForgotPasswordPage = () => (
-  <div className="min-h-screen flex flex-col items-center justify-center bg-white px-2">
+  <div className="h-fit flex flex-col items-center justify-center bg-white px-2 my-12">
     <div className="w-full max-w-md mx-auto">
       <h1 className="text-center text-2xl sm:text-3xl font-bold text-green-700 mt-8 mb-2">
         Forgot your password?
@@ -33,7 +33,7 @@ const ForgotPasswordPage = () => (
           Send OTP
         </button>
       </form>
-      <div className="mt-4 text-center">
+      <div className="mt-4 text-center mb-8">
         <Link href="/login" className="text-green-700 hover:underline text-base">
           Back to Sign In
         </Link>
