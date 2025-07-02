@@ -1,6 +1,6 @@
 "use client";
 
-import { Menu, ShoppingCart, X, Search, Mic, Phone, ChevronDown, Tag } from "lucide-react";
+import { Menu, ShoppingCart, X, Phone, ChevronDown, Tag } from "lucide-react";
 import { useRef, useState,JSX, useEffect } from "react";
 import React from "react";
 import Image from "next/image";
@@ -9,7 +9,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import CategoryMenu from "./NavOptions";
 import VendorRegistrationDrawer from "@/components/forms/publicforms/VendorRegistrationForm";
 import { User, Package, Heart, LogOut } from "lucide-react";
-// import React, { , useState } from "react";
+import SearchBar from "./SearchBar";
 
 
 const categories = [
@@ -105,19 +105,10 @@ export default function Navbar(): JSX.Element {
 
             {/* Search Bar - Desktop */}
             <div className="hidden md:flex flex-1 max-w-2xl mx-8">
-              <div className="relative w-full">
-                <input
-                  type="text"
-                  placeholder="Search by Products, Category..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full px-4 py-2 pl-10 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm transition-shadow"
-                />
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <button className="absolute right-3 top-1/2 transform -translate-y-1/2 hover:bg-gray-100 rounded-full p-1 transition">
-                  <Mic className="w-4 h-4 text-gray-400" />
-                </button>
-              </div>
+              <SearchBar
+                searchQuery={searchQuery}
+                setSearchQuery={setSearchQuery}
+              />
             </div>
 
             {/* Right Section */}
@@ -193,19 +184,10 @@ export default function Navbar(): JSX.Element {
 
           {/* Mobile Search Bar */}
           <div className="md:hidden pb-3">
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Search by Products, Category..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full px-4 py-2 pl-10 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm transition-shadow"
-              />
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <button className="absolute right-3 top-1/2 transform -translate-y-1/2 hover:bg-gray-100 rounded-full p-1 transition">
-                <Mic className="w-4 h-4 text-gray-400" />
-              </button>
-            </div>
+            <SearchBar
+              searchQuery={searchQuery}
+              setSearchQuery={setSearchQuery}
+            />
           </div>
         </div>
       </div>
