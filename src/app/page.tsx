@@ -5,9 +5,9 @@ import NewArrivalsAndTopSearches from "@/components/home/NewArrivalsAndTopSearch
 import SpareParts from "@/components/home/SparepartsFeatured";
 import VendorProductsFeatured from "@/components/home/VendorProdcutsFeatured";
 import ExportProductsFeatured from "@/components/home/ExportProdcutsFeatured";
-import CategoryForm from "@/components/forms/uploadForm/CategoryForm";
-import SubcategoryForm from "@/components/forms/uploadForm/SubcategoryForm";
-import ProductForm from "@/components/forms/uploadForm/ProductForm";
+// import CategoryForm from "@/components/forms/uploadForm/CategoryForm";
+// import SubcategoryForm from "@/components/forms/uploadForm/SubcategoryForm";
+// import ProductForm from "@/components/forms/uploadForm/ProductForm";
 
 export default function HomePage() {
   return (
@@ -36,10 +36,10 @@ export default function HomePage() {
       <h1 className="text-3xl font-bold mb-6 text-center">Export Products</h1>
       <ExportProductsFeatured />
 
-   
+{/*    
       <CategoryForm />
       <SubcategoryForm />
-      <ProductForm />
+      <ProductForm /> */}
     </>
   );
 }

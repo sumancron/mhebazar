@@ -1,6 +1,5 @@
 "use client";
 import React, { useState } from 'react';
-import { motion, AnimatePresence, easeInOut } from 'framer-motion';
 import {
   LayoutDashboard,
   FileText,
@@ -89,261 +88,134 @@ const Sidebar = () => {
     setOpenSubmenu(openSubmenu === index ? null : index);
   };
 
-  const sidebarVariants = {
-    expanded: {
-      width: 320,
-      transition: {
-        duration: 0.3,
-        ease: easeInOut
-      }
-    },
-    collapsed: {
-      width: 80,
-      transition: {
-        duration: 0.3,
-        ease: easeInOut
-      }
-    }
-  };
-
-  const contentVariants = {
-    expanded: {
-      opacity: 1,
-      x: 0,
-      transition: {
-        duration: 0.3,
-        delay: 0.1,
-        ease: easeInOut
-      }
-    },
-    collapsed: {
-      opacity: 0,
-      x: -20,
-      transition: {
-        duration: 0.2,
-        ease: easeInOut
-      }
-    }
-  };
-
-  const iconVariants = {
-    expanded: {
-      scale: 1,
-      transition: {
-        duration: 0.2,
-        ease: easeInOut
-      }
-    },
-    collapsed: {
-      scale: 1.1,
-      transition: {
-        duration: 0.2,
-        ease: easeInOut
-      }
-    }
-  };
-
   return (
-    <div className="sticky top-0 left-0 w-fit">
-      <motion.div
-        className="h-full bg-white border border-slate-200 overflow-hidden"
-        variants={sidebarVariants}
-        animate={isExpanded ? "expanded" : "collapsed"}
-        initial="expanded"
+    <div className="sticky top-0 left-0 w-fit h-screen">
+      <div
+        className={`h-full bg-gradient-to-b from-white to-green-50 border-r-2 border-[#5da031]/20 shadow-lg transition-all duration-300 ease-in-out ${isExpanded ? 'w-80' : 'w-20'
+          }`}
       >
         <div className="flex flex-col h-full">
           {/* Header */}
-          <div className="px-6 py-4 border-b border-slate-100">
+          <div className="px-4 py-4 border-b-2 border-[#5da031]/20 bg-gradient-to-r from-[#5da031]/5 to-white">
             <div className="flex items-center justify-between">
-              <AnimatePresence mode="wait">
-                {isExpanded && (
-                  <motion.div
-                    variants={contentVariants}
-                    initial="collapsed"
-                    animate="expanded"
-                    exit="collapsed"
-                    className="flex items-center space-x-3"
-                  >
-                    <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center">
-                      <span className="text-white font-bold text-lg">M</span>
-                    </div>
-                    <div>
-                      <h1 className="text-xl font-bold text-slate-800">MTE</h1>
-                      <p className="text-sm text-cyan-500 font-medium">Jagrat</p>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              {!isExpanded && (
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ delay: 0.2 }}
-                  className="w-10 h-10 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center mx-auto"
-                >
+              {isExpanded ? (
+                <div className="flex items-center space-x-3 transition-all duration-300">
+                  <div className="w-10 h-10 bg-gradient-to-br from-[#5da031] to-[#4a8b2a] rounded-lg flex items-center justify-center shadow-lg shadow-[#5da031]/25 transform transition-transform hover:scale-105 ring-2 ring-[#5da031]/10">
+                    <span className="text-white font-bold text-lg">M</span>
+                  </div>
+                  <div className="transition-all duration-300">
+                    <h1 className="text-xl font-bold text-gray-800">MTE</h1>
+                    <p className="text-sm text-[#5da031] font-semibold">Jagrat</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="w-10 h-10 bg-gradient-to-br from-[#5da031] to-[#4a8b2a] rounded-lg flex items-center justify-center mx-auto shadow-lg shadow-[#5da031]/25 transform transition-transform hover:scale-105 ring-2 ring-[#5da031]/10">
                   <span className="text-white font-bold text-lg">M</span>
-                </motion.div>
+                </div>
               )}
 
-              <motion.button
+              <button
                 onClick={() => setIsExpanded(!isExpanded)}
-                className="p-2 rounded-lg hover:bg-slate-100 transition-colors duration-200"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                className="p-2 rounded-lg hover:bg-[#5da031]/10 transition-all duration-200 hover:scale-110 active:scale-95 border border-transparent hover:border-[#5da031]/20"
               >
                 {isExpanded ? (
-                  <ChevronLeft className="w-5 h-5 text-slate-600" />
+                  <ChevronLeft className="w-5 h-5 text-gray-600 hover:text-[#5da031]" />
                 ) : (
-                  <ChevronRight className="w-5 h-5 text-slate-600" />
+                  <ChevronRight className="w-5 h-5 text-gray-600 hover:text-[#5da031]" />
                 )}
-              </motion.button>
+              </button>
             </div>
           </div>
 
           {/* Navigation */}
           <nav className="flex-1 p-4 overflow-y-auto">
-            <ul className="space-y-1">
+            <ul className="space-y-2">
               {menuItems.map((item, index) => (
-                <motion.li
-                  key={item.label}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                >
+                <li key={item.label}>
                   <div>
-                    <motion.div
-                      className="flex items-center p-3 rounded-xl hover:bg-gradient-to-r hover:from-blue-50 hover:to-cyan-50 transition-all duration-200 group cursor-pointer"
-                      whileHover={{ x: 4 }}
-                      whileTap={{ scale: 0.98 }}
+                    <div
+                      className="flex items-center p-3 rounded-lg hover:bg-gradient-to-r hover:from-[#5da031]/10 hover:to-[#5da031]/20 transition-all duration-200 cursor-pointer group hover:shadow-md hover:shadow-[#5da031]/10 transform hover:-translate-y-0.5 border border-transparent hover:border-[#5da031]/30"
                       onClick={() => item.subItems ? toggleSubmenu(index) : null}
                     >
-                      <motion.div
-                        variants={iconVariants}
-                        animate={isExpanded ? "expanded" : "collapsed"}
-                        className="flex-shrink-0"
-                      >
-                        <item.icon className="w-5 h-5 text-slate-600 group-hover:text-blue-600 transition-colors duration-200" />
-                      </motion.div>
+                      <div className="p-1.5 rounded-md group-hover:bg-[#5da031]/10 group-hover:shadow-sm transition-all duration-200 border border-transparent group-hover:border-[#5da031]/20">
+                        <item.icon className="w-5 h-5 text-gray-600 group-hover:text-[#5da031] transition-colors" />
+                      </div>
 
-                      <AnimatePresence mode="wait">
-                        {isExpanded && (
-                          <motion.span
-                            variants={contentVariants}
-                            initial="collapsed"
-                            animate="expanded"
-                            exit="collapsed"
-                            className="ml-3 text-slate-700 group-hover:text-blue-700 font-medium transition-colors duration-200 flex-1"
-                          >
+                      {isExpanded && (
+                        <>
+                          <span className="ml-3 text-gray-700 group-hover:text-[#5da031] font-medium flex-1 transition-colors group-hover:font-semibold">
                             {item.label}
-                          </motion.span>
-                        )}
-                      </AnimatePresence>
+                          </span>
 
-                      <AnimatePresence>
-                        {isExpanded && item.subItems && (
-                          <motion.div
-                            initial={{ opacity: 0, rotate: -90 }}
-                            animate={{
-                              opacity: 1,
-                              rotate: openSubmenu === index ? 0 : -90
-                            }}
-                            exit={{ opacity: 0, rotate: -90 }}
-                            transition={{ duration: 0.2 }}
-                            className="ml-auto"
-                          >
-                            <ChevronDown className="w-4 h-4 text-slate-400 group-hover:text-blue-500 transition-colors duration-200" />
-                          </motion.div>
-                        )}
-                        {isExpanded && !item.subItems && (
-                          <motion.div
-                            initial={{ opacity: 0, x: -10 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: -10 }}
-                            transition={{ delay: 0.1 }}
-                            className="ml-auto"
-                          >
-                            <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-blue-500 transition-colors duration-200" />
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </motion.div>
+                          {item.subItems && (
+                            <div className="p-1 rounded group-hover:bg-[#5da031]/10 transition-all duration-200">
+                              <ChevronDown
+                                className={`w-4 h-4 text-gray-400 group-hover:text-[#5da031] transition-all duration-300 ${openSubmenu === index ? 'rotate-0' : '-rotate-90'
+                                  }`}
+                              />
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </div>
 
                     {/* Submenu */}
-                    <AnimatePresence>
-                      {isExpanded && item.subItems && openSubmenu === index && (
-                        <motion.div
-                          initial={{ opacity: 0, height: 0 }}
-                          animate={{ opacity: 1, height: 'auto' }}
-                          exit={{ opacity: 0, height: 0 }}
-                          transition={{ duration: 0.3, ease: "easeInOut" }}
-                          className="overflow-hidden"
-                        >
-                          <motion.ul
-                            className="mt-2 ml-8 space-y-1"
-                            initial={{ y: -10 }}
-                            animate={{ y: 0 }}
-                            transition={{ delay: 0.1 }}
-                          >
-                            {item.subItems.map((subItem, subIndex) => (
-                              <motion.li
-                                key={subItem.label}
-                                initial={{ opacity: 0, x: -10 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{
-                                  delay: subIndex * 0.05,
-                                  duration: 0.2
-                                }}
-                              >
-                                <motion.a
-                                  href={subItem.href}
-                                  className="flex items-center p-2 pl-4 rounded-lg hover:bg-blue-50 transition-all duration-200 group cursor-pointer border-l-2 border-transparent hover:border-blue-300"
-                                  whileHover={{ x: 2 }}
-                                  whileTap={{ scale: 0.98 }}
-                                >
-                                  <div className="w-2 h-2 bg-slate-300 rounded-full mr-3 group-hover:bg-blue-500 transition-colors duration-200"></div>
-                                  <span className="text-sm text-slate-600 group-hover:text-blue-700 transition-colors duration-200">
-                                    {subItem.label}
-                                  </span>
-                                </motion.a>
-                              </motion.li>
-                            ))}
-                          </motion.ul>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
+                    {isExpanded && item.subItems && (
+                      <div className={`overflow-hidden transition-all duration-300 ${openSubmenu === index ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+                        }`}>
+                        <div className="mt-2 ml-8 space-y-1">
+                          {item.subItems.map((subItem, subIndex) => (
+                            <a
+                              key={subItem.label}
+                              href={subItem.href}
+                              className="flex items-center p-2 pl-4 rounded-lg hover:bg-gradient-to-r hover:from-[#5da031]/10 hover:to-[#5da031]/20 transition-all duration-200 group border-l-2 border-[#5da031]/20 hover:border-[#5da031] hover:shadow-md hover:shadow-[#5da031]/10 transform hover:translate-x-1 hover:bg-[#5da031]/5"
+                              style={{
+                                animationDelay: `${subIndex * 50}ms`,
+                                animation: openSubmenu === index ? 'slideInLeft 0.3s ease-out forwards' : 'none'
+                              }}
+                            >
+                              <div className="w-2 h-2 bg-[#5da031]/40 rounded-full mr-3 group-hover:bg-[#5da031] transition-all duration-200 group-hover:scale-125 group-hover:shadow-sm"></div>
+                              <span className="text-sm text-gray-600 group-hover:text-[#5da031] transition-colors group-hover:font-medium">
+                                {subItem.label}
+                              </span>
+                            </a>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
-                </motion.li>
+                </li>
               ))}
             </ul>
           </nav>
 
           {/* Footer */}
-          <div className="p-4 border-t border-slate-100">
-            <AnimatePresence mode="wait">
-              {isExpanded ? (
-                <motion.div
-                  variants={contentVariants}
-                  initial="collapsed"
-                  animate="expanded"
-                  exit="collapsed"
-                  className="text-center"
-                >
-                  <p className="text-xs text-slate-500">© 2025 MTE Jagrat</p>
-                  <p className="text-xs text-slate-400">All rights reserved</p>
-                </motion.div>
-              ) : (
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ delay: 0.2 }}
-                  className="w-8 h-8 bg-slate-100 rounded-lg mx-auto"
-                />
-              )}
-            </AnimatePresence>
+          <div className="p-4 border-t-2 border-[#5da031]/20 bg-gradient-to-r from-[#5da031]/5 to-white">
+            {isExpanded ? (
+              <div className="text-center transition-all duration-300">
+                <p className="text-xs text-[#5da031] font-medium">© 2025 MTE Jagrat</p>
+                <p className="text-xs text-[#5da031]/70">All rights reserved</p>
+              </div>
+            ) : (
+              <div className="w-8 h-8 bg-gradient-to-br from-[#5da031]/20 to-[#5da031]/40 rounded-lg mx-auto transition-all duration-300 hover:from-[#5da031]/40 hover:to-[#5da031]/60 shadow-sm hover:shadow-md" />
+            )}
           </div>
         </div>
-      </motion.div>
+
+        {/* Custom CSS for animations */}
+        <style jsx>{`
+          @keyframes slideInLeft {
+            from {
+              opacity: 0;
+              transform: translateX(-10px);
+            }
+            to {
+              opacity: 1;
+              transform: translateX(0);
+            }
+          }
+        `}</style>
+      </div>
     </div>
   );
 };
