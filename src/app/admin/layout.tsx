@@ -1,8 +1,7 @@
+import Navbar from "@/components/admin/navbar";
+import Sidebar from "@/components/admin/sidebar";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
-import Navbar from "@/components/layout/Nav";
-import Footer from "@/components/layout/Footer";
 
 
 
@@ -32,10 +31,10 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         {/* Sticky header */}
-        {typeof window !== "undefined" && window.location.pathname !== "/admin" && <Navbar />}
+        <Navbar />
+        <Sidebar />
         {children}
-           {/* Footer */}
-        {typeof window !== "undefined" && window.location.pathname !== "/admin" && <Footer />}
+        {/* Footer */}
       </body>
     </html>
   );

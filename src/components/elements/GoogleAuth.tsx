@@ -1,21 +1,39 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import axios from "axios";
-import {GoogleLoginButtonProps} from "@/types";
-// Extend Window interface to include google
+// import { GoogleLogin } from '@react-oauth/google';
+import axios from 'axios';
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+
+// Extend the Window interface to include 'google'
 declare global {
   interface Window {
     google?: {
       accounts: {
         id: {
-          initialize: (config: unknown) => void;
-          renderButton: (element: HTMLElement, config: unknown) => void;
+          initialize: (options: object) => void;
+          renderButton: (parent: HTMLElement, options: object) => void;
           prompt: () => void;
         };
       };
     };
   }
+}
+
+interface GoogleLoginButtonProps {
+  onSuccess?: (response: { access: string; refresh: string }) => void;
+  onError?: (error: unknown) => void;
+  variant?: "default" | "custom";
+  buttonText?: string;
+  className?: string;
+  style?: React.CSSProperties;
+  loading?: boolean;
+  disabled?: boolean;
+  size?: "small" | "medium" | "large";
+  theme?: "light" | "dark";
+  showIcon?: boolean;
+  redirectAfterLogin?: string;
 }
 
 const GoogleLoginButton = ({
@@ -30,35 +48,47 @@ const GoogleLoginButton = ({
   size = "medium",
   theme = "light",
   showIcon = true,
+  redirectAfterLogin = "/",
 }: GoogleLoginButtonProps) => {
   const defaultButtonRef = useRef<HTMLDivElement>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleReady, setIsGoogleReady] = useState(false);
+  const router = useRouter();
 
-  const handleGoogleResponse = async (response: {credential: string}) => {
+  const handleGoogleResponse = async (response: { credential: string }) => {
     setIsLoading(true);
     try {
-      const res = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/social/login/`,
-        {
-          provider: "google",
-          access_token: response.credential,
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-            ...(process.env.X_API_KEY && {
-              "X-API-KEY": process.env.X_API_KEY,
-            }),
-          },
-          withCredentials: true,
-        }
+      // Send the Google credential to your Django backend
+      const { data } = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/google/login/`,
+        { token: response.credential }
       );
 
-      if (onSuccess) onSuccess(res.data);
+      // Store the JWT tokens
+      localStorage.setItem('access_token', data.access);
+      localStorage.setItem('refresh_token', data.refresh);
+
+      // Set default authorization header for axios
+      axios.defaults.headers.common['Authorization'] = `Bearer ${data.access}`;
+
+      // Call the onSuccess callback if provided
+      if (onSuccess) {
+        onSuccess(data);
+      }
+
+      // Redirect if specified
+      if (redirectAfterLogin) {
+        router.push(redirectAfterLogin);
+      }
+
+      toast.success("Logged in successfully!");
+
     } catch (error) {
-      if (onError) onError(error);
       console.error("Google login error", error);
+      toast.error("Login failed. Please try again.");
+      if (onError) {
+        onError(error);
+      }
     } finally {
       setIsLoading(false);
     }

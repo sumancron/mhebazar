@@ -163,3 +163,10 @@ export interface GoogleLoginButtonProps {
   showIcon?: boolean;
   fallbackMessage?: React.ReactNode;
 }
+
+export type StatsCardProps = {
+  icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
+  number: string | number;
+  label: string;
+  color?: string;
+};
