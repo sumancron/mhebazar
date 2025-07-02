@@ -1,14 +1,9 @@
+"use client";
+
 import React from 'react';
 import { FileText, ShoppingCart, Tag } from 'lucide-react';
 import { StatsCardProps } from '@/types'; 
-
-// Mock imports - these would be actual component imports in a real application
-// import Sidebar from './components/Sidebar';
-// import Navbar from './components/Navbar';
-// import ProductQuoteCard from './components/ProductQuoteCard';
-// import AnalyticsDashboard from './components/AnalyticsDashboard';
-
-// For demo purposes, I'll inline simplified versions
+import AnalyticsDashboard from '@/components/admin/graph';
 
 const StatsCard: React.FC<StatsCardProps> = ({ icon: Icon, number, label, color = "green" }) => (
   <div className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow duration-200 cursor-pointer relative overflow-hidden">
@@ -35,17 +30,6 @@ const StatsCard: React.FC<StatsCardProps> = ({ icon: Icon, number, label, color 
 const CompleteDashboard = () => {
   return (
     <div className="flex min-h-screen bg-gray-50">
-      {/* Sidebar - Using the previously created Sidebar component */}
-      <div className="flex-shrink-0">
-        {/* <Sidebar /> */}
-      </div>
-
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col">
-        {/* Navbar - Using the previously created Navbar component */}
-        {/* <Navbar /> */}
-        
-
         {/* Dashboard Content */}
         <div className="flex-1 flex">
           {/* Main Dashboard Section */}
@@ -62,47 +46,8 @@ const CompleteDashboard = () => {
             </div>
 
             {/* Charts Section - Using the previously created AnalyticsDashboard component */}
-            {/* <AnalyticsDashboard /> */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Product Quote Chart */}
-              <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg font-semibold text-gray-900">Product Quote</h3>
-                  <div className="flex items-center space-x-4">
-                    <span className="text-sm text-gray-600">June 2025</span>
-                    <div className="flex items-center space-x-1 cursor-pointer">
-                      <span className="text-sm text-gray-500">Monthly</span>
-                      <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
-                    </div>
-                  </div>
-                </div>
-                <div className="h-64 bg-gray-50 rounded-lg flex items-end justify-center space-x-2 p-4">
-                  {[7, 9, 13, 7, 11, 4, 6, 12, 10].map((height, index) => (
-                    <div key={index} className="bg-blue-300 rounded-t" style={{ height: `${height * 8}px`, width: '20px' }}></div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Rent & Buy Chart */}
-              <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg font-semibold text-gray-900">Rent & Buy</h3>
-                  <div className="flex items-center space-x-4">
-                    <span className="text-sm text-gray-600">June 2025</span>
-                    <div className="flex items-center space-x-1 cursor-pointer">
-                      <span className="text-sm text-gray-500">Monthly</span>
-                      <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
-                    </div>
-                  </div>
-                </div>
-                <div className="h-64 bg-gray-50 rounded-lg flex items-center justify-center">
-                  <div className="text-blue-600 font-semibold">Line Chart: 20 → 62</div>
-                </div>
-              </div>
+            <AnalyticsDashboard />
             </div>
           </div>
 
@@ -123,7 +68,6 @@ const CompleteDashboard = () => {
           </div>
         </div>
       </div>
-    </div>
   );
 };
 
