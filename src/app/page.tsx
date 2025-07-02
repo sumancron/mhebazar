@@ -8,6 +8,9 @@ import ExportProductsFeatured from "@/components/home/ExportProdcutsFeatured";
 // import CategoryForm from "@/components/forms/uploadForm/CategoryForm";
 // import SubcategoryForm from "@/components/forms/uploadForm/SubcategoryForm";
 // import ProductForm from "@/components/forms/uploadForm/ProductForm";
+// import CategoryForm from "@/components/forms/uploadForm/CategoryForm";
+// import SubcategoryForm from "@/components/forms/uploadForm/SubcategoryForm";
+// import ProductForm from "@/components/forms/uploadForm/ProductForm";
 
 export default function HomePage() {
   return (
@@ -30,14 +33,13 @@ export default function HomePage() {
       
       <SpareParts />
 
-      <h1 className="text-3xl font-bold mb-6 text-center">Vendor Products</h1>
+   
       <VendorProductsFeatured />
 
-      <h1 className="text-3xl font-bold mb-6 text-center">Export Products</h1>
       <ExportProductsFeatured />
 
-{/*    
-      <CategoryForm />
+   
+      {/* <CategoryForm />
       <SubcategoryForm />
       <ProductForm /> */}
     </>

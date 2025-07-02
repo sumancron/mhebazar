@@ -159,6 +159,7 @@ const GoogleLoginButton = ({
         script.parentNode.removeChild(script);
       }
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [onSuccess, onError]);
 
   // Size classes
