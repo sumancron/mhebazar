@@ -31,10 +31,13 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         {/* Sticky header */}
-        <Navbar />
-        <Sidebar />
-        {children}
-        {/* Footer */}
+        <div className="flex h-screen bg-gray-50">
+          <Sidebar />
+          <div className="flex-1 flex flex-col overflow-hidden">
+            <Navbar />
+            {children}
+          </div>
+        </div>
       </body>
     </html>
   );

@@ -57,10 +57,11 @@ const GoogleLoginButton = ({
 
   const handleGoogleResponse = async (response: { credential: string }) => {
     setIsLoading(true);
+    console.log("Google credential:", response.credential);
     try {
       // Send the Google credential to your Django backend
       const { data } = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/google/login/`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/google/login/`,
         { token: response.credential }
       );
 

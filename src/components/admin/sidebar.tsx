@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState } from 'react';
 import { motion, AnimatePresence, easeInOut } from 'framer-motion';
 import {
@@ -143,16 +145,16 @@ const Sidebar = () => {
   };
 
   return (
-    <div className="h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-4">
+    <div className="sticky top-0 left-0 w-fit">
       <motion.div
-        className="h-full bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden"
+        className="h-full bg-white border border-slate-200 overflow-hidden"
         variants={sidebarVariants}
         animate={isExpanded ? "expanded" : "collapsed"}
         initial="expanded"
       >
         <div className="flex flex-col h-full">
           {/* Header */}
-          <div className="p-6 border-b border-slate-100">
+          <div className="px-6 py-4 border-b border-slate-100">
             <div className="flex items-center justify-between">
               <AnimatePresence mode="wait">
                 {isExpanded && (
