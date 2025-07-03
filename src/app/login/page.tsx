@@ -9,22 +9,30 @@ const LoginPage = () => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+  const API_KEY = process.env.X_API_KEY;
+
+  const handleLogin = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
     setError("");
     try {
       const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/login`,
+        `${API_BASE_URL}/token/`,
         { email, password },
         {
           headers: {
-            "X_API_KEY": process.env.X_API_KEY,
+            "x-api-key": API_KEY ?? "",
             "Content-Type": "application/json",
           },
         }
       );
       // handle success (e.g., save token, redirect)
-      console.log(response.data);
+      const accessToken = response.data?.access;
+      if (accessToken) {
+        localStorage.setItem("access_token", accessToken);
+        // Redirect or update UI as needed
+        window.location.href = "/";
+      }
     } catch (err: unknown) {
       if (axios.isAxiosError(err)) {
         setError(err.response?.data?.message || "Login failed");
