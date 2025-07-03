@@ -68,7 +68,7 @@ const AnalyticsDashboard = () => {
   );
 
   return (
-    <div className="bg-gray-50 p-6">
+    <div className="bg-gray-50 pb-24">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Product Quote Chart */}
         <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">

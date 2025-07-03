@@ -170,3 +170,13 @@ export type StatsCardProps = {
   label: string;
   color?: string;
 };
+
+export type ProductQuote = {
+  id: number;
+  name: string;
+  email: string;
+  mobile: string;
+  company: string;
+  product: string;
+  date: string;
+};

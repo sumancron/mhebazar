@@ -33,7 +33,7 @@ const CompleteDashboard = () => {
         {/* Dashboard Content */}
         <div className="flex-1 flex">
           {/* Main Dashboard Section */}
-          <div className="flex-1 p-6">
+          <div className="flex-1 p-6 min-h-screen overflow-y-auto">
             <h2 className="text-2xl font-bold text-gray-900 mb-6">Dashboard</h2>
 
             {/* Stats Cards Grid */}
@@ -46,9 +46,7 @@ const CompleteDashboard = () => {
             </div>
 
             {/* Charts Section - Using the previously created AnalyticsDashboard component */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <AnalyticsDashboard />
-            </div>
           </div>
 
           {/* Enquiry History Sidebar */}
