@@ -6,7 +6,7 @@ import Link from "next/link";
 import { RegisterForm } from "@/types/index";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
-const API_KEY = process.env.X_API_KEY;
+const API_KEY = process.env.NEXT_PUBLIC_X_API_KEY;
 
 const RegisterPage = () => {
   const [form, setForm] = useState<RegisterForm>({
@@ -37,14 +37,16 @@ const RegisterPage = () => {
       await axios.post(
         `${API_BASE_URL}/register/`,
         {
-          name: form.name,
+          username: form.name,
           email: form.email,
           password: form.password,
+          password2: form.confirmPassword,
+          role_id: 3
         },
         {
           headers: {
             "Content-Type": "application/json",
-            "x-api-key": API_KEY ?? "",
+            "X-API-KEY": API_KEY,
           },
         }
       );
@@ -68,9 +70,8 @@ const RegisterPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-white px-2">
+    <div className="min-h-[80vh] flex flex-col items-center justify-center bg-white px-2 py-8">
       <div className="w-full max-w-lg mx-auto">
-        <h2 className="text-center text-lg font-medium mt-4 mb-2">Register</h2>
         <h1 className="text-center text-3xl sm:text-4xl font-bold text-green-600 mb-8">
           Welcome to MHE Bazar!
         </h1>

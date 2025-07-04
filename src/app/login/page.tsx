@@ -7,6 +7,7 @@ import GoogleLoginButton from "@/components/elements/GoogleAuth";
 const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [rememberme, setRememberMe] = useState(false);
   const [error, setError] = useState("");
 
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
@@ -21,17 +22,39 @@ const LoginPage = () => {
         { email, password },
         {
           headers: {
-            "x-api-key": API_KEY ?? "",
+            "X-API-KEY": API_KEY,
             "Content-Type": "application/json",
           },
         }
       );
       // handle success (e.g., save token, redirect)
       const accessToken = response.data?.access;
+      let userData = null;
       if (accessToken) {
+        try {
+          const userResponse = await axios.get(`${API_BASE_URL}/users/me/`, {
+            headers: {
+              "Authorization": `Bearer ${accessToken}`,
+              "X-API-KEY": API_KEY,
+            },
+          });
+          userData = userResponse.data;
+        } catch (err) {
+          console.error("Failed to fetch user data:", err);
+        }
+      }
+      
+      if (accessToken && rememberme) {
         localStorage.setItem("access_token", accessToken);
+        localStorage.setItem("refresh_token", response.data.refresh);
         // Redirect or update UI as needed
-        window.location.href = "/";
+        if (userData.role.id === 1) {
+          window.location.href = "/admin/";
+        } else if (userData.role.id === 2) {
+          window.location.href = "/vendor/dashboard/";
+        } else {
+          window.location.href = "/";
+        }
       }
     } catch (err: unknown) {
       if (axios.isAxiosError(err)) {
@@ -43,9 +66,8 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-white px-2">
+    <div className="min-h-[80vh] flex flex-col items-center justify-center bg-white px-2">
       <div className="w-full max-w-lg mx-auto">
-        <h2 className="text-center text-lg font-medium mt-4 mb-2">Sign In</h2>
         <h1 className="text-center text-3xl sm:text-4xl font-bold text-green-600 mb-8">
           Welcome to MHE Bazar!
         </h1>
@@ -54,11 +76,11 @@ const LoginPage = () => {
           onSubmit={handleLogin}
         >
           <div>
-            <label className="block font-medium mb-1">Username</label>
+            <label className="block font-medium mb-1">Email</label>
             <input
               type="email"
               required
-              placeholder="Enter you email Id!"
+              placeholder="Enter your email Id!"
               className="w-full bg-gray-50 border border-gray-200 rounded px-4 py-3 outline-none focus:ring-2 focus:ring-green-500 text-base"
               value={email}
               onChange={e => setEmail(e.target.value)}
@@ -80,6 +102,8 @@ const LoginPage = () => {
               <input
                 type="checkbox"
                 className="w-4 h-4 rounded border-gray-300"
+                checked={rememberme}
+                onChange={e => setRememberMe(e.target.checked)}
               />
               Remember me
             </label>
