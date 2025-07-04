@@ -36,9 +36,9 @@ const teamMembers = [
 export default function LeadershipTeam() {
   return (
     <section className="w-full bg-[#f9f9f9] py-10 px-4 md:px-8">
-      <div className="max-w-7xl mx-auto">
+      <div className=" mx-auto">
         <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-8">Leadership Team</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-8">
           {teamMembers.map((member, index) => (
             <div key={index} className="bg-white rounded-lg overflow-hidden shadow-sm">
               <Image

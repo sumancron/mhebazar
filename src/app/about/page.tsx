@@ -87,7 +87,7 @@ const AboutPage = () => {
         </div>
 
         {/* Vision & Mission div */}
-        <div className="w-full bg-[#F8F8F8] py-10 px-2 md:px-12 mt-12 rounded-2xl flex flex-col items-center">
+        <div className="w-full py-10 px-2 md:px-12 mt-12 rounded-2xl flex flex-col items-center">
           {/* Top Image with curved border */}
           <div className="w-full max-w-6xl mx-auto">
             <div className="overflow-hidden rounded-t-3xl rounded-b-xl shadow-lg">
