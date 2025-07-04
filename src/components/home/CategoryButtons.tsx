@@ -75,7 +75,7 @@ export default function CategoriesSection(): JSX.Element {
   return (
     <section className="py-8 w-full mx-auto px-4">
       <h2 className="text-lg sm:text-xl md:text-2xl font-bold mb-6">MHE Categories</h2>
-      <div className="flex flex-wrap justify-center gap-6">
+      <div className="flex flex-wrap justify-start gap-6">
         {displayed.map((cat, idx) => (
           <CategoryItem key={idx} image={cat.image} label={cat.label} />
         ))}

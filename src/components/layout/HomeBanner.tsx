@@ -9,8 +9,13 @@ import {
   type CarouselApi,
 } from "@/components/ui/carousel";
 import { DotButton, useDotButton } from "@/components/ui/carousel-dots";
+import { cn } from "@/lib/utils";
 
-export default function BannerCarousel() {
+type BannerCarouselProps = {
+  className?: string;
+};
+
+export default function BannerCarousel({ className }: BannerCarouselProps) {
   const [api, setApi] = useState<CarouselApi>();
   const { selectedIndex, scrollSnaps, onDotClick } = useDotButton(api);
 
@@ -64,7 +69,7 @@ export default function BannerCarousel() {
   };
 
   return (
-    <div className="w-full relative bg-white overflow-hidden">
+    <div className={cn("w-full relative bg-white overflow-hidden", className)}>
       <Carousel
         className="w-full"
         setApi={setApi}

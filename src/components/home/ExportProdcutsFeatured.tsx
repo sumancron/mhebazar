@@ -36,7 +36,7 @@ export default function ExportProductsFeatured() {
   }, []);
 
   return (
-    <section className="w-full max-w-7xl mx-auto px-4 py-10">
+    <section className="w-full mx-auto px-4 py-10">
       <h2 className="text-2xl sm:text-3xl font-bold mb-8 text-gray-900">
         Export Products
       </h2>

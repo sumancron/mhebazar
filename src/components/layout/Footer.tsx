@@ -41,208 +41,237 @@ export default function Footer() {
         </div>
       </div>
 
-      {/* Main footer grid */}
-      <div className="max-w-7xl mx-auto px-4 py-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-        {/* Address & Contact */}
-        <div>
-          <Image
-            src="/mhe-logo.png"
-            alt="MHE Bazar"
-            width={96}
-            height={40}
-            className="mb-4 w-24"
-            priority
-          />
-          <h3 className="font-bold mb-1">Address:</h3>
-          <p className="text-sm mb-3">
-            E-228, Lower Basement, Lajpat Nagar-I, New Delhi-110024
-          </p>
-          <h3 className="font-bold mb-1">Phone:</h3>
-          <p className="text-sm mb-3">+91 9289094445, +91 9840088428</p>
-          <h3 className="font-bold mb-1">E-mail:</h3>
-          <p className="text-sm break-all">
-            sales.1@mhebazar.com
-            <br />
-            sales.2@mhebazar.com
-          </p>
-        </div>
+      {/* Main footer content */}
+      <div className="bg-gray-50 px-4 py-8 md:py-12">
+        <div className="max-w-7xl mx-auto">
+          {/* Grid container */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-8 lg:gap-12">
 
-        {/* Company */}
-        <div>
-          <h3 className="font-bold mb-2">Company</h3>
-          <ul className="space-y-1 text-sm">
-            <li>
-              <Link href="/about" className="hover:text-blue-700 transition">
-                About
-              </Link>
-            </li>
-            <li>
-              <Link href="/used-mhe" className="hover:text-blue-700 transition">
-                Used MHE
-              </Link>
-            </li>
-            <li>
-              <Link href="/rental" className="hover:text-blue-700 transition">
-                MHE Rental
-              </Link>
-            </li>
-            <li>
-              <Link href="/services" className="hover:text-blue-700 transition">
-                CMC & AMC Services
-              </Link>
-            </li>
-            <li>
-              <Link href="/training" className="hover:text-blue-700 transition">
-                Training
-              </Link>
-            </li>
-            <li>
-              <Link href="/testimonials" className="hover:text-blue-700 transition">
-                Testimonials
-              </Link>
-            </li>
-            <li>
-              <Link href="/contact" className="hover:text-blue-700 transition">
-                Contact Us
-              </Link>
-            </li>
-            <li>
-              <Link href="/vendors" className="hover:text-blue-700 transition">
-                Vendors
-              </Link>
-            </li>
-            <li>
-              <Link href="/blog" className="hover:text-blue-700 transition">
-                Blog
-              </Link>
-            </li>
-          </ul>
-        </div>
+            {/* Address & Contact - Takes up 1 column */}
+            <div className="lg:col-span-2">
+              <Image
+                src="/mhe-logo.png"
+                alt="MHE Bazar"
+                width={120}
+                height={40}
+                className="mb-4 h-10 w-auto"
+                priority
+              />
+              <div className="space-y-3">
+                <div>
+                  <h3 className="font-bold text-gray-800 mb-1">Address:</h3>
+                  <p className="text-sm text-gray-600 leading-relaxed">
+                    E-228, Lower Basement, Lajpat Nagar-I, New Delhi-110024
+                  </p>
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-800 mb-1">Phone:</h3>
+                  <p className="text-sm text-gray-600">+91 9289094445</p>
+                  <p className="text-sm text-gray-600">+91 9840088428</p>
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-800 mb-1">E-mail:</h3>
+                  <span className="text-sm text-gray-600 pr-2 border-r-2">sales.1@mhebazar.com</span>
+                  <span className="text-sm text-gray-600 pl-2">sales.2@mhebazar.com</span>
+                </div>
+              </div>
+            </div>
 
-        {/* Category */}
-        <div>
-          <h3 className="font-bold mb-2">Category</h3>
-          <ul className="space-y-1 text-sm columns-2 gap-x-6">
-            <li>
-              <Link href="/category/battery" className="hover:text-blue-700 transition">Battery</Link>
-            </li>
-            <li>
-              <Link href="/category/pallet-truck" className="hover:text-blue-700 transition">Pallet Truck</Link>
-            </li>
-            <li>
-              <Link href="/category/stacker" className="hover:text-blue-700 transition">Stacker</Link>
-            </li>
-            <li>
-              <Link href="/category/platform-truck" className="hover:text-blue-700 transition">Platform Truck</Link>
-            </li>
-            <li>
-              <Link href="/category/tow-truck" className="hover:text-blue-700 transition">Tow Truck</Link>
-            </li>
-            <li>
-              <Link href="/category/dock-leveller" className="hover:text-blue-700 transition">Dock Leveller</Link>
-            </li>
-            <li>
-              <Link href="/category/scissors-lift" className="hover:text-blue-700 transition">Scissors Lift</Link>
-            </li>
-            <li>
-              <Link href="/category/reach-truck" className="hover:text-blue-700 transition">Reach Truck</Link>
-            </li>
-            <li>
-              <Link href="/category/racking-system" className="hover:text-blue-700 transition">Racking System</Link>
-            </li>
-            <li>
-              <Link href="/category/forklift" className="hover:text-blue-700 transition">Forklift</Link>
-            </li>
-            <li>
-              <Link href="/category/container-handler" className="hover:text-blue-700 transition">Container Handler</Link>
-            </li>
-            <li>
-              <Link href="/category/explosionproof-mhe" className="hover:text-blue-700 transition">Explosionproof MHE</Link>
-            </li>
-            <li>
-              <Link href="/category/solution" className="hover:text-blue-700 transition">Solution</Link>
-            </li>
-            <li>
-              <Link href="/category/order-picker" className="hover:text-blue-700 transition">Order Picker</Link>
-            </li>
-            <li>
-              <Link href="/category/agv" className="hover:text-blue-700 transition">AGV (Automated Guided Vehicle)</Link>
-            </li>
-          </ul>
-        </div>
+            {/* Company - Takes up 1 column */}
+            <div className="lg:col-span-1">
+              <h3 className="font-bold text-gray-800 mb-4 text-lg">Company</h3>
+              <ul className="space-y-2 text-sm">
+                <li>
+                  <Link href="/about" className="text-gray-600 hover:text-blue-700 transition">
+                    About
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/used-mhe" className="text-gray-600 hover:text-blue-700 transition">
+                    Used MHE
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/rental" className="text-gray-600 hover:text-blue-700 transition">
+                    MHE Rental
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/services" className="text-gray-600 hover:text-blue-700 transition">
+                    CMC & AMC Services
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/training" className="text-gray-600 hover:text-blue-700 transition">
+                    Training
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/testimonials" className="text-gray-600 hover:text-blue-700 transition">
+                    Testimonials
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/contact" className="text-gray-600 hover:text-blue-700 transition">
+                    Contact Us
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/vendors" className="text-gray-600 hover:text-blue-700 transition">
+                    Vendors
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/blog" className="text-gray-600 hover:text-blue-700 transition">
+                    Blog
+                  </Link>
+                </li>
+              </ul>
+            </div>
 
-        {/* Get support */}
-        <div>
-          <h3 className="font-bold mb-2">Get support</h3>
-          <ul className="space-y-1 text-sm">
-            <li>
-              <Link href="/help" className="hover:text-blue-700 transition">
-                Help Center
-              </Link>
-            </li>
-            <li>
-              <Link href="/live-chat" className="hover:text-blue-700 transition">
-                Live chat
-              </Link>
-            </li>
-            <li>
-              <Link href="/order-status" className="hover:text-blue-700 transition">
-                Check order status
-              </Link>
-            </li>
-            <li>
-              <Link href="/refunds" className="hover:text-blue-700 transition">
-                Refunds
-              </Link>
-            </li>
-            <li>
-              <Link href="/report-abuse" className="hover:text-blue-700 transition">
-                Report abuse
-              </Link>
-            </li>
-          </ul>
+            {/* Category - Takes up 2 columns on large screens */}
+            <div className="lg:col-span-2">
+              <h3 className="font-bold text-gray-800 mb-4 text-lg">Category</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-2 text-sm">
+                <div className="space-y-2">
+                  <Link href="/category/battery" className="block text-gray-600 hover:text-blue-700 transition">
+                    Battery
+                  </Link>
+                  <Link href="/category/pallet-truck" className="block text-gray-600 hover:text-blue-700 transition">
+                    Pallet Truck
+                  </Link>
+                  <Link href="/category/stacker" className="block text-gray-600 hover:text-blue-700 transition">
+                    Stacker
+                  </Link>
+                  <Link href="/category/platform-truck" className="block text-gray-600 hover:text-blue-700 transition">
+                    Platform Truck
+                  </Link>
+                  <Link href="/category/tow-truck" className="block text-gray-600 hover:text-blue-700 transition">
+                    Tow Truck
+                  </Link>
+                  <Link href="/category/dock-leveller" className="block text-gray-600 hover:text-blue-700 transition">
+                    Dock Leveller
+                  </Link>
+                  <Link href="/category/scissors-lift" className="block text-gray-600 hover:text-blue-700 transition">
+                    Scissors Lift
+                  </Link>
+                  <Link href="/category/reach-truck" className="block text-gray-600 hover:text-blue-700 transition">
+                    Reach Truck
+                  </Link>
+                </div>
+                <div className="space-y-2">
+                  <Link href="/category/racking-system" className="block text-gray-600 hover:text-blue-700 transition">
+                    Racking System
+                  </Link>
+                  <Link href="/category/forklift" className="block text-gray-600 hover:text-blue-700 transition">
+                    Forklift
+                  </Link>
+                  <Link href="/category/container-handler" className="block text-gray-600 hover:text-blue-700 transition">
+                    Container Handler
+                  </Link>
+                  <Link href="/category/explosionproof-mhe" className="block text-gray-600 hover:text-blue-700 transition">
+                    Explosionproof MHE
+                  </Link>
+                  <Link href="/category/solution" className="block text-gray-600 hover:text-blue-700 transition">
+                    Solution
+                  </Link>
+                  <Link href="/category/order-picker" className="block text-gray-600 hover:text-blue-700 transition">
+                    Order Picker
+                  </Link>
+                  <Link href="/category/agv" className="block text-gray-600 hover:text-blue-700 transition">
+                    AGV (Automated Guided Vehicle)
+                  </Link>
+                </div>
+              </div>
+            </div>
+
+            {/* Get support - Takes up 1 column */}
+            <div className="lg:col-span-1">
+              <h3 className="font-bold text-gray-800 mb-4 text-lg">Get Support</h3>
+              <ul className="space-y-2 text-sm">
+                <li>
+                  <Link href="/help" className="text-gray-600 hover:text-blue-700 transition">
+                    Help Center
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/live-chat" className="text-gray-600 hover:text-blue-700 transition">
+                    Live chat
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/order-status" className="text-gray-600 hover:text-blue-700 transition">
+                    Check order status
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/refunds" className="text-gray-600 hover:text-blue-700 transition">
+                    Refunds
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/report-abuse" className="text-gray-600 hover:text-blue-700 transition">
+                    Report abuse
+                  </Link>
+                </li>
+              </ul>
+            </div>
+
+          </div>
         </div>
       </div>
 
       {/* Features row */}
-      <div className="bg-gray-50 border-t py-6">
-        <div className="max-w-7xl mx-auto flex flex-wrap justify-center gap-8 text-center text-sm">
-          <div className="flex flex-col items-center min-w-[120px] mb-4 sm:mb-0">
-            <Globe className="w-8 h-8 mb-2 text-blue-700" />
-            <span className="font-semibold">Worldwide Delivery</span>
-            <span className="text-xs text-gray-500">
-              MHEBazar delivers products globally.
-            </span>
-          </div>
-          <div className="flex flex-col items-center min-w-[120px] mb-4 sm:mb-0">
-            <Headphones className="w-8 h-8 mb-2 text-blue-700" />
-            <span className="font-semibold">Support 24/7</span>
-            <span className="text-xs text-gray-500">
-              Reach our experts today!
-            </span>
-          </div>
-          <div className="flex flex-col items-center min-w-[120px] mb-4 sm:mb-0">
-            <ShoppingCart className="w-8 h-8 mb-2 text-blue-700" />
-            <span className="font-semibold">First Purchase Discount</span>
-            <span className="text-xs text-gray-500">Up to 10% discount</span>
-          </div>
-          <div className="flex flex-col items-center min-w-[120px] mb-4 sm:mb-0">
-            <RotateCcw className="w-8 h-8 mb-2 text-blue-700" />
-            <span className="font-semibold">Easy Returns</span>
-            <span className="text-xs text-gray-500">
-              Read our return policy
-            </span>
-          </div>
-          <div className="flex flex-col items-center min-w-[120px]">
-            <ShieldCheck className="w-8 h-8 mb-2 text-blue-700" />
-            <span className="font-semibold">Secure payment</span>
-            <span className="text-xs text-gray-500">100% Protected</span>
+      <div className="bg-white border-t py-8">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 lg:gap-8">
+            <div className="flex flex-col items-center text-center">
+              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-3">
+                <Globe className="w-6 h-6 text-blue-700" />
+              </div>
+              <span className="font-semibold text-gray-800 mb-1">Worldwide Delivery</span>
+              <span className="text-xs text-gray-500 leading-relaxed">
+                MHEBazar delivers products globally.
+              </span>
+            </div>
+            <div className="flex flex-col items-center text-center">
+              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-3">
+                <Headphones className="w-6 h-6 text-blue-700" />
+              </div>
+              <span className="font-semibold text-gray-800 mb-1">Support 24/7</span>
+              <span className="text-xs text-gray-500 leading-relaxed">
+                Reach our experts today!
+              </span>
+            </div>
+            <div className="flex flex-col items-center text-center">
+              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-3">
+                <ShoppingCart className="w-6 h-6 text-blue-700" />
+              </div>
+              <span className="font-semibold text-gray-800 mb-1">First Purchase Discount</span>
+              <span className="text-xs text-gray-500 leading-relaxed">Up to 10% discount</span>
+            </div>
+            <div className="flex flex-col items-center text-center">
+              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-3">
+                <RotateCcw className="w-6 h-6 text-blue-700" />
+              </div>
+              <span className="font-semibold text-gray-800 mb-1">Easy Returns</span>
+              <span className="text-xs text-gray-500 leading-relaxed">
+                Read our return policy
+              </span>
+            </div>
+            <div className="flex flex-col items-center text-center">
+              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-3">
+                <ShieldCheck className="w-6 h-6 text-blue-700" />
+              </div>
+              <span className="font-semibold text-gray-800 mb-1">Secure payment</span>
+              <span className="text-xs text-gray-500 leading-relaxed">100% Protected</span>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Copyright */}
-      <div className="text-center text-sm py-4 border-t text-gray-600">
+      <div className="bg-gray-100 text-center text-sm py-4 border-t text-gray-600">
         Copyright © {new Date().getFullYear()} MHE Bazar. All rights reserved.
       </div>
     </footer>

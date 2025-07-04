@@ -29,6 +29,7 @@ const LoginPage = () => {
       );
       // handle success (e.g., save token, redirect)
       const accessToken = response.data?.access;
+      const refreshToken = response.data?.refresh;
       let userData = null;
       if (accessToken) {
         try {
@@ -39,23 +40,26 @@ const LoginPage = () => {
             },
           });
           userData = userResponse.data;
+          console.log("User data fetched successfully:", userData);
         } catch (err) {
           console.error("Failed to fetch user data:", err);
         }
       }
-      
+
       if (accessToken && rememberme) {
         localStorage.setItem("access_token", accessToken);
-        localStorage.setItem("refresh_token", response.data.refresh);
-        // Redirect or update UI as needed
-        if (userData.role.id === 1) {
-          window.location.href = "/admin/";
-        } else if (userData.role.id === 2) {
-          window.location.href = "/vendor/dashboard/";
-        } else {
-          window.location.href = "/";
-        }
+        localStorage.setItem("refresh_token", refreshToken);
       }
+
+      // Redirect or update UI as needed
+      if (userData.role.id === 1) {
+        window.location.href = "/admin/";
+      } else if (userData.role.id === 2) {
+        window.location.href = "/vendor/dashboard/";
+      } else {
+        window.location.href = "/";
+      }
+
     } catch (err: unknown) {
       if (axios.isAxiosError(err)) {
         setError(err.response?.data?.message || "Login failed");

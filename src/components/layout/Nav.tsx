@@ -1,7 +1,7 @@
 "use client";
 
 import { Menu, ShoppingCart, X, Phone, ChevronDown, Tag } from "lucide-react";
-import { useRef, useState,JSX, useEffect } from "react";
+import { useRef, useState, JSX, useEffect } from "react";
 import React from "react";
 import Image from "next/image";
 import Link from "next/link";
@@ -103,12 +103,20 @@ export default function Navbar(): JSX.Element {
               </Link>
             </div>
 
-            {/* Search Bar - Desktop */}
-            <div className="hidden md:flex flex-1 max-w-2xl mx-8">
+            {/* Search Bar with Brand Store - Desktop */}
+            <div className="hidden md:flex flex-1 max-w-2xl mx-8 items-center gap-4">
               <SearchBar
                 searchQuery={searchQuery}
                 setSearchQuery={setSearchQuery}
               />
+              {/* Brand Store Badge */}
+              <Link
+                href="/vendor-listing"
+                className="flex-shrink-0 px-3 py-1 rounded bg-gradient-to-r from-orange-400 to-rose-400 text-white text-xs font-semibold flex items-center gap-1 shadow-sm hover:scale-105 transition-transform"
+              >
+                <span className="w-2 h-2 rounded-full bg-white/80 inline-block animate-pulse"></span>
+                Brand Store
+              </Link>
             </div>
 
             {/* Right Section */}
@@ -182,12 +190,22 @@ export default function Navbar(): JSX.Element {
             </div>
           </div>
 
-          {/* Mobile Search Bar */}
+          {/* Mobile Search Bar with Brand Store */}
           <div className="md:hidden pb-3">
-            <SearchBar
-              searchQuery={searchQuery}
-              setSearchQuery={setSearchQuery}
-            />
+            <div className="flex items-center gap-2">
+              <SearchBar
+                searchQuery={searchQuery}
+                setSearchQuery={setSearchQuery}
+              />
+              {/* Brand Store Badge - Mobile */}
+              <Link
+                href="/vendor-listing"
+                className="flex-shrink-0 px-2 py-1 rounded bg-gradient-to-r from-orange-400 to-rose-400 text-white text-xs font-semibold flex items-center gap-1 shadow-sm hover:scale-105 transition-transform"
+              >
+                <span className="w-2 h-2 rounded-full bg-white/80 inline-block animate-pulse"></span>
+                Store
+              </Link>
+            </div>
           </div>
         </div>
       </div>
@@ -222,14 +240,6 @@ export default function Navbar(): JSX.Element {
                     {link.name}
                   </Link>
                 ))}
-                {/* Brand Store Badge */}
-                <Link
-                  href="/vendor-listing"
-                  className="ml-2 px-3 py-1 rounded bg-gradient-to-r from-orange-400 to-rose-400 text-white text-xs font-semibold flex items-center gap-1 shadow-sm hover:scale-105 transition-transform"
-                >
-                  <span className="w-2 h-2 rounded-full bg-white/80 inline-block animate-pulse"></span>
-                  Brand Store
-                </Link>
               </div>
             </div>
 

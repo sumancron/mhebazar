@@ -91,7 +91,7 @@ export default function NewArrivalsAndTopSearches() {
       const result: NewArrivalsApiResponse = await response.json();
 
       if (result.success && result.data && Array.isArray(result.data.products)) {
-        const validProducts = result.data.products.filter((product: NewArrival) => 
+        const validProducts = result.data.products.filter((product: NewArrival) =>
           product.image
         );
 
@@ -148,7 +148,7 @@ export default function NewArrivalsAndTopSearches() {
       const result: TopSearchedApiResponse = await response.json();
 
       if (result.success && Array.isArray(result.data)) {
-        const validProducts = result.data.filter((product: TopSearchedProduct) => 
+        const validProducts = result.data.filter((product: TopSearchedProduct) =>
           product.image && product.label
         );
 
@@ -183,33 +183,33 @@ export default function NewArrivalsAndTopSearches() {
   );
 
   return (
-    <div className="space-y-8 w-full max-w-md mx-auto sm:max-w-xl md:max-w-2xl lg:max-w-4xl xl:max-w-6xl px-2">
+    <div className="space-y-8 w-full max-w-md mx-auto sm:max-w-xl md:max-w-2xl lg:max-w-4xl xl:max-w-6xl px-4">
       {/* New Arrivals */}
-      <div className="p-4 sm:p-6 bg-white rounded-xl shadow-sm border border-gray-100">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
-          <h2 className="font-semibold text-lg text-gray-900">New Arrivals</h2>
-          <Link 
-            href="#" 
-            className="text-green-600 text-sm font-medium hover:text-green-700 transition-colors"
-          >
-            View more
-          </Link>
-        </div>
+      <div className=" ">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-lg sm:text-xl md:text-2xl font-bold">New Arrivals</h2>
+            <Link
+              href="#"
+              className="text-green-600 text-sm font-medium hover:text-green-700 transition-colors"
+            >
+              View more
+            </Link>
+          </div>
 
-        <div className="flex items-center mb-4 sm:mb-6">
-          <p className="font-medium text-gray-900">
-            {newArrivalsCount}+ products added today
-          </p>
-        </div>
+          <div className="pb-6">
+            <p className="font-medium text-gray-900">
+              {newArrivalsCount}+ products added today
+            </p>
+          </div>
 
         {isLoadingNewArrivals ? (
-          <div className="flex gap-4 overflow-x-auto">
+          <div className="flex gap-4 overflow-x-auto bg-white rounded-xl shadow-sm border border-gray-100 p-6">
             {[...Array(3)].map((_, i) => (
               <div key={i} className="w-24 h-24 sm:w-32 sm:h-32 bg-gray-200 rounded-lg animate-pulse flex-shrink-0"></div>
             ))}
           </div>
         ) : (
-          <div className="flex gap-4 overflow-x-auto pb-2">
+            <div className="flex gap-4 overflow-x-auto bg-white rounded-xl shadow-sm border border-gray-100 p-6">
             {newArrivals.slice(0, 3).map((item, i) => (
               <div
                 key={item.id || i}
@@ -242,8 +242,8 @@ export default function NewArrivalsAndTopSearches() {
       <div className="p-4 sm:p-6 bg-white rounded-xl shadow-sm border border-gray-100">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-6 gap-2">
           <h2 className="font-semibold text-lg text-gray-900">Top Searched Products</h2>
-          <Link 
-            href="#" 
+          <Link
+            href="#"
             className="text-green-600 text-sm font-medium hover:text-green-700 transition-colors"
           >
             View more

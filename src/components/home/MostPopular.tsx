@@ -94,7 +94,7 @@ export default function MostPopular() {
     <section className="w-full">
       {/* Header */}
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-semibold text-gray-900">Top Selling Products</h2>
+        <h2 className="text-lg sm:text-xl md:text-2xl font-bold mb-6">Top Selling Products</h2>
         <button className="text-green-600 text-sm hover:text-green-700">View more</button>
       </div>
 
