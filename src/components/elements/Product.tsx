@@ -50,11 +50,11 @@ const ProductCard = ({
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden w-72 hover:shadow-md transition-shadow duration-200">
+    <div className="bg-white border border-gray-200 shadow-lg rounded-2xl overflow-hidden hover:shadow-xl transition-shadow duration-200 flex flex-col items-start p-px w-80 h-[480px] box-border isolate">
       {/* Image Container */}
-      <div className="relative bg-gray-50 p-4">
+      <div className="relative bg-gray-50 p-4 w-full flex-shrink-0">
         {/* Action Icons */}
-        <div className="absolute top-3 left-3 flex flex-col gap-2">
+        <div className="absolute top-3 left-3 flex flex-col gap-2 z-10">
           <button
             onClick={handleWishlist}
             className="w-8 h-8 bg-white rounded-md shadow-sm flex items-center justify-center hover:bg-gray-50 transition-colors"
@@ -76,7 +76,7 @@ const ProductCard = ({
         </div>
 
         {/* Product Image */}
-        <div className="flex justify-center items-center h-40">
+        <div className="flex justify-center items-center h-48">
           <Image
             src={image}
             alt={title}
@@ -88,17 +88,19 @@ const ProductCard = ({
       </div>
 
       {/* Content */}
-      <div className="p-4">
-        <h3 className="text-sm font-medium text-gray-900 mb-1 line-clamp-2">
-          {title}
-        </h3>
-        <p className="text-xs text-gray-500 mb-3">{subtitle}</p>
+      <div className="p-4 flex-1 flex flex-col justify-between w-full">
+        <div>
+          <h3 className="text-sm font-medium text-gray-900 mb-1 line-clamp-2">
+            {title}
+          </h3>
+          <p className="text-xs text-gray-500 mb-3">{subtitle}</p>
 
-        {/* Price */}
-        <div className="mb-4">
-          <span className="text-lg font-semibold text-green-600">
-            {currency} {price}
-          </span>
+          {/* Price */}
+          <div className="mb-4">
+            <span className="text-lg font-semibold text-green-600">
+              {currency} {price}
+            </span>
+          </div>
         </div>
 
         {/* Add to Cart Button */}
@@ -109,8 +111,7 @@ const ProductCard = ({
           Add to Cart
         </button>
       </div>
-    </div>
-  );
+    </div>  );
 };
 
 interface ProductCardContainerProps {

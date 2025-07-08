@@ -24,7 +24,6 @@ const categories: Category[] = [
   { id: 9, name: "Rocking System", subcategories: [] },
   { id: 10, name: "Forklift", subcategories: ["Diesel Forklift", "Electric Forklift", "LPG Forklift"] },
   { id: 11, name: "Container Handler", subcategories: [] },
-  // ...aur bhi add kar sakte ho
 ];
 
 const SideFilter = ({
@@ -114,11 +113,7 @@ const SideFilter = ({
                             initial={{ x: -10, opacity: 0 }}
                             animate={{ x: 0, opacity: 1 }}
                             transition={{ delay: index * 0.05 }}
-                            className={`w-full text-left p-2 text-xs rounded-md transition-colors duration-200 ${
-                              selectedFilters?.has(subcategory)
-                                ? "bg-green-100 text-green-700 font-semibold ring-2 ring-green-300"
-                                : "text-gray-600 hover:bg-green-50"
-                            }`}
+                            className={`w-full text-left p-2 text-xs rounded-md transition-colors duration-200 text-gray-600 hover:bg-green-50`}
                             onClick={() =>
                               onFilterChange && onFilterChange(subcategory)
                             }
