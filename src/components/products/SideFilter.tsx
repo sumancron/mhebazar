@@ -27,6 +27,7 @@ const categories: Category[] = [
 ];
 
 const SideFilter = ({
+  
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   selectedFilters,
   onFilterChange,

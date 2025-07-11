@@ -22,52 +22,64 @@ const RegisterPage = () => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  console.log("🟢 Form submitted!");
 
-    if (form.password !== form.confirmPassword) {
-      setError("Passwords do not match.");
-      return;
-    }
+  setError(null);
 
-    setLoading(true);
-    try {
-      // Directly call backend API using axios
-      await axios.post(
-        `${API_BASE_URL}/register/`,
-        {
-          username: form.name,
-          email: form.email,
-          password: form.password,
-          password2: form.confirmPassword,
-          role_id: 3
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-            "X-API-KEY": API_KEY,
-          },
-        }
-      );
-      // Redirect or show success message
-      window.location.href = "/login";
-    } catch (err: unknown) {
-      if (axios.isAxiosError(err)) {
-        setError(
-          err.response?.data?.message ||
-          err.message ||
-          "Registration failed."
-        );
-      } else if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        setError("Registration failed.");
-      }
-    } finally {
-      setLoading(false);
-    }
+  if (form.password !== form.confirmPassword) {
+    console.log("❌ Passwords do not match.");
+    setError("Passwords do not match.");
+    return;
+  }
+
+  setLoading(true);
+
+  const requestData = {
+    name: form.name,
+    email: form.email,
+    password: form.password,
   };
+
+  console.log("📤 Sending request to:", `${API_BASE_URL}/register/`);
+  console.log("📦 Payload data:", requestData);
+
+  try {
+    const response = await axios.post(
+      `${API_BASE_URL}/register/`,
+      requestData,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          "X-API-KEY": API_KEY,
+        },
+      }
+    );
+
+    console.log("✅ Backend response:", response.data);
+    // Redirect or show success message
+    window.location.href = "/login";
+  } catch (err: unknown) {
+    console.log("❌ Registration failed. Error:", err);
+
+    if (axios.isAxiosError(err)) {
+      console.log("❌ Axios error response:", err.response?.data);
+      setError(
+        err.response?.data?.message ||
+        err.message ||
+        "Registration failed."
+      );
+    } else if (err instanceof Error) {
+      setError(err.message);
+    } else {
+      setError("Registration failed.");
+    }
+  } finally {
+    setLoading(false);
+    console.log("ℹ️ Loading state set to false.");
+  }
+};
 
   return (
     <div className="min-h-[80vh] flex flex-col items-center justify-center bg-white px-6 py-8">
