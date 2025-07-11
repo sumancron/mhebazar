@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { quoteAPI, Quote } from '@/lib/api';
+import { quoteAPI } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -54,7 +54,7 @@ export default function CartForm({ productId, productName, productPrice }: CartF
           </div>
           <h3 className="text-lg font-semibold mb-2">Quote Request Submitted!</h3>
           <p className="text-gray-600 mb-4">
-            Your quote request has been submitted successfully. We'll get back to you soon.
+            Your quote request has been submitted successfully. We`&apos;`ll get back to you soon.
           </p>
           <Button onClick={() => setSuccess(false)}>
             Submit Another Request
@@ -111,5 +111,4 @@ export default function CartForm({ productId, productName, productPrice }: CartF
     </Card>
   );
 }
-```
 

@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { wishlistAPI, WishlistItem } from '@/lib/api';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Trash2, ShoppingCart } from 'lucide-react';
 
 export default function WishlistForm() {
@@ -13,7 +13,7 @@ export default function WishlistForm() {
 
   useState(() => {
     fetchWishlist();
-  }, []);
+  }, );
 
   const fetchWishlist = async () => {
     try {
@@ -41,7 +41,7 @@ export default function WishlistForm() {
     try {
       // You'll need to import productAPI here
       // await productAPI.addToCart(productId);
-      console.log('Product added to cart');
+      console.log('Product added to cart', productId);
     } catch (err) {
       console.error('Error adding to cart:', err);
     }
@@ -128,5 +128,4 @@ export default function WishlistForm() {
     </div>
   );
 }
-```
 
