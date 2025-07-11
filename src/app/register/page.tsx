@@ -82,7 +82,7 @@ const handleSubmit = async (e: React.FormEvent) => {
 };
 
   return (
-    <div className="min-h-[80vh] flex flex-col items-center justify-center bg-white px-6 py-8">
+    <div className="min-h-[80vh] flex flex-col items-center justify-center bg-white px-2 py-8">
       <div className="w-full max-w-lg mx-auto">
         <h1 className="text-center text-3xl sm:text-4xl font-bold text-green-600 mb-8">
           Welcome to MHE Bazar!
