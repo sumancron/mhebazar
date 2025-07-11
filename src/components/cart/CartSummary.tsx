@@ -1,225 +1,178 @@
 // components/cart/CartSummary.tsx
-'use client';
+"use client";
 
-import { useState } from 'react';
-import Image from 'next/image';
-import { Minus, Plus, X, Tag } from 'lucide-react';
-import { motion } from 'framer-motion';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent } from '@/components/ui/card';
+import { useEffect, useState } from "react";
+import { cartAPI, CartItem } from "@/lib/api";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Trash2, Minus, Plus } from "lucide-react";
 
-interface CartItem {
-  id: string;
-  name: string;
-  image: string;
-  price: number;
-  originalPrice?: number;
-  quantity: number;
-  specs?: string;
-  inStock: boolean;
-}
+export default function CartSummary() {
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-interface CartSummaryProps {
-  onNext: () => void;
-}
+  useEffect(() => {
+    fetchCart();
+  }, []);
 
-export default function CartSummary({ onNext }: CartSummaryProps) {
-  const [couponCode, setCouponCode] = useState('MEH200');
-  const [cartItems, setCartItems] = useState<CartItem[]>([
-    {
-      id: '1',
-      name: 'Unik Semi Traction Batteries U-12120 (12v) 140 Ah',
-      image: '/api/placeholder/150/150',
-      price: 8999,
-      originalPrice: 10999,
-      quantity: 1,
-      specs: '12V 140Ah',
-      inStock: true
-    },
-    {
-      id: '2',
-      name: 'Unik Semi Traction Batteries U-12120 (12v) 140 Ah',
-      image: '/api/placeholder/150/150',
-      price: 8999,
-      originalPrice: 10999,
-      quantity: 1,
-      specs: '80v/500Ah',
-      inStock: true
+  const fetchCart = async () => {
+    try {
+      setLoading(true);
+      const response = await cartAPI.getCart();
+      setCartItems(response.data);
+    } catch (err) {
+      setError("Failed to load cart items");
+      console.error("Error fetching cart:", err);
+    } finally {
+      setLoading(false);
     }
-  ]);
+  };
 
-  const updateQuantity = (id: string, newQuantity: number) => {
-    if (newQuantity < 1) return;
-    setCartItems(items =>
-      items.map(item =>
-        item.id === id ? { ...item, quantity: newQuantity } : item
-      )
+  const updateQuantity = async (itemId: number, newQuantity: number) => {
+    try {
+      await cartAPI.updateCartItem(itemId, newQuantity);
+      await fetchCart(); // Refresh cart data
+    } catch (err) {
+      console.error("Error updating quantity:", err);
+    }
+  };
+
+  const removeItem = async (itemId: number) => {
+    try {
+      await cartAPI.deleteCartItem(itemId);
+      await fetchCart(); // Refresh cart data
+    } catch (err) {
+      console.error("Error removing item:", err);
+    }
+  };
+
+  const clearCart = async () => {
+    try {
+      await cartAPI.clearCart();
+      setCartItems([]);
+    } catch (err) {
+      console.error("Error clearing cart:", err);
+    }
+  };
+
+  const calculateTotal = () => {
+    return cartItems.reduce((total, item) => {
+      return total + item.product.price * item.quantity;
+    }, 0);
+  };
+
+  if (loading) {
+    return (
+      <div className="space-y-4">
+        {[...Array(3)].map((_, i) => (
+          <Card key={i} className="animate-pulse">
+            <CardContent className="p-4">
+              <div className="h-4 bg-gray-200 rounded mb-2"></div>
+              <div className="h-3 bg-gray-200 rounded w-2/3"></div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
     );
-  };
+  }
 
-  const removeItem = (id: string) => {
-    setCartItems(items => items.filter(item => item.id !== id));
-  };
+  if (error) {
+    return (
+      <div className="text-center py-8">
+        <p className="text-red-500">{error}</p>
+      </div>
+    );
+  }
 
-  const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const couponDiscount = 200; // Fixed discount for demo
-  const deliveryCharges = 0; // Free delivery
-  const total = subtotal - couponDiscount + deliveryCharges;
-
-  const formatPrice = (price: number) => `₹ ${price.toLocaleString()}`;
+  if (cartItems.length === 0) {
+    return (
+      <Card>
+        <CardContent className="p-8 text-center">
+          <p className="text-gray-500 mb-4">Your cart is empty</p>
+          <Button onClick={() => (window.location.href = "/")}>
+            Continue Shopping
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-      {/* Cart Items */}
-      <div className="lg:col-span-2">
-        <h2 className="text-xl font-semibold text-gray-900 mb-6">Shopping Cart</h2>
-        <div className="space-y-4">
-          {cartItems.map((item) => (
-            <motion.div
-              key={item.id}
-              layout
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm"
-            >
-              <div className="flex items-start space-x-4">
-                <div className="relative w-24 h-24 bg-gray-100 rounded-lg overflow-hidden">
-                  <Image
-                    src={item.image}
-                    alt={item.name}
-                    fill
-                    className="object-cover"
-                  />
-                </div>
-                
-                <div className="flex-1 min-w-0">
-                  <h3 className="text-sm font-medium text-gray-900 mb-1">
-                    {item.name}
-                  </h3>
-                  {item.specs && (
-                    <p className="text-xs text-gray-500 mb-2">{item.specs}</p>
-                  )}
-                  
-                  <div className="flex items-center space-x-2 mb-3">
-                    <span className="text-lg font-semibold text-green-600">
-                      {formatPrice(item.price)}
-                    </span>
-                    {item.originalPrice && (
-                      <span className="text-sm text-gray-500 line-through">
-                        {formatPrice(item.originalPrice)}
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center border border-gray-300 rounded-md">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                        className="h-8 w-8 p-0"
-                      >
-                        <Minus className="h-3 w-3" />
-                      </Button>
-                      <span className="px-3 py-1 text-sm font-medium min-w-[2rem] text-center">
-                        {item.quantity}
-                      </span>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                        className="h-8 w-8 p-0"
-                      >
-                        <Plus className="h-3 w-3" />
-                      </Button>
-                    </div>
-
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removeItem(item.id)}
-                      className="text-red-500 hover:text-red-700 h-8 w-8 p-0"
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          ))}
-        </div>
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <h2 className="text-xl font-semibold">Cart Summary</h2>
+        <Button variant="outline" onClick={clearCart}>
+          Clear Cart
+        </Button>
       </div>
 
-      {/* Order Summary */}
-      <div className="lg:col-span-1">
-        <Card>
-          <CardContent className="p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Order Summary</h3>
-            
-            {/* Coupon Section */}
-            <div className="mb-6">
-              <h4 className="text-sm font-medium text-gray-900 mb-3 flex items-center">
-                <Tag className="w-4 h-4 mr-2" />
-                Coupons
-              </h4>
-              <div className="flex">
-                <Input
-                  value={couponCode}
-                  onChange={(e) => setCouponCode(e.target.value)}
-                  placeholder="Enter coupon code"
-                  className="flex-1"
-                />
+      {cartItems.map(item => (
+        <Card key={item.id}>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-4">
+              <img
+                src={item.product.images?.[0] || "/no-product.png"}
+                alt={item.product.name}
+                className="w-16 h-16 object-cover rounded"
+              />
+              <div className="flex-1">
+                <h3 className="font-semibold">{item.product.name}</h3>
+                <p className="text-gray-600 text-sm">
+                  ${item.product.price} each
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
                 <Button
+                  size="sm"
                   variant="outline"
-                  className="ml-2 px-4"
-                  onClick={() => {}}
-                >
-                  Apply
+                  onClick={() =>
+                    updateQuantity(item.id, Math.max(1, item.quantity - 1))
+                  }>
+                  <Minus className="h-4 w-4" />
+                </Button>
+                <span className="w-8 text-center">{item.quantity}</span>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => updateQuantity(item.id, item.quantity + 1)}>
+                  <Plus className="h-4 w-4" />
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => removeItem(item.id)}>
+                  <Trash2 className="h-4 w-4" />
                 </Button>
               </div>
             </div>
-
-            {/* Price Breakdown */}
-            <div className="space-y-3 mb-6">
-              <h4 className="text-sm font-medium text-gray-900 mb-3">Price Details</h4>
-              
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Item 1</span>
-                  <span className="font-medium">{formatPrice(cartItems[0]?.price * cartItems[0]?.quantity || 0)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Item 2</span>
-                  <span className="font-medium">{formatPrice(cartItems[1]?.price * cartItems[1]?.quantity || 0)}</span>
-                </div>
-                <div className="flex justify-between text-green-600">
-                  <span>Coupon Discount</span>
-                  <span>-{formatPrice(couponDiscount)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Delivery charges</span>
-                  <span className="font-medium text-green-600">Free delivery</span>
-                </div>
-                <hr className="my-3" />
-                <div className="flex justify-between text-lg font-semibold">
-                  <span>Total</span>
-                  <span>{formatPrice(total)}</span>
-                </div>
-              </div>
-            </div>
-
-            <Button
-              onClick={onNext}
-              className="w-full bg-green-600 hover:bg-green-700 text-white py-3 text-base font-medium"
-              disabled={cartItems.length === 0}
-            >
-              Proceed to Address
-            </Button>
           </CardContent>
         </Card>
-      </div>
+      ))}
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Order Summary</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2">
+            <div className="flex justify-between">
+              <span>Subtotal:</span>
+              <span>${calculateTotal().toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Shipping:</span>
+              <span>Free</span>
+            </div>
+            <div className="border-t pt-2">
+              <div className="flex justify-between font-semibold">
+                <span>Total:</span>
+                <span>${calculateTotal().toFixed(2)}</span>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

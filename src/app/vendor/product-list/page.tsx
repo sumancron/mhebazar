@@ -177,11 +177,11 @@ const [open, setOpen] = useState(false);
 
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
         <Tabs value={tab} onValueChange={v => { setTab(v as "new" | "old"); setCurrentPage(1); }} className="w-full sm:w-auto">
-          <TabsList className="bg-gray-50 border border-gray-200 rounded-lg">
-            <TabsTrigger value="new" className="data-[state=active]:bg-green-100 data-[state=active]:text-green-600 px-6 py-2 rounded-lg font-semibold">
+          <TabsList className="bg-white">
+            <TabsTrigger value="new" className="data-[state=active]:border-b-green-500 data-[state=active]:text-green-600 px-6 py-2 font-semibold">
               New Products
             </TabsTrigger>
-            <TabsTrigger value="old" className="data-[state=active]:bg-green-100 data-[state=active]:text-green-600 px-6 py-2 rounded-lg font-semibold">
+            <TabsTrigger value="old" className="data-[state=active]:border-b-green-500 data-[state=active]:text-green-600 px-6 py-2 font-semibold">
               Old Products
             </TabsTrigger>
           </TabsList>

@@ -1,9 +1,9 @@
 "use client";
 import { useState } from "react";
-import { ShoppingCart, Download, FileText } from "lucide-react";
+import { ShoppingCart, Download, FileText, ChevronRight } from "lucide-react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import AddProductForm from "@/components/forms/product/AddProduct";
 import React from "react";
 
@@ -198,7 +198,7 @@ export default function DashboardStats() {
                 </div>
               ))}
             </div>
-            <Button variant="outline" className="w-full font-semibold text-green-600 border-green-600 hover:bg-green-50">
+            <Button variant="outline" className="w-full font-semibold text-base text-green-600 border-green-600 hover:bg-green-50 hover:text-green-600 py-6">
               View All
             </Button>
           </div>
@@ -252,24 +252,33 @@ function ActionCard({
   image: string;
 }) {
   return (
-    <div className="flex items-center justify-between bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow transition">
-      <div>
-        <h3 className="font-semibold text-gray-900">{title}</h3>
-        <p className="text-xs text-gray-500 mt-1">{description}</p>
-      </div>
-      <div className="h-14 w-14 relative flex-shrink-0 ml-4">
-        <Image
-          src={getImageSrc(image)}
-          alt={title}
-          fill
-          className="object-contain rounded"
-          sizes="56px"
-          onError={(e) => {
-            const target = e.target as HTMLImageElement;
-            target.src = "/no-product.png";
-          }}
-        />
-      </div>
-    </div>
+    <Card className="border-transparent bg-[linear-gradient(90deg,rgba(255,213,213,1)_0%,rgba(255,52,52,1)_100%)] rounded-2xl p-0">
+      <CardContent className="flex items-center gap-2 p-6">
+        <div className="h-14 w-14 relative flex-shrink-0">
+          <Image
+            src={getImageSrc(image)}
+            alt={title}
+            fill
+            className="object-contain rounded"
+            sizes="56px"
+            onError={(e) => {
+              const target = e.target as HTMLImageElement;
+              target.src = "/no-product.png";
+            }}
+          />
+        </div>
+        <div className="flex items-center justify-between relative flex-1 grow">
+          <div className="flex flex-col items-start justify-center relative flex-1 grow">
+            <div className="relative w-fit mt-[-1.00px] [text-shadow:-1px_0px_4px_#00000033] [font-family:'Inter-SemiBold',Helvetica] font-semibold text-white text-2xl tracking-[0] leading-[normal]">
+              {title}
+            </div>
+            <div className="relative self-stretch [text-shadow:-1px_0px_4px_#00000033] [font-family:'Inter-Regular',Helvetica] font-normal text-white text-[13px] tracking-[0] leading-[normal]">
+              {description}
+            </div>
+          </div>
+          <ChevronRight className="relative w-8 h-8 ml-[-9.16e-05px] text-white" />
+        </div>
+      </CardContent>
+    </Card>
   );
 }

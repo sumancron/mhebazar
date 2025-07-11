@@ -11,7 +11,7 @@ const ServicesPage = () => {
   return (
     <>
       {/* Breadcrumb */}
-      <div className="w-full px-4 sm:px-8 pt-6">
+      <div className="w-full px-4 sm:px-8 ">
         <Breadcrumb
           items={[
             { label: "Home", href: "/" },
@@ -21,7 +21,7 @@ const ServicesPage = () => {
       </div>
 
       {/* Page Title */}
-      <section className="bg-white p-6 md:p-8 w-full">
+      <section className="bg-white p-3 md:p-5 w-full">
         <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
           Services
         </h1>

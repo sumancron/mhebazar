@@ -183,7 +183,7 @@ export default function NewArrivalsAndTopSearches() {
   );
 
   return (
-    <div className="space-y-8 w-full max-w-md mx-auto sm:max-w-xl md:max-w-2xl lg:max-w-4xl xl:max-w-6xl px-4">
+    <div className="space-y-8 w-full max-w-md mx-auto sm:max-w-xl md:max-w-2xl lg:max-w-4xl xl:max-w-6xl">
       {/* New Arrivals */}
       <div className=" ">
           <div className="flex justify-between items-center mb-4">

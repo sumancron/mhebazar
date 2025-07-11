@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 type Vendor = {
   id: number;
@@ -38,15 +39,23 @@ export default function VendorCard({ vendor }: Props) {
       {/* Buttons */}
 
       <div className="flex gap-2 w-full mt-2">
-        <Button
-          variant="default"
-          className="flex-1 text-sm font-medium py-2 rounded-lg bg-[#6FCF97] hover:bg-[#57b87b] border border-[#6FCF97] text-white transition"
+        <Link
+          href={
+            window.location.pathname.startsWith('/admin/')
+              ? `/admin/accounts/registered-vendors/${vendor.name}`
+              : `/vendor-listing/${vendor.name}`
+          }
+          passHref
         >
-          View Product
-        </Button>
+          <Button
+            className="flex-1 text-sm font-medium py-2 rounded-lg bg-[#5CA131] hover:bg-[#57b87b] border border-[#6FCF97] text-white transition"
+          >
+            View Product
+          </Button>
+        </Link>
         <Button
           variant="outline"
-          className="flex-1 text-sm font-medium py-2 rounded-lg border border-[#6FCF97] text-[#6FCF97] bg-white hover:bg-[#e5f4e8] transition"
+          className="flex-1 text-sm font-medium py-2 rounded-lg border border-[#5CA131] text-[#5CA131] bg-white hover:bg-[#e5f4e8] transition"
         >
           Contact
         </Button>

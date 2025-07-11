@@ -7,7 +7,7 @@ import AnalyticsDashboard from '@/components/admin/Graph';
 
 const StatsCard: React.FC<StatsCardProps> = ({ icon: Icon, number, label, color = "green" }) => (
   <div className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow duration-200 cursor-pointer relative overflow-hidden">
-    <div className={`absolute top-0 left-0 w-20 h-20 bg-${color}-100 rounded-full opacity-50 -translate-x-4 -translate-y-4`}></div>
+    {/* <div className={`absolute top-0 left-0 w-20 h-20 bg-${color}-100 rounded-full opacity-50 -translate-x-4 -translate-y-4`}></div> */}
     <div className="relative z-10">
       <div className="mb-4">
         <div className={`w-10 h-10 bg-${color}-600 rounded-lg flex items-center justify-center`}>

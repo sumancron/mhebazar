@@ -24,10 +24,10 @@ const ProductCard = ({
   subtitle,
   price,
   currency,
-  onAddToCart = async () => { },
-  onWishlist = async () => { },
-  onCompare = () => { },
-  onShare = () => { },
+  onAddToCart = async () => {},
+  onWishlist = async () => {},
+  onCompare = () => {},
+  onShare = () => {},
 }: ProductCardProps) => {
   const handleAddToCart = async () => {
     try {
@@ -50,50 +50,47 @@ const ProductCard = ({
   };
 
   return (
-    <div className="bg-white border border-gray-200 shadow-lg rounded-2xl overflow-hidden hover:shadow-xl transition-shadow duration-200 flex flex-col items-start p-px w-80 h-[480px] box-border isolate">
+    <div className="bg-white border border-gray-200 shadow-lg rounded-2xl overflow-hidden hover:shadow-xl transition-shadow duration-200 flex flex-col items-start p-px w-full max-w-xs sm:max-w-sm md:w-80 md:h-[480px] h-auto box-border isolate">
       {/* Image Container */}
-      <div className="relative bg-gray-50 p-4 w-full flex-shrink-0">
+      <div className="relative bg-gray-50 p-2 sm:p-4 w-full flex-shrink-0 h-48 sm:h-[60%]">
         {/* Action Icons */}
-        <div className="absolute top-3 left-3 flex flex-col gap-2 z-10">
+        <div className="absolute top-2 left-2 sm:top-3 sm:left-3 flex flex-col gap-2 z-10">
           <button
             onClick={handleWishlist}
-            className="w-8 h-8 bg-white rounded-md shadow-sm flex items-center justify-center hover:bg-gray-50 transition-colors"
-          >
+            className="w-8 h-8 bg-white rounded-md shadow-sm flex items-center justify-center hover:bg-gray-50 transition-colors">
             <Heart className="w-4 h-4 text-gray-600" />
           </button>
           <button
             onClick={onCompare}
-            className="w-8 h-8 bg-white rounded-md shadow-sm flex items-center justify-center hover:bg-gray-50 transition-colors"
-          >
+            className="w-8 h-8 bg-white rounded-md shadow-sm flex items-center justify-center hover:bg-gray-50 transition-colors">
             <BarChart3 className="w-4 h-4 text-gray-600" />
           </button>
           <button
             onClick={onShare}
-            className="w-8 h-8 bg-white rounded-md shadow-sm flex items-center justify-center hover:bg-gray-50 transition-colors"
-          >
+            className="w-8 h-8 bg-white rounded-md shadow-sm flex items-center justify-center hover:bg-gray-50 transition-colors">
             <RefreshCw className="w-4 h-4 text-gray-600" />
           </button>
         </div>
 
         {/* Product Image */}
-        <div className="flex justify-center items-center h-48">
+        <div className="flex justify-center items-center h-36 sm:h-48">
           <Image
             src={image}
             alt={title}
             className="max-w-full max-h-full object-contain"
             width={200}
-            height={200}
+            height={400}
           />
         </div>
       </div>
 
       {/* Content */}
-      <div className="p-4 flex-1 flex flex-col justify-between w-full">
+      <div className="p-3 sm:p-4 flex-1 flex flex-col justify-between w-full h-auto md:h-[40%]">
         <div>
-          <h3 className="text-sm font-medium text-gray-900 mb-1 line-clamp-2">
+          <h3 className="text-base sm:text-sm font-medium text-gray-900 mb-1 line-clamp-2">
             {title}
           </h3>
-          <p className="text-xs text-gray-500 mb-3">{subtitle}</p>
+          <p className="text-xs text-gray-500 mb-3 line-clamp-1">{subtitle}</p>
 
           {/* Price */}
           <div className="mb-4">
@@ -106,12 +103,12 @@ const ProductCard = ({
         {/* Add to Cart Button */}
         <button
           onClick={handleAddToCart}
-          className="w-full bg-green-500 hover:bg-green-600 text-white font-medium py-2.5 px-4 rounded-md transition-colors"
-        >
+          className="w-full bg-green-500 hover:bg-green-600 text-white font-medium py-2 px-3 sm:py-2.5 sm:px-4 rounded-md transition-colors text-sm sm:text-base">
           Add to Cart
         </button>
       </div>
-    </div>  );
+    </div>
+  );
 };
 
 interface ProductCardContainerProps {
@@ -134,16 +131,16 @@ export const ProductCardContainer = ({
   const handleAddToCart = async (productId: number, quantity = 1) => {
     try {
       const response = await fetch(`/api/products/${productId}/add_to_cart/`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
         },
-        body: JSON.stringify({ quantity })
+        body: JSON.stringify({ quantity }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to add to cart');
+        throw new Error("Failed to add to cart");
       }
 
       const data = await response.json();
@@ -159,16 +156,19 @@ export const ProductCardContainer = ({
 
   const handleWishlist = async (productId: number) => {
     try {
-      const response = await fetch(`/api/products/${productId}/add_to_wishlist/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+      const response = await fetch(
+        `/api/products/${productId}/add_to_wishlist/`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+          },
         }
-      });
+      );
 
       if (!response.ok) {
-        throw new Error('Failed to add to wishlist');
+        throw new Error("Failed to add to wishlist");
       }
 
       const data = await response.json();

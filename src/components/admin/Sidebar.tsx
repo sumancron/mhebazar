@@ -38,12 +38,10 @@ const Sidebar = () => {
     {
       icon: Users,
       label: 'Registered User',
-      href: '/admin/users',
+      href: '/admin/accounts',
       subItems: [
-        { label: 'Active Users', href: '/admin/users/active' },
-        { label: 'Pending Users', href: '/admin/users/pending' },
-        { label: 'Blocked Users', href: '/admin/users/blocked' },
-        { label: 'User Analytics', href: '/admin/users/analytics' }
+        { label: 'Registered Vendors', href: '/admin/accounts/registered-vendors' },
+        { label: 'Registered Users', href: '/admin/accounts/users' },
       ]
     },
     {

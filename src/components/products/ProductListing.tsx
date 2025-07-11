@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Grid, List, X } from "lucide-react";
+import { Grid, List, MenuIcon, X } from "lucide-react";
 import { ProductCardContainer } from "@/components/elements/Product";
 import FilterSidebar from "@/components/products/SideFilter";
 import Image from "next/image";
@@ -31,31 +31,32 @@ function ProductGrid({
 }) {
   if (viewMode === "list") {
     return (
-      <div className="space-y-4">
-        {products.map((product) => (
+      <div className="space-y-3 sm:space-y-4">
+        {products.map(product => (
           <div
             key={product.id}
-            className="flex bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden"
-          >
-            <div className="w-48 h-32 flex-shrink-0 relative">
+            className="flex flex-col sm:flex-row bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+            <div className="w-full sm:w-48 h-48 sm:h-32 flex-shrink-0 relative">
               <Image
                 src={product.image}
                 alt={product.title}
                 width={300}
                 height={300}
-                className="object-cover w-full h-48 rounded-t-lg"
+                className="object-cover w-full h-full rounded-t-lg sm:rounded-l-lg sm:rounded-t-none"
               />
             </div>
-            <div className="flex-1 p-4">
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            <div className="flex-1 p-3 sm:p-4">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-1 sm:mb-2 line-clamp-2">
                 {product.title}
               </h3>
-              <p className="text-sm text-gray-600 mb-2">{product.subtitle}</p>
-              <div className="flex items-center justify-between">
-                <span className="text-2xl font-bold text-green-600">
+              <p className="text-xs sm:text-sm text-gray-600 mb-2 line-clamp-2">
+                {product.subtitle}
+              </p>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0">
+                <span className="text-lg sm:text-2xl font-bold text-green-600">
                   {product.currency} {product.price.toLocaleString()}
                 </span>
-                <button className="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-md transition-colors duration-200">
+                <button className="w-full sm:w-auto bg-green-500 hover:bg-green-600 text-white px-4 sm:px-6 py-2 rounded-md transition-colors duration-200 text-sm font-medium">
                   Add to Cart
                 </button>
               </div>
@@ -67,15 +68,17 @@ function ProductGrid({
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-      {products.map((product) => (
+    <div className="flex flex-wrap justify-center gap-3 sm:gap-4 md:gap-6">
+      {products.map(product => (
         <ProductCardContainer
           key={product.id}
           image={product.image}
           title={product.title}
           subtitle={product.subtitle}
           price={product.price}
-          currency={product.currency} id={0}        />
+          currency={product.currency}
+          id={0}
+        />
       ))}
     </div>
   );
@@ -87,7 +90,9 @@ export default function ProductListing({
   totalCount = 0,
 }: ProductListingProps) {
   const [currentView, setCurrentView] = useState<"grid" | "list">("grid");
-  const [selectedFilters, setSelectedFilters] = useState<Set<string>>(new Set());
+  const [selectedFilters, setSelectedFilters] = useState<Set<string>>(
+    new Set()
+  );
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
 
   const handleViewChange = (view: "grid" | "list") => {
@@ -122,21 +127,18 @@ export default function ProductListing({
               ? "opacity-100 pointer-events-auto"
               : "opacity-0 pointer-events-none"
           }`}
-          onClick={() => setMobileFilterOpen(false)}
-        >
+          onClick={() => setMobileFilterOpen(false)}>
           <aside
             className={`absolute left-0 top-0 h-full w-full max-w-xs sm:max-w-sm bg-white shadow-xl transition-transform duration-300 ${
               mobileFilterOpen ? "translate-x-0" : "-translate-x-full"
             }`}
-            onClick={(e) => e.stopPropagation()}
-          >
+            onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between p-4 border-b">
               <span className="font-semibold text-lg">Filter</span>
               <button
                 onClick={() => setMobileFilterOpen(false)}
                 className="p-2 rounded hover:bg-gray-100"
-                aria-label="Close"
-              >
+                aria-label="Close">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -150,23 +152,23 @@ export default function ProductListing({
         {/* Main Content */}
         <div className="flex-1 lg:ml-0">
           {/* Top Controls */}
-          <div className="bg-white border-b border-gray-200 px-2 sm:px-4 py-2 sm:py-3 sticky top-0">
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <div className="bg-orange-100 text-orange-800 px-3 py-1 rounded-full text-sm font-medium inline-block mb-1">
+          <div className="bg-white border-b border-gray-200 px-3 sm:px-4 py-3 sm:py-4">
+            <div className="flex flex-col gap-3 sm:gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex-1">
+                <div className="bg-orange-100 text-orange-800 px-3 py-1 rounded-full text-xs sm:text-sm font-medium inline-block mb-2">
                   {title}
                 </div>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-gray-500 px-3">
                   Showing {products.length} of {totalCount}
                 </p>
               </div>
-              <div className="flex flex-wrap items-center gap-2">
+              <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-3">
                 {/* Sort By */}
-                <div className="flex items-center gap-2">
-                  <label className="text-sm font-medium text-gray-700">
+                <div className="flex items-center gap-1 sm:gap-2">
+                  <label className="text-xs sm:text-sm font-medium text-gray-700 whitespace-nowrap">
                     Sort By
                   </label>
-                  <select className="p-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white">
+                  <select className="p-1.5 sm:p-2 border border-gray-300 rounded-md text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white min-w-0">
                     <option>Relevance</option>
                     <option>Price: Low to High</option>
                     <option>Price: High to Low</option>
@@ -175,78 +177,65 @@ export default function ProductListing({
                   </select>
                 </div>
                 {/* View Toggle */}
-                <div className="flex items-center border border-gray-300 rounded-md overflow-hidden">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="flex items-center border border-gray-300 rounded-md overflow-hidden">
+                    <button
+                      onClick={() => handleViewChange("grid")}
+                      className={`p-1.5 sm:p-2 transition ${currentView === "grid"
+                          ? "bg-green-500 text-white"
+                          : "text-gray-500 hover:bg-gray-100"
+                        }`}
+                      aria-label="Grid View">
+                      <Grid className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                    </button>
+                    <button
+                      onClick={() => handleViewChange("list")}
+                      className={`p-1.5 sm:p-2 transition ${currentView === "list"
+                          ? "bg-green-500 text-white"
+                          : "text-gray-500 hover:bg-gray-100"
+                        }`}
+                      aria-label="List View">
+                      <List className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                    </button>
+                  </div>
+                  {/* Mobile Filter Button */}
                   <button
-                    onClick={() => handleViewChange("grid")}
-                    className={`p-2 transition ${
-                      currentView === "grid"
-                        ? "bg-green-500 text-white"
-                        : "text-gray-500 hover:bg-gray-100"
-                    }`}
-                    aria-label="Grid View"
-                  >
-                    <Grid className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => handleViewChange("list")}
-                    className={`p-2 transition ${
-                      currentView === "list"
-                        ? "bg-green-500 text-white"
-                        : "text-gray-500 hover:bg-gray-100"
-                    }`}
-                    aria-label="List View"
-                  >
-                    <List className="w-4 h-4" />
+                    className="lg:hidden flex items-center gap-1.5 sm:gap-2 bg-green-500 hover:bg-green-600 text-white px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-md shadow transition text-xs sm:text-sm font-medium"
+                    onClick={() => setMobileFilterOpen(true)}>
+                    <MenuIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                    <span className="hidden xs:inline">Filters</span>
                   </button>
                 </div>
-                {/* Mobile Filter Button */}
-                <button
-                  className="lg:hidden flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded-md shadow transition"
-                  onClick={() => setMobileFilterOpen(true)}
-                >
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth={2}
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm0 7a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1v-2zm0 7a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1v-2z"
-                    />
-                  </svg>
-                  <span className="text-sm font-medium">Filters</span>
-                </button>
               </div>
             </div>
           </div>
 
           {/* Products Grid */}
-          <div className="p-2 sm:p-4 md:p-6">
+          <div className="p-3 sm:p-4 md:p-6">
             <ProductGrid products={products} viewMode={currentView} />
 
             {/* Pagination */}
             {products.length > 0 && (
-              <div className="mt-8 flex flex-wrap justify-center gap-2">
-                <button className="px-3 py-2 text-xs sm:text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed">
+              <div className="mt-6 sm:mt-8 flex flex-wrap justify-center gap-1 sm:gap-2">
+                <button className="px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed">
                   Previous
                 </button>
-                <button className="px-3 py-2 text-xs sm:text-sm font-medium text-white bg-green-500 border border-green-500 rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500">
+                <button className="px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-medium text-white bg-green-500 border border-green-500 rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500">
                   1
                 </button>
-                <button className="px-3 py-2 text-xs sm:text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-green-500">
+                <button className="px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-green-500">
                   2
                 </button>
-                <button className="px-3 py-2 text-xs sm:text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-green-500">
+                <button className="px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-green-500">
                   3
                 </button>
-                <button className="px-3 py-2 text-xs sm:text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-green-500">
+                <button className="px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-green-500">
                   4
                 </button>
-                <span className="px-2 text-gray-500">...</span>
-                <button className="px-3 py-2 text-xs sm:text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-green-500">
+                <span className="px-1 sm:px-2 text-gray-500 text-xs sm:text-sm">
+                  ...
+                </span>
+                <button className="px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-green-500">
                   Next
                 </button>
               </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { LayoutGrid } from "lucide-react";
+import { LayoutGrid, Link } from "lucide-react";
 import Image from "next/image";
 import { JSX,useEffect, useState } from "react";
 
@@ -73,22 +73,26 @@ export default function CategoriesSection(): JSX.Element {
   const displayed = showAll ? categories : categories.slice(0, 7);
 
   return (
-    <section className="py-8 w-full mx-auto px-4">
-      <h2 className="text-lg sm:text-xl md:text-2xl font-bold mb-6">MHE Categories</h2>
-      <div className="flex flex-wrap justify-start gap-6">
+    <section className="py-8 w-full mx-auto px-4 max-w-7xl">
+      <h2 className="text-lg sm:text-xl md:text-2xl font-bold mb-6 text-center md:text-left">
+        MHE Categories
+      </h2>
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-6">
         {displayed.map((cat, idx) => (
           <CategoryItem key={idx} image={cat.image} label={cat.label} />
         ))}
-        <button
+        {/* put original link this is placeholder */}
+        <Link href="/categories"
           onClick={() => setShowAll(!showAll)}
-          className="flex flex-col items-center border border-blue-500 rounded-full w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 lg:w-36 lg:h-36 justify-center hover:bg-blue-50 transition-colors"
+          className="flex flex-col items-center border border-blue-500 rounded-full aspect-square justify-center hover:bg-blue-50 transition-colors w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 lg:w-36 lg:h-36 bg-blue-50 mb-2 overflow-hidden"
         >
           <LayoutGrid className="text-blue-500 mb-2" size={24} />
           <span className="text-xs sm:text-sm md:text-base font-medium text-center">
             {showAll ? "Show Less" : "All Categories"}
           </span>
-        </button>
+        </Link>
       </div>
     </section>
+
   );
 }
