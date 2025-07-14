@@ -7,7 +7,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Trash2, Minus, Plus } from "lucide-react";
 
-export default function CartSummary() {
+// ✅ Add props type
+type CartSummaryProps = {
+  onNext: () => void;
+};
+
+export default function CartSummary({ onNext }: CartSummaryProps) {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -170,6 +175,9 @@ export default function CartSummary() {
                 <span>${calculateTotal().toFixed(2)}</span>
               </div>
             </div>
+          </div>
+          <div className="pt-4 flex justify-end">
+            <Button onClick={onNext}>Proceed to Address</Button>
           </div>
         </CardContent>
       </Card>
