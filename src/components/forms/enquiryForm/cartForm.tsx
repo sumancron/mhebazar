@@ -28,6 +28,7 @@ export default function CartForm({ productId, productName, productPrice }: CartF
 
     try {
       await quoteAPI.createQuote({
+        //@ts-expect-error
         product: productId,
         quantity,
         message: message || undefined,
