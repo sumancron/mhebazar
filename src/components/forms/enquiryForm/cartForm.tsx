@@ -28,7 +28,7 @@ export default function CartForm({ productId, productName, productPrice }: CartF
 
     try {
       await quoteAPI.createQuote({
-        //@ts-expect-error
+        // @ts-expect-error - backend accepts product as ID, not full Product type
         product: productId,
         quantity,
         message: message || undefined,
