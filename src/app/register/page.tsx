@@ -4,10 +4,11 @@ import axios from "axios";
 import GoogleLoginButton from "@/components/elements/GoogleAuth";
 import Link from "next/link";
 import { RegisterForm } from "@/types/index";
-
+import { toast } from "sonner";
+ 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 const API_KEY = process.env.NEXT_PUBLIC_X_API_KEY;
-
+ 
 const RegisterPage = () => {
   const [form, setForm] = useState<RegisterForm>({
     name: "",
@@ -17,38 +18,32 @@ const RegisterPage = () => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
+ 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
-
+ 
 const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
-  console.log("🟢 Form submitted!");
-
   setError(null);
 
   if (form.password !== form.confirmPassword) {
-    console.log("❌ Passwords do not match.");
-    setError("Passwords do not match.");
+    toast.error("Passwords do not match.");
     return;
   }
 
   setLoading(true);
 
-  const requestData = {
-    name: form.name,
-    email: form.email,
-    password: form.password,
-  };
-
-  console.log("📤 Sending request to:", `${API_BASE_URL}/register/`);
-  console.log("📦 Payload data:", requestData);
-
   try {
-    const response = await axios.post(
+    await axios.post(
       `${API_BASE_URL}/register/`,
-      requestData,
+      {
+        username: form.name,
+        email: form.email,
+        password: form.password,
+        password2: form.confirmPassword,
+        role_id: 3,
+      },
       {
         headers: {
           "Content-Type": "application/json",
@@ -57,32 +52,56 @@ const handleSubmit = async (e: React.FormEvent) => {
       }
     );
 
-    console.log("✅ Backend response:", response.data);
-    // Redirect or show success message
+    toast.success("Registration successful! Redirecting...");
     window.location.href = "/login";
   } catch (err: unknown) {
-    console.log("❌ Registration failed. Error:", err);
-
     if (axios.isAxiosError(err)) {
-      console.log("❌ Axios error response:", err.response?.data);
-      setError(
-        err.response?.data?.message ||
-        err.message ||
-        "Registration failed."
-      );
+      const data = err.response?.data;
+
+      if (data && typeof data === "object") {
+        const formatMessage = (key: string, msg: string) => {
+          if (key === "username" && msg.includes("Enter a valid username")) {
+            return "Invalid username: Only letters, numbers and @ . + - _ are allowed.";
+          }
+          if (key === "email" && msg.includes("Enter a valid email address")) {
+            return "Invalid email address. Please enter a valid email like example@domain.com.";
+          }
+          if (key === "password" && msg.toLowerCase().includes("too short")) {
+            return "Password too short. Please use at least 8 characters.";
+          }
+          if (key === "password2" && msg.toLowerCase().includes("do not match")) {
+            return "Password confirmation does not match.";
+          }
+
+          // Default fallback
+          return `${capitalize(key)}: ${msg}`;
+        };
+
+        const capitalize = (str: string) => str.charAt(0).toUpperCase() + str.slice(1);
+
+        Object.entries(data).forEach(([key, value]) => {
+          if (Array.isArray(value)) {
+            value.forEach((msg) => toast.error(formatMessage(key, msg)));
+          } else {
+            toast.error(formatMessage(key, String(value)));
+          }
+        });
+      } else {
+        toast.error("Registration failed. Please try again.");
+      }
     } else if (err instanceof Error) {
-      setError(err.message);
+      toast.error(err.message);
     } else {
-      setError("Registration failed.");
+      toast.error("Something went wrong. Please try again.");
     }
   } finally {
     setLoading(false);
-    console.log("ℹ️ Loading state set to false.");
   }
 };
 
+ 
   return (
-    <div className="min-h-[80vh] flex flex-col items-center justify-center bg-white px-2 py-8">
+    <div className="min-h-[80vh] flex flex-col items-center justify-center bg-white px-2 m-5">
       <div className="w-full max-w-lg mx-auto">
         <h1 className="text-center text-3xl sm:text-4xl font-bold text-green-600 mb-8">
           Welcome to MHE Bazar!
@@ -186,5 +205,6 @@ const handleSubmit = async (e: React.FormEvent) => {
     </div>
   );
 };
-
+ 
 export default RegisterPage;
+ 
