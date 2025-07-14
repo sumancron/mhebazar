@@ -4,6 +4,7 @@ import "./globals.css";
 import SiteLayout from "@/components/layout/SiteLayout";
 import { Suspense } from "react";
 import Loading from "./loading";
+import { Toaster } from "sonner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -28,6 +29,19 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <Toaster
+          position="top-right"
+          richColors
+          closeButton
+          toastOptions={{
+            className: "bg-white text-gray-800 shadow-lg",
+            style: {
+              fontFamily: "var(--font-geist-sans)",
+              fontSize: "14px",
+            },
+          }}
+        />
+
         <SiteLayout>
           <Suspense fallback={<Loading />}>
             {children}

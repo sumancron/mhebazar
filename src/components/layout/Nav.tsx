@@ -10,6 +10,10 @@ import CategoryMenu from "./NavOptions";
 import VendorRegistrationDrawer from "@/components/forms/publicforms/VendorRegistrationForm";
 import { User, Package, Heart, LogOut } from "lucide-react";
 import SearchBar from "./SearchBar";
+import { handleLogout } from "@/lib/auth/logout";
+
+// OnClick example
+
 
 
 const categories = [
@@ -179,9 +183,12 @@ export default function Navbar(): JSX.Element {
                       onClick={() => {
                         setProfileMenuOpen(false);
                         // logout logic yahan lagao
+                        handleLogout();
                       }}
                     >
                       <LogOut className="w-5 h-5 text-green-600" />
+
+
                       Logout
                     </button>
                   </div>
