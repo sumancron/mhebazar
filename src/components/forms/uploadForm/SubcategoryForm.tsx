@@ -56,6 +56,8 @@ export default function SubcategoryForm() {
     },
   })
 
+  const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+
   const { fields, append, remove } = useFieldArray({
     control,
     name: 'product_details',
@@ -64,15 +66,42 @@ export default function SubcategoryForm() {
   const [categories, setCategories] = useState<Category[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [message, setMessage] = useState('')
+  const [loading, setLoading] = useState(true)
+
+    // get access token
+  const token = localStorage.getItem('access_token')
+  let userData = null;
 
   // Add local state for images
   const [subImageFiles, setSubImageFiles] = useState<File[]>([])
   const [subBannerFiles, setSubBannerFiles] = useState<File[]>([])
 
   useEffect(() => {
-    axios.get('http://localhost:8000/api/categories/').then((res) => {
-      setCategories(res.data)
-    })
+    const fetchCategories = async () => {
+      try {
+        setLoading(true)
+        const response = await axios.get(`${API_BASE_URL}/categories/`)
+
+        // Ensure the response data is an array
+        if (Array.isArray(response.data)) {
+          setCategories(response.data)
+        } else if (response.data && Array.isArray(response.data.results)) {
+          // Handle paginated responses
+          setCategories(response.data.results)
+        } else {
+          console.error('Unexpected API response format:', response.data)
+          setCategories([])
+        }
+      } catch (error) {
+        console.error('Error fetching categories:', error)
+        setCategories([])
+        setMessage('Failed to load categories')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchCategories()
   }, [])
 
   // Handle file input change
@@ -106,10 +135,28 @@ export default function SubcategoryForm() {
     if (subBannerFiles[0]) formData.append('sub_banner', subBannerFiles[0])
     formData.append('product_details', JSON.stringify(data.product_details))
 
+     if (token) {
+      try {
+        const userResponse = await axios.get(`${API_BASE_URL}/users/me/`, {
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            // "X-API-KEY": API_KEY,
+          },
+        });
+        userData = userResponse.data;
+        console.log("User data fetched successfully:", userData);
+      } catch (err) {
+        console.error("Failed to fetch user data:", err);
+      }
+    }
+
     try {
       setIsSubmitting(true)
-      await axios.post('http://localhost:8000/api/subcategories/', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
+      await axios.post(`${API_BASE_URL}/subcategories/`, formData, {
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
+        },
       })
       setMessage('Subcategory created successfully!')
     } catch (error: unknown) {
@@ -151,16 +198,24 @@ export default function SubcategoryForm() {
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           <div>
             <Label>Category</Label>
-            <Select onValueChange={(val) => setValue('category', val)}>
+            <Select onValueChange={(val) => setValue('category', val)} disabled={loading}>
               <SelectTrigger>
-                <SelectValue placeholder="Select a category" />
+                <SelectValue placeholder={loading ? "Loading categories..." : "Select a category"} />
               </SelectTrigger>
               <SelectContent>
-                {categories.map((cat) => (
-                  <SelectItem key={cat.id} value={String(cat.id)}>
-                    {cat.name}
-                  </SelectItem>
-                ))}
+                {Array.isArray(categories) && categories.length > 0 ? (
+                  categories.map((cat) => (
+                    <SelectItem key={cat.id} value={String(cat.id)}>
+                      {cat.name}
+                    </SelectItem>
+                  ))
+                ) : (
+                  !loading && (
+                    <div className="px-2 py-1 text-sm text-gray-500">
+                      No categories available
+                    </div>
+                  )
+                )}
               </SelectContent>
             </Select>
             {errors.category && <p className="text-red-500 text-sm">Category is required</p>}
@@ -208,7 +263,7 @@ export default function SubcategoryForm() {
                 </Button>
               </div>
               <div className="flex gap-2 mt-2">
-                {subImageFiles.map((file, idx) => (
+                {subImageFiles?.map((file, idx) => (
                   <div key={idx} className="relative w-20 h-20">
                     <Image
                       src={URL.createObjectURL(file)}
@@ -249,7 +304,7 @@ export default function SubcategoryForm() {
                 </Button>
               </div>
               <div className="flex gap-2 mt-2">
-                {subBannerFiles.map((file, idx) => (
+                {subBannerFiles?.map((file, idx) => (
                   <div key={idx} className="relative w-20 h-20">
                     <Image
                       src={URL.createObjectURL(file)}
@@ -279,7 +334,7 @@ export default function SubcategoryForm() {
               Define the fields that will appear in the product form for this category
             </p>
 
-            {fields.map((field, fieldIndex) => {
+            {fields?.map((field, fieldIndex) => {
               const fieldType = watch(`product_details.${fieldIndex}.type`)
               const showOptions = ['select', 'radio', 'checkbox'].includes(fieldType)
 

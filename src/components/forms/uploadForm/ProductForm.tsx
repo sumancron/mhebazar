@@ -12,7 +12,7 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@
 import { Checkbox } from '@/components/ui/checkbox'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { X } from 'lucide-react'
-import Image from 'next/image';
+import Image from 'next/image'
 
 type FieldOption = {
   label: string
@@ -85,9 +85,41 @@ export default function ProductForm() {
   const [message, setMessage] = useState('')
   const [brochureFile, setBrochureFile] = useState<File | null>(null)
   const [imageFiles, setImageFiles] = useState<File[]>([])
+  const [loading, setLoading] = useState(true)
 
+  const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+
+  // get access token
+  const token = localStorage.getItem('access_token')
+  let userData = null;
+
+  // categories fetch
   useEffect(() => {
-    axios.get('http://localhost:8000/api/categories/').then((res) => setCategories(res.data))
+    const fetchCategories = async () => {
+      try {
+        setLoading(true)
+        const response = await axios.get(`${API_BASE_URL}/categories/`)
+
+        // Ensure the response data is an array
+        if (Array.isArray(response.data)) {
+          setCategories(response.data)
+        } else if (response.data && Array.isArray(response.data.results)) {
+          // Handle paginated responses
+          setCategories(response.data.results)
+        } else {
+          console.error('Unexpected API response format:', response.data)
+          setCategories([])
+        }
+      } catch (error) {
+        console.error('Error fetching categories:', error)
+        setCategories([])
+        setMessage('Failed to load categories')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchCategories()
   }, [])
 
   useEffect(() => {
@@ -174,10 +206,25 @@ export default function ProductForm() {
     if (brochureFile) formData.append('brochure', brochureFile)
     imageFiles.forEach((img) => formData.append('images', img))
 
+    if (token) {
+      try {
+        const userResponse = await axios.get(`${API_BASE_URL}/users/me/`, {
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            // "X-API-KEY": API_KEY,
+          },
+        });
+        userData = userResponse.data;
+        console.log("User data fetched successfully:", userData);
+      } catch (err) {
+        console.error("Failed to fetch user data:", err);
+      }
+    }
+
     try {
       setIsSubmitting(true)
-      await axios.post('http://localhost:8000/api/products/', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
+      await axios.post(`${API_BASE_URL}/products/`, formData, {
+        headers: { "Authorization": `Bearer ${token}`, 'Content-Type': 'multipart/form-data' },
       })
       setMessage('Product created successfully!')
     } catch (error) {
@@ -219,49 +266,63 @@ export default function ProductForm() {
               <SelectValue placeholder={`Select ${field.label}`} />
             </SelectTrigger>
             <SelectContent>
-              {field.options?.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
+              {Array.isArray(field.options) && field.options.length > 0 ? (
+                field.options.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))
+              ) : (
+                <div className="px-2 py-1 text-sm text-gray-500">
+                  No options available
+                </div>
+              )}
             </SelectContent>
           </Select>
         )
       case 'radio':
         return (
-            <RadioGroup
+          <RadioGroup
             onValueChange={(value: string) => handleDynamicValueChange(field.name, value)}
             value={dynamicValues[field.name] || ''}
             required={field.required}
             className="flex flex-col space-y-2"
-            >
-            {field.options?.map((option: FieldOption) => (
-              <div key={option.value} className="flex items-center space-x-2">
-              <RadioGroupItem value={option.value} id={`${field.name}-${option.value}`} />
-              <Label htmlFor={`${field.name}-${option.value}`}>{option.label}</Label>
-              </div>
-            ))}
-            </RadioGroup>
+          >
+            {Array.isArray(field.options) && field.options.length > 0 ? (
+              field.options.map((option: FieldOption) => (
+                <div key={option.value} className="flex items-center space-x-2">
+                  <RadioGroupItem value={option.value} id={`${field.name}-${option.value}`} />
+                  <Label htmlFor={`${field.name}-${option.value}`}>{option.label}</Label>
+                </div>
+              ))
+            ) : (
+              <div className="text-sm text-gray-500">No options available</div>
+            )}
+          </RadioGroup>
         )
       case 'checkbox':
         return (
           <div className="flex flex-col space-y-2">
-            {field.options?.map((option) => (
+            {Array.isArray(field.options) && field.options.length > 0 ? (
+              field.options.map((option) => (
                 <div key={option.value} className="flex items-center space-x-2">
-                <Checkbox
-                  id={`${field.name}-${option.value}`}
-                  checked={dynamicValues[field.name]?.includes(option.value) || false}
-                  onCheckedChange={(checked: boolean | "indeterminate") => {
-                  const currentValues: string[] = dynamicValues[field.name]?.split(',') || []
-                  const newValues: string[] = checked === true
-                    ? [...currentValues, option.value]
-                    : currentValues.filter((v: string) => v !== option.value)
-                  handleDynamicValueChange(field.name, newValues.join(','))
-                  }}
-                />
-                <Label htmlFor={`${field.name}-${option.value}`}>{option.label}</Label>
+                  <Checkbox
+                    id={`${field.name}-${option.value}`}
+                    checked={dynamicValues[field.name]?.includes(option.value) || false}
+                    onCheckedChange={(checked: boolean | "indeterminate") => {
+                      const currentValues: string[] = dynamicValues[field.name]?.split(',').filter(Boolean) || []
+                      const newValues: string[] = checked === true
+                        ? [...currentValues, option.value]
+                        : currentValues.filter((v: string) => v !== option.value)
+                      handleDynamicValueChange(field.name, newValues.join(','))
+                    }}
+                  />
+                  <Label htmlFor={`${field.name}-${option.value}`}>{option.label}</Label>
                 </div>
-            ))}
+              ))
+            ) : (
+              <div className="text-sm text-gray-500">No options available</div>
+            )}
           </div>
         )
       default:
@@ -276,22 +337,30 @@ export default function ProductForm() {
           {/* Category Select */}
           <div>
             <Label>Category</Label>
-            <Select onValueChange={(val) => setValue('category', val)}>
+            <Select onValueChange={(val) => setValue('category', val)} disabled={loading}>
               <SelectTrigger>
-                <SelectValue placeholder="Select a category" />
+                <SelectValue placeholder={loading ? "Loading categories..." : "Select a category"} />
               </SelectTrigger>
               <SelectContent>
-                {categories.map((cat) => (
-                  <SelectItem key={cat.id} value={String(cat.id)}>
-                    {cat.name}
-                  </SelectItem>
-                ))}
+                {Array.isArray(categories) && categories.length > 0 ? (
+                  categories.map((cat) => (
+                    <SelectItem key={cat.id} value={String(cat.id)}>
+                      {cat.name}
+                    </SelectItem>
+                  ))
+                ) : (
+                  !loading && (
+                    <div className="px-2 py-1 text-sm text-gray-500">
+                      No categories available
+                    </div>
+                  )
+                )}
               </SelectContent>
             </Select>
           </div>
 
           {/* Subcategory Select */}
-          {subcategories.length > 0 && (
+          {Array.isArray(subcategories) && subcategories.length > 0 && (
             <div>
               <Label>Subcategory</Label>
               <Select onValueChange={(val) => setValue('subcategory', val)}>
@@ -380,7 +449,7 @@ export default function ProductForm() {
 
           {/* Dynamic Fields */}
           {warning && <p className="text-yellow-500 text-sm">{warning}</p>}
-          {dynamicFields.map((field) => (
+          {Array.isArray(dynamicFields) && dynamicFields.map((field) => (
             <div key={field.name} className="space-y-2">
               <Label>
                 {field.label}
@@ -443,11 +512,11 @@ export default function ProductForm() {
               {imageFiles.map((file, idx) => (
                 <div key={idx} className="relative w-20 h-20">
                   <Image
-                    src={file ? URL.createObjectURL(file) : '/placeholder.png'}
+                    src={URL.createObjectURL(file)}
                     alt="Preview"
-                    className="object-cover w-full h-full rounded"
-                    width={400} // Set appropriate width
-                    height={400} // Set appropriate height
+                    fill
+                    className="object-cover rounded"
+                    unoptimized
                   />
                   <button
                     type="button"

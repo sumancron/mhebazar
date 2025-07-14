@@ -1,6 +1,7 @@
 "use client";
 
-import { LayoutGrid, Link } from "lucide-react";
+import { LayoutGrid } from "lucide-react";
+import Link from "next/link";
 import Image from "next/image";
 import { JSX,useEffect, useState } from "react";
 
@@ -70,14 +71,14 @@ export default function CategoriesSection(): JSX.Element {
       });
   }, []);
 
-  const displayed = showAll ? categories : categories.slice(0, 7);
+  const displayed = showAll ? categories : categories.slice(0, 6);
 
   return (
-    <section className="py-8 w-full mx-auto px-4 max-w-7xl">
+    <section className="py-8 w-full mx-auto px-4">
       <h2 className="text-lg sm:text-xl md:text-2xl font-bold mb-6 text-center md:text-left">
         MHE Categories
       </h2>
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-6">
+      <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 gap-4 sm:gap-6">
         {displayed.map((cat, idx) => (
           <CategoryItem key={idx} image={cat.image} label={cat.label} />
         ))}
