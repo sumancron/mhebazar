@@ -49,6 +49,8 @@ export default function CategoryForm(): JSX.Element {
     },
   })
 
+  const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+
   const { fields, append, remove } = useFieldArray({
     control,
     name: 'product_details',
@@ -60,6 +62,10 @@ export default function CategoryForm(): JSX.Element {
   // Add local state for images
   const [catImageFiles, setCatImageFiles] = useState<File[]>([])
   const [catBannerFiles, setCatBannerFiles] = useState<File[]>([])
+
+  // get access token
+  const token = localStorage.getItem('access_token')
+  let userData = null;
 
   // Handle file input change
   const handleCatImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -90,11 +96,29 @@ export default function CategoryForm(): JSX.Element {
     if (catImageFiles[0]) formData.append('cat_image', catImageFiles[0])
     if (catBannerFiles[0]) formData.append('cat_banner', catBannerFiles[0])
     formData.append('product_details', JSON.stringify(data.product_details))
+    
+    if (token) {
+      try {
+        const userResponse = await axios.get(`${API_BASE_URL}/users/me/`, {
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            // "X-API-KEY": API_KEY,
+          },
+        });
+        userData = userResponse.data;
+        console.log("User data fetched successfully:", userData);
+      } catch (err) {
+        console.error("Failed to fetch user data:", err);
+      }
+    }
 
     try {
       setIsSubmitting(true)
-      await axios.post('http://localhost:8000/api/categories/', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
+      await axios.post(`${API_BASE_URL}/categories/`, formData, {
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
+        },
       })
       setMessage('Category created successfully!')
     } catch (error: unknown) {

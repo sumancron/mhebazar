@@ -5,6 +5,9 @@ import NewArrivalsAndTopSearches from "@/components/home/NewArrivalsAndTopSearch
 import SpareParts from "@/components/home/SparepartsFeatured";
 import VendorProductsFeatured from "@/components/home/VendorProdcutsFeatured";
 import ExportProductsFeatured from "@/components/home/ExportProdcutsFeatured";
+import ProductForm from "@/components/forms/uploadForm/ProductForm";
+import CategoryForm from "@/components/forms/uploadForm/CategoryForm";
+import SubcategoryForm from "@/components/forms/uploadForm/SubcategoryForm";
 // import ProductCards from "@/components/test/card";
 // import MheWriteAReview from "@/components/test/reviewCard";
 
@@ -38,6 +41,15 @@ export default function HomePage() {
 
         {/* <ProductCards />
         <MheWriteAReview  /> */}
+
+        <h1 className="mb-10 text-center">Category</h1>
+        <CategoryForm />
+
+        <h1 className="mb-10 text-center">Subcategory</h1>
+        <SubcategoryForm />
+
+        <h1 className="mb-10 text-center">Product</h1>
+        <ProductForm />
       </div>
 
     </>

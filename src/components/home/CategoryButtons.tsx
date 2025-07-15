@@ -1,8 +1,10 @@
 "use client";
 
-import { LayoutGrid, Link } from "lucide-react";
+import { LayoutGrid } from "lucide-react";
+import Link from "next/link";
 import Image from "next/image";
 import { JSX,useEffect, useState } from "react";
+import axios from "axios";
 
 interface Category {
   image?: string;
@@ -57,27 +59,41 @@ export default function CategoriesSection(): JSX.Element {
   const [categories, setCategories] = useState<Category[]>(fallbackCategories); // default is dummy
   const [showAll, setShowAll] = useState(false);
 
-  useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/categories`)
-      .then((res) => res.json())
-      .then((data) => {
-        if (Array.isArray(data) && data.length > 0) {
-          setCategories(data); // replace dummy if real data arrives
-        }
-      })
-      .catch((err) => {
-        console.error("Error fetching categories:", err);
-      });
-  }, []);
+  const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
-  const displayed = showAll ? categories : categories.slice(0, 7);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await axios.get(`${API_BASE_URL}/categories/`)
+
+        // Ensure the response data is an array
+        if (Array.isArray(response.data)) {
+          setCategories(response.data)
+        } else if (response.data && Array.isArray(response.data.results)) {
+          // Handle paginated responses
+          setCategories(response.data.results)
+        } else {
+          console.error('Unexpected API response format:', response.data)
+          setCategories([])
+        }
+      } catch (error) {
+        console.error('Error fetching categories:', error)
+        setCategories([])
+      } 
+    }
+
+    fetchCategories()
+  }, [])
+
+  const displayed = showAll ? categories : categories.slice(0, 6);
 
   return (
-    <section className="py-8 w-full mx-auto px-4 max-w-7xl">
+    <section className="py-8 w-full mx-auto px-4">
       <h2 className="text-lg sm:text-xl md:text-2xl font-bold mb-6 text-center md:text-left">
         MHE Categories
       </h2>
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-6">
+      <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 gap-4 sm:gap-6">
         {displayed.map((cat, idx) => (
           <CategoryItem key={idx} image={cat.image} label={cat.label} />
         ))}

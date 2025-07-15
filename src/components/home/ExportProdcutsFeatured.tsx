@@ -19,21 +19,21 @@ export default function ExportProductsFeatured() {
   const [exportProducts, setExportProducts] = useState<ExportProduct[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchExportProducts = async () => {
-      try {
-        const res = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/export_products`);
-        if (!res.ok) throw new Error("Failed to fetch data");
-        const data: ExportProduct[] = await res.json();
-        setExportProducts(data || []);
-      } catch {
-        setExportProducts([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchExportProducts();
-  }, []);
+  // useEffect(() => {
+  //   const fetchExportProducts = async () => {
+  //     try {
+  //       const res = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/export_products`);
+  //       if (!res.ok) throw new Error("Failed to fetch data");
+  //       const data: ExportProduct[] = await res.json();
+  //       setExportProducts(data || []);
+  //     } catch {
+  //       setExportProducts([]);
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
+  //   fetchExportProducts();
+  // }, []);
 
   return (
     <section className="w-full mx-auto px-4 py-10">

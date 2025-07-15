@@ -56,123 +56,123 @@ export default function NewArrivalsAndTopSearches() {
     topSearched?: string;
   }>({});
 
-  const fetchNewArrivals = useCallback(async (): Promise<void> => {
-    if (!process.env.NEXT_PUBLIC_API_BASE_URL) {
-      console.warn("NEXT_PUBLIC_API_BASE_URL not configured for new arrivals, using fallback data");
-      setIsLoadingNewArrivals(false);
-      return;
-    }
+  // const fetchNewArrivals = useCallback(async (): Promise<void> => {
+  //   if (!process.env.NEXT_PUBLIC_API_BASE_URL) {
+  //     console.warn("NEXT_PUBLIC_API_BASE_URL not configured for new arrivals, using fallback data");
+  //     setIsLoadingNewArrivals(false);
+  //     return;
+  //   }
 
-    try {
-      setErrors(prev => ({ ...prev, newArrivals: undefined }));
+  //   try {
+  //     setErrors(prev => ({ ...prev, newArrivals: undefined }));
 
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000);
+  //     const controller = new AbortController();
+  //     const timeoutId = setTimeout(() => controller.abort(), 10000);
 
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/new_arrivals`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          signal: controller.signal,
-          cache: "force-cache",
-          next: { revalidate: 300 },
-        }
-      );
+  //     const response = await fetch(
+  //       `${process.env.NEXT_PUBLIC_API_BASE_URL}/new_arrivals`,
+  //       {
+  //         method: "GET",
+  //         headers: {
+  //           "Content-Type": "application/json",
+  //         },
+  //         signal: controller.signal,
+  //         cache: "force-cache",
+  //         next: { revalidate: 300 },
+  //       }
+  //     );
 
-      clearTimeout(timeoutId);
+  //     clearTimeout(timeoutId);
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+  //     if (!response.ok) {
+  //       throw new Error(`HTTP error! status: ${response.status}`);
+  //     }
 
-      const result: NewArrivalsApiResponse = await response.json();
+  //     const result: NewArrivalsApiResponse = await response.json();
 
-      if (result.success && result.data && Array.isArray(result.data.products)) {
-        const validProducts = result.data.products.filter((product: NewArrival) =>
-          product.image
-        );
+  //     if (result.success && result.data && Array.isArray(result.data.products)) {
+  //       const validProducts = result.data.products.filter((product: NewArrival) =>
+  //         product.image
+  //       );
 
-        if (validProducts.length > 0) {
-          setNewArrivals(validProducts.slice(0, 6)); // Limit to 6 items for UI
-          setNewArrivalsCount(result.data.count || validProducts.length);
-        } else {
-          throw new Error("No valid products in API response");
-        }
-      } else {
-        throw new Error("Invalid API response format");
-      }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Unknown error occurred";
-      console.error("Failed to fetch new arrivals:", errorMessage);
-      setErrors(prev => ({ ...prev, newArrivals: errorMessage }));
-    } finally {
-      setIsLoadingNewArrivals(false);
-    }
-  }, []);
+  //       if (validProducts.length > 0) {
+  //         setNewArrivals(validProducts.slice(0, 6)); // Limit to 6 items for UI
+  //         setNewArrivalsCount(result.data.count || validProducts.length);
+  //       } else {
+  //         throw new Error("No valid products in API response");
+  //       }
+  //     } else {
+  //       throw new Error("Invalid API response format");
+  //     }
+  //   } catch (err) {
+  //     const errorMessage = err instanceof Error ? err.message : "Unknown error occurred";
+  //     console.error("Failed to fetch new arrivals:", errorMessage);
+  //     setErrors(prev => ({ ...prev, newArrivals: errorMessage }));
+  //   } finally {
+  //     setIsLoadingNewArrivals(false);
+  //   }
+  // }, []);
 
-  const fetchTopSearched = useCallback(async (): Promise<void> => {
-    if (!process.env.NEXT_PUBLIC_API_BASE_URL) {
-      console.warn("NEXT_PUBLIC_API_BASE_URL not configured for top searched, using fallback data");
-      setIsLoadingTopSearched(false);
-      return;
-    }
+  // const fetchTopSearched = useCallback(async (): Promise<void> => {
+  //   if (!process.env.NEXT_PUBLIC_API_BASE_URL) {
+  //     console.warn("NEXT_PUBLIC_API_BASE_URL not configured for top searched, using fallback data");
+  //     setIsLoadingTopSearched(false);
+  //     return;
+  //   }
 
-    try {
-      setErrors(prev => ({ ...prev, topSearched: undefined }));
+  //   try {
+  //     setErrors(prev => ({ ...prev, topSearched: undefined }));
 
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000);
+  //     const controller = new AbortController();
+  //     const timeoutId = setTimeout(() => controller.abort(), 10000);
 
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/top_searched`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          signal: controller.signal,
-          cache: "force-cache",
-          next: { revalidate: 300 },
-        }
-      );
+  //     const response = await fetch(
+  //       `${process.env.NEXT_PUBLIC_API_BASE_URL}/top_searched`,
+  //       {
+  //         method: "GET",
+  //         headers: {
+  //           "Content-Type": "application/json",
+  //         },
+  //         signal: controller.signal,
+  //         cache: "force-cache",
+  //         next: { revalidate: 300 },
+  //       }
+  //     );
 
-      clearTimeout(timeoutId);
+  //     clearTimeout(timeoutId);
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+  //     if (!response.ok) {
+  //       throw new Error(`HTTP error! status: ${response.status}`);
+  //     }
 
-      const result: TopSearchedApiResponse = await response.json();
+  //     const result: TopSearchedApiResponse = await response.json();
 
-      if (result.success && Array.isArray(result.data)) {
-        const validProducts = result.data.filter((product: TopSearchedProduct) =>
-          product.image && product.label
-        );
+  //     if (result.success && Array.isArray(result.data)) {
+  //       const validProducts = result.data.filter((product: TopSearchedProduct) =>
+  //         product.image && product.label
+  //       );
 
-        if (validProducts.length > 0) {
-          setTopSearched(validProducts.slice(0, 5)); // Limit to 5 items for UI
-        } else {
-          throw new Error("No valid products in API response");
-        }
-      } else {
-        throw new Error("Invalid API response format");
-      }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Unknown error occurred";
-      console.error("Failed to fetch top searched products:", errorMessage);
-      setErrors(prev => ({ ...prev, topSearched: errorMessage }));
-    } finally {
-      setIsLoadingTopSearched(false);
-    }
-  }, []);
+  //       if (validProducts.length > 0) {
+  //         setTopSearched(validProducts.slice(0, 5)); // Limit to 5 items for UI
+  //       } else {
+  //         throw new Error("No valid products in API response");
+  //       }
+  //     } else {
+  //       throw new Error("Invalid API response format");
+  //     }
+  //   } catch (err) {
+  //     const errorMessage = err instanceof Error ? err.message : "Unknown error occurred";
+  //     console.error("Failed to fetch top searched products:", errorMessage);
+  //     setErrors(prev => ({ ...prev, topSearched: errorMessage }));
+  //   } finally {
+  //     setIsLoadingTopSearched(false);
+  //   }
+  // }, []);
 
-  useEffect(() => {
-    fetchNewArrivals();
-    fetchTopSearched();
-  }, [fetchNewArrivals, fetchTopSearched]);
+  // useEffect(() => {
+  //   fetchNewArrivals();
+  //   fetchTopSearched();
+  // }, [fetchNewArrivals, fetchTopSearched]);
 
   const LoadingSkeleton = ({ className }: { className?: string }) => (
     <div className={`animate-pulse ${className}`}>
