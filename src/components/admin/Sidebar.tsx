@@ -31,8 +31,8 @@ const Sidebar = () => {
         { label: 'Quotes Forms', href: '/admin/forms/quotes' },
         { label: 'Rent and Buy Forms', href: '/admin/forms/rent-buy' },
         { label: 'Rental Forms', href: '/admin/forms/rentals' },
-        { label: 'Specification Forms', href: '/admin/forms/specification' },
-        { label: 'Catalogue Forms', href: '/admin/forms/catalogue' }
+        // { label: 'Specification Forms', href: '/admin/forms/specification' },
+        // { label: 'Catalogue Forms', href: '/admin/forms/catalogue' }
       ]
     },
     {
