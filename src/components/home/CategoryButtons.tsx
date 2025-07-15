@@ -4,6 +4,7 @@ import { LayoutGrid } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { JSX,useEffect, useState } from "react";
+import axios from "axios";
 
 interface Category {
   image?: string;
@@ -58,18 +59,32 @@ export default function CategoriesSection(): JSX.Element {
   const [categories, setCategories] = useState<Category[]>(fallbackCategories); // default is dummy
   const [showAll, setShowAll] = useState(false);
 
+  const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+
+
   useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/categories`)
-      .then((res) => res.json())
-      .then((data) => {
-        if (Array.isArray(data) && data.length > 0) {
-          setCategories(data); // replace dummy if real data arrives
+    const fetchCategories = async () => {
+      try {
+        const response = await axios.get(`${API_BASE_URL}/categories/`)
+
+        // Ensure the response data is an array
+        if (Array.isArray(response.data)) {
+          setCategories(response.data)
+        } else if (response.data && Array.isArray(response.data.results)) {
+          // Handle paginated responses
+          setCategories(response.data.results)
+        } else {
+          console.error('Unexpected API response format:', response.data)
+          setCategories([])
         }
-      })
-      .catch((err) => {
-        console.error("Error fetching categories:", err);
-      });
-  }, []);
+      } catch (error) {
+        console.error('Error fetching categories:', error)
+        setCategories([])
+      } 
+    }
+
+    fetchCategories()
+  }, [])
 
   const displayed = showAll ? categories : categories.slice(0, 6);
 
