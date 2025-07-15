@@ -1,9 +1,10 @@
 "use client";
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { FileText, ShoppingCart, Tag } from 'lucide-react';
 import { StatsCardProps } from '@/types'; 
 import AnalyticsDashboard from '@/components/admin/Graph';
+import axios from 'axios';
 
 const StatsCard: React.FC<StatsCardProps> = ({ icon: Icon, number, label, color = "green" }) => (
   <div className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow duration-200 cursor-pointer relative overflow-hidden">
@@ -28,6 +29,33 @@ const StatsCard: React.FC<StatsCardProps> = ({ icon: Icon, number, label, color 
 );
 
 const CompleteDashboard = () => {
+  const token = localStorage?.getItem('access_token')
+  const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+
+  useEffect(() => {
+    const checkUser = async () => {
+      if (token) {
+        try {
+          const userResponse = await axios.get(`${API_BASE_URL}/users/me/`, {
+            headers: {
+              "Authorization": `Bearer ${token}`,
+              // "X-API-KEY": API_KEY,
+            },
+          });
+          const userData = userResponse.data;
+          console.log("User data fetched successfully:", userData);
+          if (userData?.role?.id != 1) {
+            window.location.href = "/"
+          }
+        } catch (err) {
+          console.error("Failed to fetch user data:", err);
+        }
+      }
+    }
+
+    checkUser()
+  }, [])
+
   return (
     <div className="flex min-h-screen bg-gray-50">
         {/* Dashboard Content */}

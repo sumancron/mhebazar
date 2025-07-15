@@ -10,6 +10,7 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import { Card } from "@/components/ui/card";
+import axios from "axios";
 
 // ====================
 // Types
@@ -68,10 +69,10 @@ export default function MostPopular() {
     }
 
     try {
-      const res = await fetch(`${baseUrl}/most_popular`);
-      if (!res.ok) throw new Error(`Status: ${res.status}`);
-      const result: ApiResponse = await res.json();
-
+      const res = await axios.get<ApiResponse>(
+        `${baseUrl}/products/most_popular/`
+      );
+      const result = res.data;
       if (result.success && Array.isArray(result.data) && result.data.length) {
         setCategories(result.data);
       }
@@ -94,8 +95,12 @@ export default function MostPopular() {
     <section className="w-full">
       {/* Header */}
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-lg sm:text-xl md:text-2xl font-bold mb-6">Top Selling Products</h2>
-        <button className="text-green-600 text-sm hover:text-green-700">View more</button>
+        <h2 className="text-lg sm:text-xl md:text-2xl font-bold mb-6">
+          Top Selling Products
+        </h2>
+        <button className="text-green-600 text-sm hover:text-green-700">
+          View more
+        </button>
       </div>
 
       {/* Carousel */}
@@ -147,7 +152,9 @@ export default function MostPopular() {
                           />
                         </div>
                         {product.label && (
-                          <p className="text-xs mt-1 text-center">{product.label}</p>
+                          <p className="text-xs mt-1 text-center">
+                            {product.label}
+                          </p>
                         )}
                       </div>
                     ))}
@@ -159,9 +166,7 @@ export default function MostPopular() {
         </Carousel>
 
         {error && (
-          <p className="mt-2 text-xs text-amber-600 bg-amber-50 px-2 py-1 rounded">
-            
-          </p>
+          <p className="mt-2 text-xs text-amber-600 bg-amber-50 px-2 py-1 rounded"></p>
         )}
       </div>
     </section>
