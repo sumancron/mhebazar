@@ -7,12 +7,13 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
-import { Card, CardContent } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select'
 import { Checkbox } from '@/components/ui/checkbox'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
-import { X } from 'lucide-react'
+import { X, FileText, Image as ImageIcon, Package, AlertCircle } from 'lucide-react'
 import Image from 'next/image'
+import Cookies from 'js-cookie'
 
 type FieldOption = {
   label: string
@@ -88,10 +89,6 @@ export default function ProductForm() {
   const [loading, setLoading] = useState(true)
 
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
-
-  // get access token
-  const token = localStorage.getItem('access_token')
-  let userData = null;
 
   // categories fetch
   useEffect(() => {
@@ -206,18 +203,25 @@ export default function ProductForm() {
     if (brochureFile) formData.append('brochure', brochureFile)
     imageFiles.forEach((img) => formData.append('images', img))
 
-    if (token) {
-      try {
-        const userResponse = await axios.get(`${API_BASE_URL}/users/me/`, {
-          headers: {
-            "Authorization": `Bearer ${token}`,
-            // "X-API-KEY": API_KEY,
-          },
+    let token = Cookies.get("access_token");
+
+    if (!token) {
+      const refreshResponse = await axios.post(
+        `${API_BASE_URL}/token/refresh/`,
+        {},
+        { withCredentials: true } // refresh_token read from HttpOnly cookie
+      );
+
+      token = refreshResponse.data?.access;
+
+      if (token) {
+        Cookies.set("access_token", token, {
+          expires: 1 / 24, // 1 hour
+          secure: true,
+          sameSite: "Lax",
         });
-        userData = userResponse.data;
-        console.log("User data fetched successfully:", userData);
-      } catch (err) {
-        console.error("Failed to fetch user data:", err);
+      } else {
+        throw new Error("No new access token returned");
       }
     }
 
@@ -240,6 +244,7 @@ export default function ProductForm() {
       case 'text':
         return (
           <Input
+            className="border-gray-300 focus:border-[#5CA131] focus:ring-[#5CA131]"
             placeholder={field.placeholder}
             value={dynamicValues[field.name] || ''}
             onChange={(e) => handleDynamicValueChange(field.name, e.target.value)}
@@ -249,6 +254,7 @@ export default function ProductForm() {
       case 'textarea':
         return (
           <Textarea
+            className="border-gray-300 focus:border-[#5CA131] focus:ring-[#5CA131] min-h-[100px]"
             placeholder={field.placeholder}
             value={dynamicValues[field.name] || ''}
             onChange={(e) => handleDynamicValueChange(field.name, e.target.value)}
@@ -262,7 +268,7 @@ export default function ProductForm() {
             value={dynamicValues[field.name] || ''}
             required={field.required}
           >
-            <SelectTrigger>
+            <SelectTrigger className="border-gray-300 focus:border-[#5CA131] focus:ring-[#5CA131]">
               <SelectValue placeholder={`Select ${field.label}`} />
             </SelectTrigger>
             <SelectContent>
@@ -286,13 +292,19 @@ export default function ProductForm() {
             onValueChange={(value: string) => handleDynamicValueChange(field.name, value)}
             value={dynamicValues[field.name] || ''}
             required={field.required}
-            className="flex flex-col space-y-2"
+            className="flex flex-col space-y-3"
           >
             {Array.isArray(field.options) && field.options.length > 0 ? (
               field.options.map((option: FieldOption) => (
-                <div key={option.value} className="flex items-center space-x-2">
-                  <RadioGroupItem value={option.value} id={`${field.name}-${option.value}`} />
-                  <Label htmlFor={`${field.name}-${option.value}`}>{option.label}</Label>
+                <div key={option.value} className="flex items-center space-x-3">
+                  <RadioGroupItem
+                    value={option.value}
+                    id={`${field.name}-${option.value}`}
+                    className="border-gray-300 text-[#5CA131] focus:ring-[#5CA131]"
+                  />
+                  <Label htmlFor={`${field.name}-${option.value}`} className="text-sm font-medium">
+                    {option.label}
+                  </Label>
                 </div>
               ))
             ) : (
@@ -302,10 +314,10 @@ export default function ProductForm() {
         )
       case 'checkbox':
         return (
-          <div className="flex flex-col space-y-2">
+          <div className="flex flex-col space-y-3">
             {Array.isArray(field.options) && field.options.length > 0 ? (
               field.options.map((option) => (
-                <div key={option.value} className="flex items-center space-x-2">
+                <div key={option.value} className="flex items-center space-x-3">
                   <Checkbox
                     id={`${field.name}-${option.value}`}
                     checked={dynamicValues[field.name]?.includes(option.value) || false}
@@ -316,8 +328,11 @@ export default function ProductForm() {
                         : currentValues.filter((v: string) => v !== option.value)
                       handleDynamicValueChange(field.name, newValues.join(','))
                     }}
+                    className="border-gray-300 data-[state=checked]:bg-[#5CA131] data-[state=checked]:border-[#5CA131]"
                   />
-                  <Label htmlFor={`${field.name}-${option.value}`}>{option.label}</Label>
+                  <Label htmlFor={`${field.name}-${option.value}`} className="text-sm font-medium">
+                    {option.label}
+                  </Label>
                 </div>
               ))
             ) : (
@@ -331,213 +346,313 @@ export default function ProductForm() {
   }
 
   return (
-    <Card className="max-w-3xl mx-auto p-6">
-      <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          {/* Category Select */}
-          <div>
-            <Label>Category</Label>
-            <Select onValueChange={(val) => setValue('category', val)} disabled={loading}>
-              <SelectTrigger>
-                <SelectValue placeholder={loading ? "Loading categories..." : "Select a category"} />
-              </SelectTrigger>
-              <SelectContent>
-                {Array.isArray(categories) && categories.length > 0 ? (
-                  categories.map((cat) => (
-                    <SelectItem key={cat.id} value={String(cat.id)}>
-                      {cat.name}
-                    </SelectItem>
-                  ))
-                ) : (
-                  !loading && (
-                    <div className="px-2 py-1 text-sm text-gray-500">
-                      No categories available
-                    </div>
-                  )
+    <div className="min-h-screen bg-gray-50 py-8">
+      <Card className="max-w-4xl mx-auto shadow-lg border-0">
+        <CardHeader className="bg-gradient-to-r from-[#5CA131] to-[#47881F] text-white">
+          <CardTitle className="text-2xl font-bold flex items-center gap-2">
+            <Package className="w-6 h-6" />
+            Create New Product
+          </CardTitle>
+        </CardHeader>
+
+        <CardContent className="p-8">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+            {/* Category Selection Section */}
+            <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">Category & Classification</h3>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <Label className="text-sm font-medium text-gray-700 mb-2 block">Category</Label>
+                  <Select onValueChange={(val) => setValue('category', val)} disabled={loading}>
+                    <SelectTrigger className="border-gray-300 focus:border-[#5CA131] focus:ring-[#5CA131]">
+                      <SelectValue placeholder={loading ? "Loading categories..." : "Select a category"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Array.isArray(categories) && categories.length > 0 ? (
+                        categories.map((cat) => (
+                          <SelectItem key={cat.id} value={String(cat.id)}>
+                            {cat.name}
+                          </SelectItem>
+                        ))
+                      ) : (
+                        !loading && (
+                          <div className="px-2 py-1 text-sm text-gray-500">
+                            No categories available
+                          </div>
+                        )
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {Array.isArray(subcategories) && subcategories.length > 0 && (
+                  <div>
+                    <Label className="text-sm font-medium text-gray-700 mb-2 block">Subcategory</Label>
+                    <Select onValueChange={(val) => setValue('subcategory', val)}>
+                      <SelectTrigger className="border-gray-300 focus:border-[#5CA131] focus:ring-[#5CA131]">
+                        <SelectValue placeholder="Select a subcategory" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {subcategories.map((sub) => (
+                          <SelectItem key={sub.id} value={String(sub.id)}>
+                            {sub.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 )}
-              </SelectContent>
-            </Select>
-          </div>
+              </div>
+            </div>
 
-          {/* Subcategory Select */}
-          {Array.isArray(subcategories) && subcategories.length > 0 && (
-            <div>
-              <Label>Subcategory</Label>
-              <Select onValueChange={(val) => setValue('subcategory', val)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a subcategory" />
-                </SelectTrigger>
-                <SelectContent>
-                  {subcategories.map((sub) => (
-                    <SelectItem key={sub.id} value={String(sub.id)}>
-                      {sub.name}
-                    </SelectItem>
+            {/* Basic Information Section */}
+            <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">Basic Information</h3>
+
+              <div className="space-y-4">
+                <div>
+                  <Label className="text-sm font-medium text-gray-700 mb-2 block">
+                    Product Name <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    {...register('name', { required: true })}
+                    placeholder="Enter product name"
+                    className="border-gray-300 focus:border-[#5CA131] focus:ring-[#5CA131]"
+                  />
+                  {errors.name && <p className="text-red-500 text-sm mt-1">Product name is required</p>}
+                </div>
+
+                <div>
+                  <Label className="text-sm font-medium text-gray-700 mb-2 block">Description</Label>
+                  <Textarea
+                    {...register('description')}
+                    placeholder="Enter product description"
+                    className="border-gray-300 focus:border-[#5CA131] focus:ring-[#5CA131] min-h-[100px]"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-sm font-medium text-gray-700 mb-2 block">Manufacturer</Label>
+                    <Input
+                      {...register('manufacturer')}
+                      placeholder="Manufacturer name"
+                      className="border-gray-300 focus:border-[#5CA131] focus:ring-[#5CA131]"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium text-gray-700 mb-2 block">Model</Label>
+                    <Input
+                      {...register('model')}
+                      placeholder="Model number"
+                      className="border-gray-300 focus:border-[#5CA131] focus:ring-[#5CA131]"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-sm font-medium text-gray-700 mb-2 block">
+                      Price <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      {...register('price', { required: true })}
+                      placeholder="0.00"
+                      className="border-gray-300 focus:border-[#5CA131] focus:ring-[#5CA131]"
+                    />
+                    {errors.price && <p className="text-red-500 text-sm mt-1">Price is required</p>}
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium text-gray-700 mb-2 block">Type</Label>
+                    <Select onValueChange={(val) => setValue('type', val)}>
+                      <SelectTrigger className="border-gray-300 focus:border-[#5CA131] focus:ring-[#5CA131]">
+                        <SelectValue placeholder="Select type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {TYPE_OPTIONS.map((opt) => (
+                          <SelectItem key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* SEO Information Section */}
+            <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">SEO Information</h3>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-sm font-medium text-gray-700 mb-2 block">Meta Title</Label>
+                  <Input
+                    {...register('meta_title')}
+                    placeholder="SEO title"
+                    className="border-gray-300 focus:border-[#5CA131] focus:ring-[#5CA131]"
+                  />
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-gray-700 mb-2 block">Meta Description</Label>
+                  <Input
+                    {...register('meta_description')}
+                    placeholder="SEO description"
+                    className="border-gray-300 focus:border-[#5CA131] focus:ring-[#5CA131]"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Dynamic Fields Section */}
+            {(Array.isArray(dynamicFields) && dynamicFields.length > 0) || warning ? (
+              <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+                <h3 className="text-lg font-semibold text-gray-800 mb-4">Product Details</h3>
+
+                {warning && (
+                  <div className="flex items-center gap-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg mb-4">
+                    <AlertCircle className="w-5 h-5 text-yellow-600" />
+                    <p className="text-yellow-800 text-sm">{warning}</p>
+                  </div>
+                )}
+
+                <div className="space-y-4">
+                  {Array.isArray(dynamicFields) && dynamicFields.map((field) => (
+                    <div key={field.name} className="space-y-2">
+                      <Label className="text-sm font-medium text-gray-700 mb-2 block">
+                        {field.label}
+                        {field.required && <span className="text-red-500 ml-1">*</span>}
+                      </Label>
+                      {renderDynamicField(field)}
+                    </div>
                   ))}
-                </SelectContent>
-              </Select>
+                </div>
+              </div>
+            ) : null}
+
+            {/* File Upload Section */}
+            <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">Files & Media</h3>
+
+              <div className="space-y-6">
+                {/* Brochure Upload */}
+                <div>
+                  <Label className="text-sm font-medium text-gray-700 mb-2 block">Brochure (PDF)</Label>
+                  <input
+                    id="brochure-input"
+                    type="file"
+                    accept=".pdf"
+                    style={{ display: 'none' }}
+                    onChange={handleBrochureChange}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="border-[#5CA131] text-[#5CA131] hover:bg-[#5CA131] hover:text-white"
+                    onClick={() => document.getElementById('brochure-input')?.click()}
+                  >
+                    <FileText className="w-4 h-4 mr-2" />
+                    Select Brochure
+                  </Button>
+                  {brochureFile && (
+                    <div className="flex items-center gap-2 mt-2 p-3 bg-gray-50 rounded-lg">
+                      <FileText className="w-4 h-4 text-gray-500" />
+                      <span className="text-sm text-gray-700 flex-1">{brochureFile.name}</span>
+                      <button
+                        type="button"
+                        className="text-red-500 hover:text-red-700 p-1"
+                        onClick={removeBrochure}
+                        aria-label="Remove brochure"
+                      >
+                        <X size={16} />
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Images Upload */}
+                <div>
+                  <Label className="text-sm font-medium text-gray-700 mb-2 block">Product Images</Label>
+                  <input
+                    id="images-input"
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    style={{ display: 'none' }}
+                    onChange={handleImagesChange}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="border-[#5CA131] text-[#5CA131] hover:bg-[#5CA131] hover:text-white"
+                    onClick={() => document.getElementById('images-input')?.click()}
+                  >
+                    <ImageIcon className="w-4 h-4 mr-2" />
+                    Select Images
+                  </Button>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+                    {imageFiles.map((file, idx) => (
+                      <div key={idx} className="relative group">
+                        <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
+                          <Image
+                            src={URL.createObjectURL(file)}
+                            alt="Preview"
+                            fill
+                            className="object-cover"
+                            unoptimized
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                          onClick={() => removeImage(idx)}
+                          aria-label="Remove image"
+                        >
+                          <X size={14} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
             </div>
-          )}
 
-          {/* Standard Product Fields */}
-          <div>
-            <Label>
-              Product Name <span className="text-red-500">*</span>
-            </Label>
-            <Input
-              {...register('name', { required: true })}
-              placeholder="Product Name"
-            />
-            {errors.name && <p className="text-red-500 text-sm">Product name is required</p>}
-          </div>
-
-          <div>
-            <Label>Description</Label>
-            <Textarea {...register('description')} placeholder="Description" />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label>Meta Title</Label>
-              <Input {...register('meta_title')} placeholder="Meta Title" />
+            {/* Submit Button */}
+            <div className="flex justify-end">
+              <Button
+                type="submit"
+                disabled={isSubmitting}
+                className="bg-[#5CA131] hover:bg-[#47881F] text-white px-8 py-3 font-medium"
+              >
+                {isSubmitting ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Creating Product...
+                  </>
+                ) : (
+                  <>
+                    <Package className="w-4 h-4 mr-2" />
+                    Create Product
+                  </>
+                )}
+              </Button>
             </div>
-            <div>
-              <Label>Meta Description</Label>
-              <Input {...register('meta_description')} placeholder="Meta Description" />
-            </div>
-          </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label>Manufacturer</Label>
-              <Input {...register('manufacturer')} placeholder="Manufacturer" />
-            </div>
-            <div>
-              <Label>Model</Label>
-              <Input {...register('model')} placeholder="Model" />
-            </div>
-          </div>
-
-          <div>
-            <Label>
-              Price <span className="text-red-500">*</span>
-            </Label>
-            <Input
-              type="number"
-              step="0.01"
-              {...register('price', { required: true })}
-              placeholder="Price"
-            />
-            {errors.price && <p className="text-red-500 text-sm">Price is required</p>}
-          </div>
-
-          {/* Type Select */}
-          <div>
-            <Label>Type</Label>
-            <Select onValueChange={(val) => setValue('type', val)}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select a type" />
-              </SelectTrigger>
-              <SelectContent>
-                {TYPE_OPTIONS.map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Dynamic Fields */}
-          {warning && <p className="text-yellow-500 text-sm">{warning}</p>}
-          {Array.isArray(dynamicFields) && dynamicFields.map((field) => (
-            <div key={field.name} className="space-y-2">
-              <Label>
-                {field.label}
-                {field.required && <span className="text-red-500 ml-1">*</span>}
-              </Label>
-              {renderDynamicField(field)}
-            </div>
-          ))}
-
-          {/* File Uploads */}
-          <div>
-            <Label>Brochure (PDF)</Label>
-            <input
-              id="brochure-input"
-              type="file"
-              accept=".pdf"
-              style={{ display: 'none' }}
-              onChange={handleBrochureChange}
-            />
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => document.getElementById('brochure-input')?.click()}
-            >
-              Select Brochure
-            </Button>
-            {brochureFile && (
-              <div className="flex items-center gap-2 mt-2">
-                <span className="text-sm">{brochureFile.name}</span>
-                <button
-                  type="button"
-                  className="bg-white rounded-full p-1 shadow"
-                  onClick={removeBrochure}
-                  aria-label="Remove brochure"
-                >
-                  <X size={16} />
-                </button>
+            {message && (
+              <div className={`p-4 rounded-lg text-center ${message.includes('successfully')
+                  ? 'bg-green-50 text-green-800 border border-green-200'
+                  : 'bg-red-50 text-red-800 border border-red-200'
+                }`}>
+                {message}
               </div>
             )}
-          </div>
-
-          <div>
-            <Label>Product Images</Label>
-            <input
-              id="images-input"
-              type="file"
-              accept="image/*"
-              multiple
-              style={{ display: 'none' }}
-              onChange={handleImagesChange}
-            />
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => document.getElementById('images-input')?.click()}
-            >
-              Select Images
-            </Button>
-            <div className="flex gap-2 mt-2 flex-wrap">
-              {imageFiles.map((file, idx) => (
-                <div key={idx} className="relative w-20 h-20">
-                  <Image
-                    src={URL.createObjectURL(file)}
-                    alt="Preview"
-                    fill
-                    className="object-cover rounded"
-                    unoptimized
-                  />
-                  <button
-                    type="button"
-                    className="absolute top-0 right-0 bg-white rounded-full p-1 shadow"
-                    onClick={() => removeImage(idx)}
-                    aria-label="Remove image"
-                  >
-                    <X size={16} />
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Submit */}
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? 'Submitting...' : 'Create Product'}
-          </Button>
-          {message && <p className="text-sm text-center mt-2">{message}</p>}
-        </form>
-      </CardContent>
-    </Card>
+          </form>
+        </CardContent>
+      </Card>
+    </div>
   )
 }
