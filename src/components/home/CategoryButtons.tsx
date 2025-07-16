@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { JSX, useEffect, useState } from "react";
 import axios from "axios";
+import api from "@/lib/api";
 
 interface Category {
   image?: string;
@@ -53,7 +54,7 @@ export default function CategoriesSection(): JSX.Element {
     const fetchCategories = async () => {
       try {
         setLoading(true)
-        const response = await axios.get(`${API_BASE_URL}/categories/`)
+        const response = await api.get(`${API_BASE_URL}/categories/`)
 
         // Ensure the response data is an array
         if (Array.isArray(response.data)) {
