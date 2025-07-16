@@ -4,7 +4,7 @@ import { useState, useEffect, JSX } from "react"; // useRef added for image fall
 import Image from "next/image";
 import Link from "next/link";
 import api from "@/lib/api"; // Your custom API client
-import { Loader2 } from "lucide-react"; // For a better loading spinner
+// import { Loader2 } from "lucide-react"; // For a better loading spinner
 
 
 // --- Type Definitions (Refined) ---

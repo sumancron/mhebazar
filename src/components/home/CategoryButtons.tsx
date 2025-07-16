@@ -10,14 +10,14 @@ import api from "@/lib/api"; // Assuming your custom api wrapper is correctly co
 // --- Updated Category interface to precisely match API response for a single category ---
 interface Category {
   id: number;
-  subcategories: any[]; // We'll ignore this for display, but keep it in interface
+  subcategories: never[]; // We'll ignore this for display, but keep it in interface
   cat_image: string | null; // Can be a string (full URL) or null
   cat_banner: string | null; // Can be a string (full URL) or null
   name: string; // The category name
   description: string;
   meta_title: string | null;
   meta_description: string | null;
-  product_details: any; // Can be null or JSONB data
+  product_details: never; // Can be null or JSONB data
   created_at: string;
   updated_at: string;
 }
