@@ -52,7 +52,6 @@ const CompleteDashboard = () => {
               expires: 1 / 24, // 1 hour
               secure: true,
               sameSite: "Lax",
-              path: "/",
             });
           } else {
             throw new Error("No new access token returned");
