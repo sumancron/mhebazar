@@ -27,3 +27,4 @@ api.interceptors.request.use(
 
 // Response interceptor to handle token refresh on 401 errors
 
+export default api;
