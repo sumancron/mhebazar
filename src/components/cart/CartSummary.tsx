@@ -1,13 +1,40 @@
-// components/cart/CartSummary.tsx
 "use client";
 
 import { useEffect, useState } from "react";
-import { cartAPI, CartItem } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Trash2, Minus, Plus } from "lucide-react";
+import api from "@/lib/api";
 
-export default function CartSummary() {
+// Type definitions
+interface Product {
+  id: number;
+  name: string;
+  price: number;
+  images: string[];
+}
+
+interface CartItem {
+  id: number;
+  product: Product;
+  quantity: number;
+}
+
+interface CartSummaryProps {
+  onNext?: () => void;
+}
+
+// cartAPI using Axios instance
+const cartAPI = {
+  getCart: () => api.get<CartItem[]>("/cart/"),
+  updateCartItem: (itemId: number, quantity: number) =>
+    api.patch(`/cart/${itemId}/`, { quantity }),
+  deleteCartItem: (itemId: number) => api.delete(`/cart/${itemId}/`),
+  clearCart: () => api.post("/cart/clear/"),
+};
+
+// ✅ Functional component with props
+const CartSummary: React.FC<CartSummaryProps> = ({ onNext }) => {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -32,7 +59,7 @@ export default function CartSummary() {
   const updateQuantity = async (itemId: number, newQuantity: number) => {
     try {
       await cartAPI.updateCartItem(itemId, newQuantity);
-      await fetchCart(); // Refresh cart data
+      await fetchCart();
     } catch (err) {
       console.error("Error updating quantity:", err);
     }
@@ -41,7 +68,7 @@ export default function CartSummary() {
   const removeItem = async (itemId: number) => {
     try {
       await cartAPI.deleteCartItem(itemId);
-      await fetchCart(); // Refresh cart data
+      await fetchCart();
     } catch (err) {
       console.error("Error removing item:", err);
     }
@@ -57,9 +84,10 @@ export default function CartSummary() {
   };
 
   const calculateTotal = () => {
-    return cartItems.reduce((total, item) => {
-      return total + item.product.price * item.quantity;
-    }, 0);
+    return cartItems.reduce(
+      (total, item) => total + item.product.price * item.quantity,
+      0
+    );
   };
 
   if (loading) {
@@ -128,20 +156,23 @@ export default function CartSummary() {
                   variant="outline"
                   onClick={() =>
                     updateQuantity(item.id, Math.max(1, item.quantity - 1))
-                  }>
+                  }
+                >
                   <Minus className="h-4 w-4" />
                 </Button>
                 <span className="w-8 text-center">{item.quantity}</span>
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() => updateQuantity(item.id, item.quantity + 1)}>
+                  onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                >
                   <Plus className="h-4 w-4" />
                 </Button>
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() => removeItem(item.id)}>
+                  onClick={() => removeItem(item.id)}
+                >
                   <Trash2 className="h-4 w-4" />
                 </Button>
               </div>
@@ -173,6 +204,16 @@ export default function CartSummary() {
           </div>
         </CardContent>
       </Card>
+
+      {/* ⏭ Proceed Button */}
+      {onNext && (
+        <Button className="w-full mt-4" onClick={onNext}>
+          Proceed to Address
+        </Button>
+      )}
     </div>
   );
-}
+};
+
+// ✅ Correct export
+export default CartSummary;

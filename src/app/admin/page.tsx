@@ -73,7 +73,8 @@ const CompleteDashboard = () => {
           window.location.href = "/";
         }
 
-      } catch (err:any) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } catch (err: any) {
         console.error("Auth or user check failed:", err);
 
         // If token refresh failed (e.g., 401), redirect to login

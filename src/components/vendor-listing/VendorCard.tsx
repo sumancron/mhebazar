@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
 type Vendor = {
   id: number;
@@ -16,6 +17,16 @@ type Props = {
 };
 
 export default function VendorCard({ vendor }: Props) {
+  const [isAdminPath, setIsAdminPath] = useState(false);
+
+  useEffect(() => {
+    setIsAdminPath(window.location.pathname.startsWith("/admin/"));
+  }, []);
+
+  const href = isAdminPath
+    ? `/admin/accounts/registered-vendors/${vendor.name}`
+    : `/vendor-listing/${vendor.name}`;
+
   return (
     <div className="relative border border-[#E5F4E8] rounded-2xl p-6 flex flex-col items-center shadow-sm hover:shadow-lg hover:scale-[1.03] transition-all duration-200 bg-white min-w-[220px] max-w-[260px] w-full">
       {/* Items Badge */}
@@ -39,17 +50,8 @@ export default function VendorCard({ vendor }: Props) {
       {/* Buttons */}
 
       <div className="flex gap-2 w-full mt-2">
-        <Link
-          href={
-            window.location.pathname.startsWith('/admin/')
-              ? `/admin/accounts/registered-vendors/${vendor.name}`
-              : `/vendor-listing/${vendor.name}`
-          }
-          passHref
-        >
-          <Button
-            className="flex-1 text-sm font-medium py-2 rounded-lg bg-[#5CA131] hover:bg-[#57b87b] border border-[#6FCF97] text-white transition"
-          >
+        <Link href={href}>
+          <Button className="flex-1 text-sm font-medium py-2 rounded-lg bg-[#5CA131] hover:bg-[#57b87b] border border-[#6FCF97] text-white transition">
             View Product
           </Button>
         </Link>
