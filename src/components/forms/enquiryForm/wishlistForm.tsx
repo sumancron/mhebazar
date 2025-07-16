@@ -1,19 +1,37 @@
 'use client';
 
-import { useState } from 'react';
-import { wishlistAPI, WishlistItem } from '@/lib/api';
+import { useEffect, useState } from 'react';
+import api from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Trash2, ShoppingCart } from 'lucide-react';
+
+// Define or import this type based on your backend response
+interface WishlistItem {
+  id: number;
+  product: {
+    id: number;
+    name: string;
+    price: number;
+    description: string;
+    images?: string[];
+  };
+}
+
+// Assuming you have a wishlistAPI file
+const wishlistAPI = {
+  getWishlist: () => api.get('/wishlist/'),
+  deleteWishlistItem: (id: number) => api.delete(`/wishlist/${id}/`),
+};
 
 export default function WishlistForm() {
   const [wishlistItems, setWishlistItems] = useState<WishlistItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useState(() => {
+  useEffect(() => {
     fetchWishlist();
-  }, );
+  }, []);
 
   const fetchWishlist = async () => {
     try {
@@ -31,7 +49,7 @@ export default function WishlistForm() {
   const removeFromWishlist = async (itemId: number) => {
     try {
       await wishlistAPI.deleteWishlistItem(itemId);
-      await fetchWishlist(); // Refresh wishlist data
+      await fetchWishlist();
     } catch (err) {
       console.error('Error removing from wishlist:', err);
     }
@@ -39,8 +57,7 @@ export default function WishlistForm() {
 
   const addToCart = async (productId: number) => {
     try {
-      // You'll need to import productAPI here
-      // await productAPI.addToCart(productId);
+      // Add proper cart API here later
       console.log('Product added to cart', productId);
     } catch (err) {
       console.error('Error adding to cart:', err);
@@ -86,7 +103,7 @@ export default function WishlistForm() {
   return (
     <div className="space-y-4">
       <h2 className="text-xl font-semibold">My Wishlist</h2>
-      
+
       {wishlistItems.map((item) => (
         <Card key={item.id}>
           <CardContent className="p-4">
@@ -128,4 +145,3 @@ export default function WishlistForm() {
     </div>
   );
 }
-
