@@ -49,7 +49,11 @@ const CompleteDashboard = () => {
           }
         } catch (err) {
           console.error("Failed to fetch user data:", err);
+          window.location.href = "/"
         }
+      }
+      else {
+        window.location.href = "/"
       }
     }
 
