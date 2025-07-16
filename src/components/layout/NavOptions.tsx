@@ -47,6 +47,8 @@ interface ProductsResponse {
   results: Product[];
 }
 
+// Define your API_BASE_URL here
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000"; // Replace with your actual API base URL
 
 // Helper function to create slugs
 const createSlug = (name: string) => name.toLowerCase().replace(/\s+/g, "-");
@@ -61,8 +63,8 @@ export default function CategoryMenu({
   const router = useRouter();
 
   const [categories, setCategories] = useState<Category[]>([]);
-  const [hoveredCategory, setHoveredCategory] = useState<Category | null>(null);
-  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null); // Clicked to lock subcategory view
+  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null); // Clicked category, locks the view
+  const [hoveredCategory, setHoveredCategory] = useState<Category | null>(null); // Hovered category, temporary view
   const [products, setProducts] = useState<Product[]>([]);
 
   useEffect(() => {
@@ -75,13 +77,12 @@ export default function CategoryMenu({
         setCategories(categoriesResponse.data.results);
         setProducts(productsResponse.data.results);
 
-        // Set "Battery" as the initially hovered and displayed category
+        // Set "Battery" as the initially hovered category, but not selected
         if (categoriesResponse.data.results.length > 0) {
           const defaultCategory =
             categoriesResponse.data.results.find((cat) => cat.name === "Battery") ||
             categoriesResponse.data.results[0];
-          setHoveredCategory(defaultCategory);
-          setSelectedCategory(defaultCategory); // Keep the selected category visible initially
+          setHoveredCategory(defaultCategory); // Only set hovered, not selected initially
         }
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -90,14 +91,18 @@ export default function CategoryMenu({
 
     if (isOpen) {
       fetchData();
+    } else {
+      // Reset states when menu closes
+      setSelectedCategory(null);
+      setHoveredCategory(null);
     }
   }, [isOpen]);
 
   // Determine which category's data to display in the rightmost column
-  // This will be the selected (clicked) category, or the hovered category if nothing is selected.
+  // If a category is selected by click, display that. Otherwise, display the hovered category.
   const displaySourceCategory = selectedCategory || hoveredCategory;
 
-  // Divide categories into two columns for the first two UI columns
+  // Divide categories into two columns
   const categoriesCol1 = useMemo(
     () => categories.slice(0, Math.ceil(categories.length / 2)),
     [categories]
@@ -117,10 +122,9 @@ export default function CategoryMenu({
     return products.filter((product) => product.category === categoryId).length;
   };
 
-  // Function to get image for a subcategory (prioritizing sub_image, then product image, then fallback)
+  // Function to get image for a subcategory
   const getSubCategoryImage = (subCategory: SubCategory) => {
     if (subCategory.sub_image) {
-      // Ensure the URL is absolute if it's relative
       return subCategory.sub_image.startsWith("http")
         ? subCategory.sub_image
         : `${API_BASE_URL}${subCategory.sub_image}`;
@@ -143,28 +147,28 @@ export default function CategoryMenu({
     return name.split(" ").map((n) => n[0]).join("").toUpperCase().substring(0, 2);
   };
 
-  // Handle click on category name (toggle subcategories or redirect if no subcats)
+  // Handle click on category name: toggles selected category
   const handleCategoryNameClick = (category: Category) => {
     if (category.subcategories.length > 0) {
-      // Toggle selection: if already selected, deselect; otherwise, select
+      // If the clicked category is already selected, deselect it. Otherwise, select it.
       setSelectedCategory(category.id === selectedCategory?.id ? null : category);
-      // Keep hovered state in sync for immediate visual feedback
+      // Also update hovered to keep consistency
       setHoveredCategory(category);
     } else {
-      // No subcategories, redirect to category page and close menu
+      // No subcategories, navigate directly and close menu
       router.push(`/${createSlug(category.name)}`);
       onClose();
     }
   };
 
-  // Handle click on category arrow (always redirect to category page)
-  const handleCategoryArrowClick = (category: Category) => {
-    onClose(); // Close the menu regardless of navigation being handled by Link
+  // Handle click on category arrow: navigates to category page and closes menu
+  const handleCategoryArrowClick = () => {
+    onClose();
   };
 
-  // Handle click on subcategory (always redirect to subcategory page)
+  // Handle click on subcategory: navigates to subcategory page and closes menu
   const handleSubCategoryClick = () => {
-    onClose(); // Close the menu regardless of navigation being handled by Link
+    onClose();
   };
 
   return (
@@ -188,16 +192,22 @@ export default function CategoryMenu({
                     className={`flex items-center justify-between px-3 py-2 text-sm cursor-pointer rounded transition-colors
                       ${selectedCategory?.id === category.id // If this category is explicitly selected
                         ? "bg-white text-orange-600 font-medium"
-                        : !selectedCategory && hoveredCategory?.id === category.id // If no selection, but hovered
+                        : hoveredCategory?.id === category.id // If no selection, but hovered
                           ? "bg-gray-100 text-orange-600"
                           : "text-gray-700 hover:bg-white hover:text-orange-600" // Default hover
                       }
                     `}
                     onMouseEnter={() => {
-                      if (!selectedCategory) {
                         // Only update hovered if no category is currently selected by click
-                        setHoveredCategory(category);
-                      }
+                        if (!selectedCategory || selectedCategory.id !== category.id) {
+                            setHoveredCategory(category);
+                        }
+                    }}
+                    onMouseLeave={() => {
+                        // Clear hovered state only if it's not the currently selected category
+                        if (hoveredCategory?.id === category.id && selectedCategory?.id !== category.id) {
+                            setHoveredCategory(null);
+                        }
                     }}
                   >
                     <span
@@ -209,8 +219,8 @@ export default function CategoryMenu({
                     <Link
                       href={`/${createSlug(category.name)}`}
                       passHref
-                      onClick={() => handleCategoryArrowClick(category)}
-                      className="p-1 -mr-1 rounded hover:bg-gray-200" // Make arrow clickable area slightly larger
+                      onClick={handleCategoryArrowClick}
+                      className="p-1 -mr-1 rounded hover:bg-gray-200"
                       aria-label={`Go to ${category.name} category page`}
                     >
                       <ChevronRight className="w-4 h-4" />
@@ -229,15 +239,20 @@ export default function CategoryMenu({
                     className={`flex items-center justify-between px-3 py-2 text-sm cursor-pointer rounded transition-colors
                       ${selectedCategory?.id === category.id
                         ? "bg-white text-orange-600 font-medium"
-                        : !selectedCategory && hoveredCategory?.id === category.id
+                        : hoveredCategory?.id === category.id
                           ? "bg-gray-100 text-orange-600"
                           : "text-gray-700 hover:bg-white hover:text-orange-600"
                       }
                     `}
                     onMouseEnter={() => {
-                      if (!selectedCategory) {
-                        setHoveredCategory(category);
-                      }
+                        if (!selectedCategory || selectedCategory.id !== category.id) {
+                            setHoveredCategory(category);
+                        }
+                    }}
+                    onMouseLeave={() => {
+                        if (hoveredCategory?.id === category.id && selectedCategory?.id !== category.id) {
+                            setHoveredCategory(null);
+                        }
                     }}
                   >
                     <span
@@ -249,7 +264,7 @@ export default function CategoryMenu({
                     <Link
                       href={`/${createSlug(category.name)}`}
                       passHref
-                      onClick={() => handleCategoryArrowClick(category)}
+                      onClick={handleCategoryArrowClick}
                       className="p-1 -mr-1 rounded hover:bg-gray-200"
                       aria-label={`Go to ${category.name} category page`}
                     >
@@ -265,7 +280,7 @@ export default function CategoryMenu({
               <div className="h-[400px] overflow-y-auto space-y-4 custom-scrollbar">
                 {!displaySourceCategory && (
                   <p className="text-gray-500 text-sm p-3 text-center">
-                    Hover over a category or click its name to begin Browse.
+                    Hover over a category or click its name to browse.
                   </p>
                 )}
 
@@ -309,7 +324,7 @@ export default function CategoryMenu({
                   ))
                 ) : (
                   // Display "View All" card for categories with no subcategories
-                  displaySourceCategory && ( // Only show if a category is actually being displayed
+                  displaySourceCategory && (
                     <motion.div
                       key="no-subcategories-card"
                       initial={{ opacity: 0, y: 10 }}
