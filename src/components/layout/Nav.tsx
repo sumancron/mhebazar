@@ -233,7 +233,11 @@ export default function Navbar(): JSX.Element {
                   All Categories
                   <ChevronDown className="w-4 h-4" />
                 </button>
-                <CategoryMenu isOpen={categoriesOpen} />
+                {/* Add the onClose prop here */}
+                <CategoryMenu
+                  isOpen={categoriesOpen}
+                  onClose={() => setCategoriesOpen(false)}
+                />
               </div>
 
               {/* Navigation Links */}
