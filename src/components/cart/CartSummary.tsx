@@ -2,10 +2,35 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { cartAPI, CartItem } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Trash2, Minus, Plus } from "lucide-react";
+import api from "@/lib/api"; // Assuming api.ts is in lib/api.ts
+
+// Define the interfaces for your data structures
+interface Product {
+  id: number;
+  name: string;
+  price: number;
+  images: string[];
+  // Add other product fields as needed
+}
+
+interface CartItem {
+  id: number;
+  product: Product;
+  quantity: number;
+  // Add other cart item fields as needed
+}
+
+// Define the cartAPI object using the imported axios instance
+const cartAPI = {
+  getCart: () => api.get<CartItem[]>("/cart/"),
+  updateCartItem: (itemId: number, quantity: number) =>
+    api.patch(`/cart/${itemId}/`, { quantity }),
+  deleteCartItem: (itemId: number) => api.delete(`/cart/${itemId}/`),
+  clearCart: () => api.post("/cart/clear/"),
+};
 
 export default function CartSummary() {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
