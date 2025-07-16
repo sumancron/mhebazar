@@ -7,10 +7,11 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
-import { Card, CardContent } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { X } from 'lucide-react'
+import { X, Plus, Minus, Settings } from 'lucide-react'
 import Image from 'next/image'
+import Cookies from 'js-cookie'
 
 type FieldOption = {
   label: string
@@ -67,10 +68,6 @@ export default function SubcategoryForm() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(true)
-
-    // get access token
-  const token = localStorage.getItem('access_token')
-  let userData = null;
 
   // Add local state for images
   const [subImageFiles, setSubImageFiles] = useState<File[]>([])
@@ -135,18 +132,25 @@ export default function SubcategoryForm() {
     if (subBannerFiles[0]) formData.append('sub_banner', subBannerFiles[0])
     formData.append('product_details', JSON.stringify(data.product_details))
 
-     if (token) {
-      try {
-        const userResponse = await axios.get(`${API_BASE_URL}/users/me/`, {
-          headers: {
-            "Authorization": `Bearer ${token}`,
-            // "X-API-KEY": API_KEY,
-          },
+    let token = Cookies.get("access_token");
+
+    if (!token) {
+      const refreshResponse = await axios.post(
+        `${API_BASE_URL}/token/refresh/`,
+        {},
+        { withCredentials: true } // refresh_token read from HttpOnly cookie
+      );
+
+      token = refreshResponse.data?.access;
+
+      if (token) {
+        Cookies.set("access_token", token, {
+          expires: 1 / 24, // 1 hour
+          secure: true,
+          sameSite: "Lax",
         });
-        userData = userResponse.data;
-        console.log("User data fetched successfully:", userData);
-      } catch (err) {
-        console.error("Failed to fetch user data:", err);
+      } else {
+        throw new Error("No new access token returned");
       }
     }
 
@@ -193,304 +197,389 @@ export default function SubcategoryForm() {
   }
 
   return (
-    <Card className="max-w-2xl mx-auto p-6">
-      <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          <div>
-            <Label>Category</Label>
-            <Select onValueChange={(val) => setValue('category', val)} disabled={loading}>
-              <SelectTrigger>
-                <SelectValue placeholder={loading ? "Loading categories..." : "Select a category"} />
-              </SelectTrigger>
-              <SelectContent>
-                {Array.isArray(categories) && categories.length > 0 ? (
-                  categories.map((cat) => (
-                    <SelectItem key={cat.id} value={String(cat.id)}>
-                      {cat.name}
-                    </SelectItem>
-                  ))
-                ) : (
-                  !loading && (
-                    <div className="px-2 py-1 text-sm text-gray-500">
-                      No categories available
-                    </div>
-                  )
-                )}
-              </SelectContent>
-            </Select>
-            {errors.category && <p className="text-red-500 text-sm">Category is required</p>}
-          </div>
-
-          <div>
-            <Label>Name</Label>
-            <Input {...register('name', { required: true })} />
-            {errors.name && <p className="text-red-500 text-sm">Name is required</p>}
-          </div>
-
-          <div>
-            <Label>Description</Label>
-            <Textarea {...register('description')} />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label>Meta Title</Label>
-              <Input {...register('meta_title')} />
-            </div>
-            <div>
-              <Label>Meta Description</Label>
-              <Input {...register('meta_description')} />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label>Subcategory Image</Label>
-              <div>
-                <input
-                  id="sub-image-input"
-                  type="file"
-                  accept="image/*"
-                  onChange={handleSubImageChange}
-                  style={{ display: 'none' }}
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => document.getElementById('sub-image-input')?.click()}
-                >
-                  Select Image
-                </Button>
+    <div className="max-w-4xl mx-auto p-6 space-y-6">
+      <Card className="shadow-lg border-0 bg-gradient-to-br from-white to-gray-50">
+        <CardHeader className="bg-gradient-to-r from-[#5CA131] to-[#47881F] text-white rounded-t-lg">
+          <CardTitle className="text-2xl font-bold flex items-center gap-2">
+            <Settings className="w-6 h-6" />
+            Create Subcategory
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-8">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+            {/* Basic Information Section */}
+            <div className="space-y-6">
+              <div className="border-l-4 border-[#5CA131] pl-4">
+                <h3 className="text-lg font-semibold text-gray-800 mb-4">Basic Information</h3>
               </div>
-              <div className="flex gap-2 mt-2">
-                {subImageFiles?.map((file, idx) => (
-                  <div key={idx} className="relative w-20 h-20">
-                    <Image
-                      src={URL.createObjectURL(file)}
-                      alt="Preview"
-                      fill
-                      className="object-cover rounded"
-                      unoptimized
-                      style={{ objectFit: 'cover' }}
-                    />
-                    <button
-                      type="button"
-                      className="absolute top-0 right-0 bg-white rounded-full p-1 shadow"
-                      onClick={() => removeSubImage(idx)}
-                      aria-label="Remove image"
-                    >
-                      <X size={16} />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div>
-              <Label>Subcategory Banner</Label>
-              <div>
-                <input
-                  id="sub-banner-input"
-                  type="file"
-                  accept="image/*"
-                  onChange={handleSubBannerChange}
-                  style={{ display: 'none' }}
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => document.getElementById('sub-banner-input')?.click()}
-                >
-                  Select Banner
-                </Button>
-              </div>
-              <div className="flex gap-2 mt-2">
-                {subBannerFiles?.map((file, idx) => (
-                  <div key={idx} className="relative w-20 h-20">
-                    <Image
-                      src={URL.createObjectURL(file)}
-                      alt="Preview"
-                      fill
-                      className="object-cover rounded"
-                      unoptimized
-                      style={{ objectFit: 'cover' }}
-                    />
-                    <button
-                      type="button"
-                      className="absolute top-0 right-0 bg-white rounded-full p-1 shadow"
-                      onClick={() => removeSubBanner(idx)}
-                      aria-label="Remove image"
-                    >
-                      <X size={16} />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
 
-          <div className="space-y-4">
-            <Label className="text-lg">Product Details Fields</Label>
-            <p className="text-sm text-muted-foreground">
-              Define the fields that will appear in the product form for this category
-            </p>
-
-            {fields?.map((field, fieldIndex) => {
-              const fieldType = watch(`product_details.${fieldIndex}.type`)
-              const showOptions = ['select', 'radio', 'checkbox'].includes(fieldType)
-
-              return (
-                <div key={field.id} className="p-4 border rounded-lg space-y-3">
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <Label>Field Name*</Label>
-                      <Input
-                        placeholder="e.g. 'material'"
-                        {...register(`product_details.${fieldIndex}.name`, { required: true })}
-                      />
-                      {errors.product_details?.[fieldIndex]?.name && (
-                        <p className="text-red-500 text-sm">Field name is required</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium text-gray-700">Category *</Label>
+                  <Select onValueChange={(val) => setValue('category', val)} disabled={loading}>
+                    <SelectTrigger className="h-11 border-gray-300 focus:border-[#5CA131] focus:ring-[#5CA131]">
+                      <SelectValue placeholder={loading ? "Loading categories..." : "Select a category"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Array.isArray(categories) && categories.length > 0 ? (
+                        categories.map((cat) => (
+                          <SelectItem key={cat.id} value={String(cat.id)}>
+                            {cat.name}
+                          </SelectItem>
+                        ))
+                      ) : (
+                        !loading && (
+                          <div className="px-2 py-1 text-sm text-gray-500">
+                            No categories available
+                          </div>
+                        )
                       )}
-                    </div>
-                    <div>
-                      <Label>Display Label*</Label>
-                      <Input
-                        placeholder="e.g. 'Material Type'"
-                        {...register(`product_details.${fieldIndex}.label`, { required: true })}
-                      />
-                      {errors.product_details?.[fieldIndex]?.label && (
-                        <p className="text-red-500 text-sm">Label is required</p>
-                      )}
-                    </div>
-                  </div>
+                    </SelectContent>
+                  </Select>
+                  {errors.category && <p className="text-red-500 text-sm">Category is required</p>}
+                </div>
 
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <Label>Field Type*</Label>
-                      <Select
-                        onValueChange={(value: ProductDetailField['type']) => {
-                          // Update the field type
-                          const updatedField = {
-                            ...watch(`product_details.${fieldIndex}`),
-                            type: value,
-                          }
-                          remove(fieldIndex)
-                          append(updatedField)
-                        }}
-                        value={fieldType}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select field type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="text">Text Input</SelectItem>
-                          <SelectItem value="textarea">Text Area</SelectItem>
-                          <SelectItem value="select">Dropdown</SelectItem>
-                          <SelectItem value="radio">Radio Buttons</SelectItem>
-                          <SelectItem value="checkbox">Checkbox</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="flex items-end">
-                      <div className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          id={`required-${fieldIndex}`}
-                          {...register(`product_details.${fieldIndex}.required`)}
-                          className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium text-gray-700">Name *</Label>
+                  <Input
+                    {...register('name', { required: true })}
+                    className="h-11 border-gray-300 focus:border-[#5CA131] focus:ring-[#5CA131]"
+                    placeholder="Enter subcategory name"
+                  />
+                  {errors.name && <p className="text-red-500 text-sm">Name is required</p>}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-sm font-medium text-gray-700">Description</Label>
+                <Textarea
+                  {...register('description')}
+                  className="min-h-[100px] border-gray-300 focus:border-[#5CA131] focus:ring-[#5CA131]"
+                  placeholder="Enter subcategory description"
+                />
+              </div>
+            </div>
+
+            {/* SEO Section */}
+            <div className="space-y-6">
+              <div className="border-l-4 border-[#5CA131] pl-4">
+                <h3 className="text-lg font-semibold text-gray-800 mb-4">SEO Information</h3>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium text-gray-700">Meta Title</Label>
+                  <Input
+                    {...register('meta_title')}
+                    className="h-11 border-gray-300 focus:border-[#5CA131] focus:ring-[#5CA131]"
+                    placeholder="Enter meta title"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium text-gray-700">Meta Description</Label>
+                  <Input
+                    {...register('meta_description')}
+                    className="h-11 border-gray-300 focus:border-[#5CA131] focus:ring-[#5CA131]"
+                    placeholder="Enter meta description"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Media Section */}
+            <div className="space-y-6">
+              <div className="border-l-4 border-[#5CA131] pl-4">
+                <h3 className="text-lg font-semibold text-gray-800 mb-4">Media Files</h3>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-3">
+                  <Label className="text-sm font-medium text-gray-700">Subcategory Image</Label>
+                  <div>
+                    <input
+                      id="sub-image-input"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleSubImageChange}
+                      style={{ display: 'none' }}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => document.getElementById('sub-image-input')?.click()}
+                      className="w-full h-11 border-2 border-dashed border-[#5CA131] text-[#5CA131] hover:bg-[#5CA131] hover:text-white transition-colors"
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Select Image
+                    </Button>
+                  </div>
+                  <div className="flex gap-2 mt-3">
+                    {subImageFiles?.map((file, idx) => (
+                      <div key={idx} className="relative w-20 h-20 rounded-lg overflow-hidden border-2 border-gray-200">
+                        <Image
+                          src={URL.createObjectURL(file)}
+                          alt="Preview"
+                          fill
+                          className="object-cover"
+                          unoptimized
                         />
-                        <Label htmlFor={`required-${fieldIndex}`}>Required Field</Label>
+                        <button
+                          type="button"
+                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-md hover:bg-red-600 transition-colors"
+                          onClick={() => removeSubImage(idx)}
+                          aria-label="Remove image"
+                        >
+                          <X size={14} />
+                        </button>
                       </div>
-                    </div>
+                    ))}
                   </div>
+                </div>
 
-                  {fieldType === 'text' && (
-                    <div>
-                      <Label>Placeholder (optional)</Label>
-                      <Input
-                        placeholder="e.g. 'Enter material type'"
-                        {...register(`product_details.${fieldIndex}.placeholder`)}
-                      />
-                    </div>
-                  )}
+                <div className="space-y-3">
+                  <Label className="text-sm font-medium text-gray-700">Subcategory Banner</Label>
+                  <div>
+                    <input
+                      id="sub-banner-input"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleSubBannerChange}
+                      style={{ display: 'none' }}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => document.getElementById('sub-banner-input')?.click()}
+                      className="w-full h-11 border-2 border-dashed border-[#5CA131] text-[#5CA131] hover:bg-[#5CA131] hover:text-white transition-colors"
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Select Banner
+                    </Button>
+                  </div>
+                  <div className="flex gap-2 mt-3">
+                    {subBannerFiles?.map((file, idx) => (
+                      <div key={idx} className="relative w-20 h-20 rounded-lg overflow-hidden border-2 border-gray-200">
+                        <Image
+                          src={URL.createObjectURL(file)}
+                          alt="Preview"
+                          fill
+                          className="object-cover"
+                          unoptimized
+                        />
+                        <button
+                          type="button"
+                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-md hover:bg-red-600 transition-colors"
+                          onClick={() => removeSubBanner(idx)}
+                          aria-label="Remove image"
+                        >
+                          <X size={14} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
 
-                  {showOptions && (
-                    <div className="space-y-2">
-                      <Label>Options</Label>
-                      <div className="space-y-2">
-                        {watch(`product_details.${fieldIndex}.options`)?.map((option, optionIndex) => (
-                          <div key={optionIndex} className="flex gap-2 items-center">
-                            <Input
-                              placeholder="Option label"
-                              {...register(`product_details.${fieldIndex}.options.${optionIndex}.label`, {
-                                required: true,
-                              })}
-                            />
-                            <Input
-                              placeholder="Option value"
-                              {...register(`product_details.${fieldIndex}.options.${optionIndex}.value`, {
-                                required: true,
-                              })}
-                            />
+            {/* Product Details Section */}
+            <div className="space-y-6">
+              <div className="border-l-4 border-[#5CA131] pl-4">
+                <h3 className="text-lg font-semibold text-gray-800 mb-2">Product Details Fields</h3>
+                <p className="text-sm text-gray-600">
+                  Define the fields that will appear in the product form for this category
+                </p>
+              </div>
+
+              <div className="space-y-4">
+                {fields?.map((field, fieldIndex) => {
+                  const fieldType = watch(`product_details.${fieldIndex}.type`)
+                  const showOptions = ['select', 'radio', 'checkbox'].includes(fieldType)
+
+                  return (
+                    <Card key={field.id} className="border-2 border-gray-200 hover:border-[#5CA131] transition-colors">
+                      <CardContent className="p-6">
+                        <div className="space-y-4">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <Label className="text-sm font-medium text-gray-700">Field Name *</Label>
+                              <Input
+                                placeholder="e.g. 'material'"
+                                {...register(`product_details.${fieldIndex}.name`, { required: true })}
+                                className="h-10 border-gray-300 focus:border-[#5CA131] focus:ring-[#5CA131]"
+                              />
+                              {errors.product_details?.[fieldIndex]?.name && (
+                                <p className="text-red-500 text-sm">Field name is required</p>
+                              )}
+                            </div>
+                            <div className="space-y-2">
+                              <Label className="text-sm font-medium text-gray-700">Display Label *</Label>
+                              <Input
+                                placeholder="e.g. 'Material Type'"
+                                {...register(`product_details.${fieldIndex}.label`, { required: true })}
+                                className="h-10 border-gray-300 focus:border-[#5CA131] focus:ring-[#5CA131]"
+                              />
+                              {errors.product_details?.[fieldIndex]?.label && (
+                                <p className="text-red-500 text-sm">Label is required</p>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <Label className="text-sm font-medium text-gray-700">Field Type *</Label>
+                              <Select
+                                onValueChange={(value: ProductDetailField['type']) => {
+                                  const updatedField = {
+                                    ...watch(`product_details.${fieldIndex}`),
+                                    type: value,
+                                  }
+                                  remove(fieldIndex)
+                                  append(updatedField)
+                                }}
+                                value={fieldType}
+                              >
+                                <SelectTrigger className="h-10 border-gray-300 focus:border-[#5CA131] focus:ring-[#5CA131]">
+                                  <SelectValue placeholder="Select field type" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="text">Text Input</SelectItem>
+                                  <SelectItem value="textarea">Text Area</SelectItem>
+                                  <SelectItem value="select">Dropdown</SelectItem>
+                                  <SelectItem value="radio">Radio Buttons</SelectItem>
+                                  <SelectItem value="checkbox">Checkbox</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <div className="flex items-end">
+                              <div className="flex items-center space-x-2">
+                                <input
+                                  type="checkbox"
+                                  id={`required-${fieldIndex}`}
+                                  {...register(`product_details.${fieldIndex}.required`)}
+                                  className="h-4 w-4 rounded border-gray-300 text-[#5CA131] focus:ring-[#5CA131]"
+                                />
+                                <Label htmlFor={`required-${fieldIndex}`} className="text-sm font-medium text-gray-700">
+                                  Required Field
+                                </Label>
+                              </div>
+                            </div>
+                          </div>
+
+                          {fieldType === 'text' && (
+                            <div className="space-y-2">
+                              <Label className="text-sm font-medium text-gray-700">Placeholder (optional)</Label>
+                              <Input
+                                placeholder="e.g. 'Enter material type'"
+                                {...register(`product_details.${fieldIndex}.placeholder`)}
+                                className="h-10 border-gray-300 focus:border-[#5CA131] focus:ring-[#5CA131]"
+                              />
+                            </div>
+                          )}
+
+                          {showOptions && (
+                            <div className="space-y-3">
+                              <Label className="text-sm font-medium text-gray-700">Options</Label>
+                              <div className="space-y-2">
+                                {watch(`product_details.${fieldIndex}.options`)?.map((option, optionIndex) => (
+                                  <div key={optionIndex} className="flex gap-2 items-center">
+                                    <Input
+                                      placeholder="Option label"
+                                      {...register(`product_details.${fieldIndex}.options.${optionIndex}.label`, {
+                                        required: true,
+                                      })}
+                                      className="h-10 border-gray-300 focus:border-[#5CA131] focus:ring-[#5CA131]"
+                                    />
+                                    <Input
+                                      placeholder="Option value"
+                                      {...register(`product_details.${fieldIndex}.options.${optionIndex}.value`, {
+                                        required: true,
+                                      })}
+                                      className="h-10 border-gray-300 focus:border-[#5CA131] focus:ring-[#5CA131]"
+                                    />
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => removeOption(fieldIndex, optionIndex)}
+                                      className="text-red-500 border-red-300 hover:bg-red-50 hover:border-red-400"
+                                    >
+                                      <Minus className="w-4 h-4" />
+                                    </Button>
+                                  </div>
+                                ))}
+                              </div>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => addOption(fieldIndex)}
+                                className="border-[#5CA131] text-[#5CA131] hover:bg-[#5CA131] hover:text-white"
+                              >
+                                <Plus className="w-4 h-4 mr-2" />
+                                Add Option
+                              </Button>
+                            </div>
+                          )}
+
+                          <div className="flex justify-end pt-4 border-t">
                             <Button
                               type="button"
                               variant="outline"
                               size="sm"
-                              onClick={() => removeOption(fieldIndex, optionIndex)}
+                              onClick={() => remove(fieldIndex)}
+                              className="text-red-500 border-red-300 hover:bg-red-50 hover:border-red-400"
                             >
-                              Remove
+                              <Minus className="w-4 h-4 mr-2" />
+                              Remove Field
                             </Button>
                           </div>
-                        ))}
-                      </div>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => addOption(fieldIndex)}
-                      >
-                        Add Option
-                      </Button>
-                    </div>
-                  )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )
+                })}
 
-                  <div className="flex justify-end">
-                    <Button
-                      type="button"
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => remove(fieldIndex)}
-                    >
-                      Remove Field
-                    </Button>
-                  </div>
-                </div>
-              )
-            })}
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() =>
+                    append({
+                      name: '',
+                      label: '',
+                      type: 'text',
+                      required: false,
+                      options: [],
+                    })
+                  }
+                  className="w-full h-12 border-2 border-dashed border-[#5CA131] text-[#5CA131] hover:bg-[#5CA131] hover:text-white transition-colors"
+                >
+                  <Plus className="w-5 h-5 mr-2" />
+                  Add Product Field
+                </Button>
+              </div>
+            </div>
 
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() =>
-                append({
-                  name: '',
-                  label: '',
-                  type: 'text',
-                  required: false,
-                  options: [],
-                })
-              }
-            >
-              Add Product Field
-            </Button>
-          </div>
+            <div className="pt-6 border-t">
+              <Button
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full h-12 bg-[#5CA131] hover:bg-[#47881F] text-white font-medium text-lg transition-colors shadow-md"
+              >
+                {isSubmitting ? 'Creating Subcategory...' : 'Create Subcategory'}
+              </Button>
+            </div>
 
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? 'Submitting...' : 'Create Subcategory'}
-          </Button>
-
-          {message && <p className="text-sm text-center mt-2">{message}</p>}
-        </form>
-      </CardContent>
-    </Card>
+            {message && (
+              <div className={`text-center p-4 rounded-lg ${message.includes('success')
+                  ? 'bg-green-50 text-green-700 border border-green-200'
+                  : 'bg-red-50 text-red-700 border border-red-200'
+                }`}>
+                {message}
+              </div>
+            )}
+          </form>
+        </CardContent>
+      </Card>
+    </div>
   )
 }
