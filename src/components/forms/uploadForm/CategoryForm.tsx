@@ -64,7 +64,7 @@ export default function CategoryForm(): JSX.Element {
   const [catBannerFiles, setCatBannerFiles] = useState<File[]>([])
 
   // get access token
-  const token = localStorage.getItem('access_token')
+  const token = localStorage?.getItem('access_token')
   let userData = null;
 
   // Handle file input change

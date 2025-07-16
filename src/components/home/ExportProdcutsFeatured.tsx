@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import ProductCard from "@/components/elements/Product";
 import Image from "next/image";
+import axios from "axios";
 
 const NEXT_PUBLIC_API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "";
 
@@ -19,21 +20,25 @@ export default function ExportProductsFeatured() {
   const [exportProducts, setExportProducts] = useState<ExportProduct[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // useEffect(() => {
-  //   const fetchExportProducts = async () => {
-  //     try {
-  //       const res = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/export_products`);
-  //       if (!res.ok) throw new Error("Failed to fetch data");
-  //       const data: ExportProduct[] = await res.json();
-  //       setExportProducts(data || []);
-  //     } catch {
-  //       setExportProducts([]);
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
-  //   fetchExportProducts();
-  // }, []);
+  useEffect(() => {
+    const fetchPopularProducts = async () => {
+      try {
+        const response = await axios.get(`${NEXT_PUBLIC_API_BASE_URL}/products/most_popular/`);
+        const data = Array.isArray(response.data)
+          ? response.data
+          : response.data?.results ?? [];
+
+        setExportProducts(data);
+      } catch (error) {
+        console.error("Failed to fetch most popular products:", error);
+        setExportProducts([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPopularProducts();
+  }, []);
 
   return (
     <section className="w-full mx-auto px-4 py-10">

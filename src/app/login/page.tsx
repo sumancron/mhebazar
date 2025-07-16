@@ -4,6 +4,7 @@ import axios from "axios";
 import { useState } from "react";
 import GoogleLoginButton from "@/components/elements/GoogleAuth";
 import { toast } from "sonner";
+import Cookies from 'js-cookie'
 
 
 const LoginPage = () => {
@@ -15,81 +16,88 @@ const LoginPage = () => {
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
   const API_KEY = process.env.X_API_KEY;
 
- const handleLogin = async (e: React.FormEvent): Promise<void> => {
-  e.preventDefault();
-  setError("");
+  const handleLogin = async (e: React.FormEvent): Promise<void> => {
+    e.preventDefault();
+    setError("");
 
-  try {
-    const response = await axios.post(
-      `${API_BASE_URL}/token/`,
-      { email, password },
-      {
-        headers: {
-          "X-API-KEY": API_KEY,
-          "Content-Type": "application/json",
-        },
-      }
-    );
-
-    const accessToken = response.data?.access;
-    const refreshToken = response.data?.refresh;
-    let userData = null;
-
-    if (accessToken) {
-      try {
-        const userResponse = await axios.get(`${API_BASE_URL}/users/me/`, {
+    try {
+      const response = await axios.post(
+        `${API_BASE_URL}/token/`,
+        { email, password },
+        {
           headers: {
-            Authorization: `Bearer ${accessToken}`,
             "X-API-KEY": API_KEY,
+            "Content-Type": "application/json",
           },
+          withCredentials: true, // Allow cookies to be set by backend
+        }
+      );
+
+      const accessToken = response.data?.access;
+      let userData = null;
+
+      // Fetch user info using access token
+      if (accessToken) {
+        try {
+          const userResponse = await axios.get(`${API_BASE_URL}/users/me/`, {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+              "X-API-KEY": API_KEY,
+            },
+          });
+          userData = userResponse.data;
+          console.log("User data fetched successfully:", userData);
+        } catch (err) {
+          toast.error("Failed to fetch user profile. Please try again.");
+          console.error("User fetch error:", err);
+        }
+      }
+
+      // Store access token (non-HttpOnly) only if needed (optional)
+      if (accessToken && rememberme) {
+        Cookies.set("access_token", accessToken, {
+          expires: 1 / 24, // 1 hour = 1/24 of a day
+          secure: true,
+          sameSite: "Lax",
         });
-        userData = userResponse.data;
-        console.log("User data fetched successfully:", userData);
-      } catch (err) {
-        toast.error("Failed to fetch user profile. Please try again.");
-        console.error("User fetch error:", err);
+      }
+
+      // Redirect based on user role
+      if (userData?.role?.id === 1) {
+        window.location.href = "/admin/";
+      } else if (userData?.role?.id === 2) {
+        window.location.href = "/vendor/dashboard/";
+      } else {
+        window.location.href = "/";
+      }
+
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err)) {
+        const data = err.response?.data;
+
+        const getFriendlyError = (message: string) => {
+          if (message.includes("No active account found")) {
+            return "Invalid email or password. Please try again.";
+          }
+          if (message.toLowerCase().includes("email") && message.toLowerCase().includes("required")) {
+            return "Please enter your email.";
+          }
+          if (message.toLowerCase().includes("password") && message.toLowerCase().includes("required")) {
+            return "Please enter your password.";
+          }
+          return message || "Login failed. Please try again.";
+        };
+
+        const rawMessage = typeof data === "string"
+          ? data
+          : data?.detail || data?.message || "Login failed";
+
+        toast.error(getFriendlyError(rawMessage));
+      } else {
+        toast.error("Something went wrong during login. Please try again.");
       }
     }
-
-    if (accessToken && rememberme) {
-      localStorage.setItem("access_token", accessToken);
-      localStorage.setItem("refresh_token", refreshToken);
-    }
-
-    if (userData?.role?.id === 1) {
-      window.location.href = "/admin/";
-    } else if (userData?.role?.id === 2) {
-      window.location.href = "/vendor/dashboard/";
-    } else {
-      window.location.href = "/";
-    }
-  } catch (err: unknown) {
-    if (axios.isAxiosError(err)) {
-      const data = err.response?.data;
-
-      const getFriendlyError = (message: string) => {
-        if (message.includes("No active account found")) {
-          return "Invalid email or password. Please try again.";
-        }
-        if (message.toLowerCase().includes("email") && message.toLowerCase().includes("required")) {
-          return "Please enter your email.";
-        }
-        if (message.toLowerCase().includes("password") && message.toLowerCase().includes("required")) {
-          return "Please enter your password.";
-        }
-        return message || "Login failed. Please try again.";
-      };
-
-      const rawMessage = typeof data === "string"
-        ? data
-        : data?.detail || data?.message || "Login failed";
-
-      toast.error(getFriendlyError(rawMessage));
-    } else {
-      toast.error("Something went wrong during login. Please try again.");
-    }
-  }
-};
+  };
 
   return (
     <div className="min-h-[80vh] flex flex-col items-center justify-center bg-white px-6">
