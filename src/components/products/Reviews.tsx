@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ChevronLeft, ChevronRight, Star } from "lucide-react";
+import MheWriteAReview from "@/components/forms/product/ProductReviewForm";
 
 type Review = {
   name: string;
@@ -76,6 +77,8 @@ const fallbackData: ReviewData = {
 export default function ReviewSection({ slug }: { slug: string }) {
   const [data, setData] = useState<ReviewData | null>(null);
   const [imgScroll, setImgScroll] = useState(0);
+  const [reviewOpen, setReviewOpen] = useState(false);
+
 
   // Simulate API fetch
   useEffect(() => {
@@ -131,8 +134,11 @@ export default function ReviewSection({ slug }: { slug: string }) {
                 {data.summary.avg.toFixed(1)}
               </span>
               <div className="flex gap-0.5">
-                {[1, 2, 3, 4, 5].map(i => (
-                  <Star key={i} className="w-5 h-5 fill-yellow-400 text-yellow-400" />
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <Star
+                    key={i}
+                    className="w-5 h-5 fill-yellow-400 text-yellow-400"
+                  />
                 ))}
               </div>
               <span className="text-gray-600 text-sm">
@@ -143,7 +149,7 @@ export default function ReviewSection({ slug }: { slug: string }) {
               {data.summary.total} ratings
             </div>
             <div className="space-y-2 mb-4">
-              {data.summary.breakdown.map(item => (
+              {data.summary.breakdown.map((item) => (
                 <div key={item.star} className="flex items-center gap-2">
                   <span className="w-8 text-xs">{item.star} star</span>
                   <div className="flex-1 bg-gray-200 h-2 rounded">
@@ -152,18 +158,30 @@ export default function ReviewSection({ slug }: { slug: string }) {
                       style={{ width: `${item.percent}%` }}
                     ></div>
                   </div>
-                  <span className="w-8 text-xs text-right">{item.percent}%</span>
+                  <span className="w-8 text-xs text-right">
+                    {item.percent}%
+                  </span>
                 </div>
               ))}
             </div>
             <div className="bg-gray-50 rounded-lg p-4 mt-4">
-              <div className="font-semibold mb-1 text-gray-800">Review this product</div>
+              <div className="font-semibold mb-1 text-gray-800">
+                Review this product
+              </div>
               <div className="text-xs text-gray-500 mb-2">
                 Share your thoughts with other customers
               </div>
-              <button className="w-full border border-green-600 text-green-600 font-semibold px-4 py-2 rounded hover:bg-green-50 transition">
+              <button
+                className="w-full border border-green-600 text-green-600 font-semibold px-4 py-2 rounded hover:bg-green-50 transition"
+                onClick={() => setReviewOpen(true)}
+              >
                 Write your product review
               </button>
+
+              <MheWriteAReview
+                isOpen={reviewOpen}
+                onOpenChange={setReviewOpen}
+              />
             </div>
           </div>
         </div>
@@ -180,7 +198,10 @@ export default function ReviewSection({ slug }: { slug: string }) {
           <div className="bg-white rounded-lg border p-5 shadow-sm">
             <div className="flex justify-between items-center mb-3">
               <h4 className="font-semibold">Reviews with Images</h4>
-              <Link href="#" className="text-green-600 text-sm font-medium hover:underline">
+              <Link
+                href="#"
+                className="text-green-600 text-sm font-medium hover:underline"
+              >
                 View all
               </Link>
             </div>
@@ -225,7 +246,10 @@ export default function ReviewSection({ slug }: { slug: string }) {
           <div className="bg-white rounded-lg border p-5 shadow-sm">
             <h4 className="font-semibold mb-4">Top Reviews</h4>
             {data.reviews.map((review, i) => (
-              <div key={i} className="mb-8 border-b last:border-b-0 pb-6 last:pb-0">
+              <div
+                key={i}
+                className="mb-8 border-b last:border-b-0 pb-6 last:pb-0"
+              >
                 <div className="flex items-center gap-3 mb-1">
                   <div className="w-9 h-9 rounded-full bg-gray-200 overflow-hidden flex items-center justify-center">
                     {review.avatar ? (
@@ -237,20 +261,26 @@ export default function ReviewSection({ slug }: { slug: string }) {
                         className="object-cover"
                       />
                     ) : (
-                      <span className="text-lg font-bold text-gray-500">{review.name[0]}</span>
+                      <span className="text-lg font-bold text-gray-500">
+                        {review.name[0]}
+                      </span>
                     )}
                   </div>
                   <span className="font-medium">{review.name}</span>
                   <div className="flex items-center gap-1 ml-2">
-                    {[1, 2, 3, 4, 5].map(j => (
+                    {[1, 2, 3, 4, 5].map((j) => (
                       <Star
                         key={j}
                         className={`w-4 h-4 ${
-                          review.rating >= j ? "fill-yellow-400 text-yellow-400" : "text-gray-300"
+                          review.rating >= j
+                            ? "fill-yellow-400 text-yellow-400"
+                            : "text-gray-300"
                         }`}
                       />
                     ))}
-                    <span className="text-xs text-gray-600 ml-1">{review.rating} out of 5</span>
+                    <span className="text-xs text-gray-600 ml-1">
+                      {review.rating} out of 5
+                    </span>
                   </div>
                 </div>
                 <div className="text-xs text-gray-500 mb-1">
