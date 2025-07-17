@@ -5,7 +5,7 @@ import axios, {
 import Cookies from "js-cookie";
 
 const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
+  process.env.NEXT_PUBLIC_API_URL || "https://mheback.onrender.com/api";
 
 const api: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
