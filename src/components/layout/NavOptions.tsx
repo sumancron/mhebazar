@@ -48,7 +48,7 @@ interface ProductsResponse {
 }
 
 // Define your API_BASE_URL here
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 // Helper function to create slugs
 const createSlug = (name: string) => name.toLowerCase().replace(/\s+/g, "-");
