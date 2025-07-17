@@ -1,3 +1,4 @@
+// components/publicforms/VendorRegistrationForm.tsx
 "use client";
 import { useEffect, useState } from "react";
 import { toast } from "sonner"; // or your preferred notification library
