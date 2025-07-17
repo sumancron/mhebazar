@@ -12,10 +12,6 @@ import { User, Package, Heart, LogOut } from "lucide-react";
 import SearchBar from "./SearchBar";
 import { handleLogout } from "@/lib/auth/logout";
 
-// OnClick example
-
-
-
 const categories = [
   "Forklifts",
   "Pallet Trucks",
@@ -43,6 +39,7 @@ export default function Navbar(): JSX.Element {
   const [vendorDrawerOpen, setVendorDrawerOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const profileMenuRef = useRef<HTMLDivElement>(null);
+  const categoryMenuRef = useRef<HTMLDivElement>(null);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -59,6 +56,23 @@ export default function Navbar(): JSX.Element {
     }
     return () => document.removeEventListener("mousedown", handleClick);
   }, [profileMenuOpen]);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        categoryMenuRef.current &&
+        !categoryMenuRef.current.contains(event.target as Node)
+      ) {
+        setCategoriesOpen(false);
+      }
+    }
+    if (categoriesOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [categoriesOpen]);
 
   return (
     <header className="bg-white shadow-sm z-50 sticky top-0">
@@ -224,7 +238,7 @@ export default function Navbar(): JSX.Element {
             {/* Left Navigation */}
             <div className="flex items-center">
               {/* Categories Dropdown */}
-              <div className="relative">
+              <div className="relative" ref={categoryMenuRef}> {/* <-- ADD THE REF HERE */}
                 <button
                   className="flex items-center gap-2 px-4 py-3 text-gray-700 hover:text-green-600 text-sm font-medium transition"
                   onClick={() => setCategoriesOpen(!categoriesOpen)}
@@ -233,7 +247,6 @@ export default function Navbar(): JSX.Element {
                   All Categories
                   <ChevronDown className="w-4 h-4" />
                 </button>
-                {/* Add the onClose prop here */}
                 <CategoryMenu
                   isOpen={categoriesOpen}
                   onClose={() => setCategoriesOpen(false)}

@@ -34,6 +34,7 @@ const LoginPage = () => {
       );
 
       const accessToken = response.data?.access;
+      const refreshToken = response.data?.refresh;
       let userData = null;
 
       // Fetch user info using access token
@@ -62,6 +63,13 @@ const LoginPage = () => {
         });
       }
 
+      // set refresh token in cookies
+      Cookies.set("refresh_token", refreshToken, {
+        expires: 7,
+        secure: true,
+        sameSite: "Lax",
+      });
+      
       // Redirect based on user role
       if (userData?.role?.id === 1) {
         window.location.href = "/admin/";

@@ -32,6 +32,7 @@ api.interceptors.response.use(
   response => response, // If response is OK, pass it through
   async error => {
     const originalRequest = error.config;
+    const refresh = Cookies.get("refresh_token");
 
     // Prevent infinite loop
     if (error.response?.status === 401 && !originalRequest._retry) {
@@ -40,7 +41,7 @@ api.interceptors.response.use(
       try {
         const refreshResponse = await axios.post(
           `${API_BASE_URL}/token/refresh/`,
-          {},
+          {refresh},
           { withCredentials: true }
         );
 

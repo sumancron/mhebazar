@@ -5,7 +5,7 @@ import { ChevronRight } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState, useMemo } from "react";
-import api from "@/lib/api"; // Correct API import
+import api from "@/lib/api";
 import { useRouter } from "next/navigation";
 
 // Define interfaces for the API response structures
@@ -48,14 +48,14 @@ interface ProductsResponse {
 }
 
 // Define your API_BASE_URL here
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000"; // Replace with your actual API base URL
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
 
 // Helper function to create slugs
 const createSlug = (name: string) => name.toLowerCase().replace(/\s+/g, "-");
 
 export default function CategoryMenu({
   isOpen,
-  onClose, // Prop to signal parent to close the menu
+  onClose,
 }: {
   isOpen: boolean;
   onClose: () => void;
@@ -63,8 +63,8 @@ export default function CategoryMenu({
   const router = useRouter();
 
   const [categories, setCategories] = useState<Category[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null); // Clicked category, locks the view
-  const [hoveredCategory, setHoveredCategory] = useState<Category | null>(null); // Hovered category, temporary view
+  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
+  const [hoveredCategory, setHoveredCategory] = useState<Category | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
 
   useEffect(() => {
@@ -77,12 +77,11 @@ export default function CategoryMenu({
         setCategories(categoriesResponse.data.results);
         setProducts(productsResponse.data.results);
 
-        // Set "Battery" as the initially hovered category, but not selected
         if (categoriesResponse.data.results.length > 0) {
           const defaultCategory =
             categoriesResponse.data.results.find((cat) => cat.name === "Battery") ||
             categoriesResponse.data.results[0];
-          setHoveredCategory(defaultCategory); // Only set hovered, not selected initially
+          setHoveredCategory(defaultCategory);
         }
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -92,17 +91,41 @@ export default function CategoryMenu({
     if (isOpen) {
       fetchData();
     } else {
-      // Reset states when menu closes
       setSelectedCategory(null);
       setHoveredCategory(null);
     }
   }, [isOpen]);
 
-  // Determine which category's data to display in the rightmost column
-  // If a category is selected by click, display that. Otherwise, display the hovered category.
+  // Memoize product counts for performance
+  const { subcategoryProductCounts, categoryTotalProductCounts } = useMemo(() => {
+    const subCounts = new Map<number, number>();
+    const catCounts = new Map<number, number>();
+
+    for (const product of products) {
+      if (product.category) {
+        catCounts.set(product.category, (catCounts.get(product.category) || 0) + 1);
+      }
+      if (product.subcategory) {
+        subCounts.set(product.subcategory, (subCounts.get(product.subcategory) || 0) + 1);
+      }
+    }
+    return {
+      subcategoryProductCounts: subCounts,
+      categoryTotalProductCounts: catCounts,
+    };
+  }, [products]);
+
+  // Use efficient map lookups for product counts
+  const getProductCountForSubcategory = (subcategoryId: number) => {
+    return subcategoryProductCounts.get(subcategoryId) || 0;
+  };
+
+  const getProductCountForCategory = (categoryId: number) => {
+    return categoryTotalProductCounts.get(categoryId) || 0;
+  };
+
   const displaySourceCategory = selectedCategory || hoveredCategory;
 
-  // Divide categories into two columns
   const categoriesCol1 = useMemo(
     () => categories.slice(0, Math.ceil(categories.length / 2)),
     [categories]
@@ -112,17 +135,6 @@ export default function CategoryMenu({
     [categories]
   );
 
-  // Function to get product count for a subcategory
-  const getProductCountForSubcategory = (subcategoryId: number) => {
-    return products.filter((product) => product.subcategory === subcategoryId).length;
-  };
-
-  // Function to get product count directly under a category (if no subcategories)
-  const getProductCountForCategory = (categoryId: number) => {
-    return products.filter((product) => product.category === categoryId).length;
-  };
-
-  // Function to get image for a subcategory
   const getSubCategoryImage = (subCategory: SubCategory) => {
     if (subCategory.sub_image) {
       return subCategory.sub_image.startsWith("http")
@@ -140,35 +152,21 @@ export default function CategoryMenu({
         ? productWithImage.images[0]
         : `${API_BASE_URL}${productWithImage.images[0]}`;
     }
-    return null; // Indicates no image found, will use fallback text
+    return null;
   };
 
   const getInitials = (name: string) => {
     return name.split(" ").map((n) => n[0]).join("").toUpperCase().substring(0, 2);
   };
 
-  // Handle click on category name: toggles selected category
   const handleCategoryNameClick = (category: Category) => {
     if (category.subcategories.length > 0) {
-      // If the clicked category is already selected, deselect it. Otherwise, select it.
       setSelectedCategory(category.id === selectedCategory?.id ? null : category);
-      // Also update hovered to keep consistency
       setHoveredCategory(category);
     } else {
-      // No subcategories, navigate directly and close menu
       router.push(`/${createSlug(category.name)}`);
       onClose();
     }
-  };
-
-  // Handle click on category arrow: navigates to category page and closes menu
-  const handleCategoryArrowClick = () => {
-    onClose();
-  };
-
-  // Handle click on subcategory: navigates to subcategory page and closes menu
-  const handleSubCategoryClick = () => {
-    onClose();
   };
 
   return (
@@ -179,7 +177,7 @@ export default function CategoryMenu({
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -10 }}
           transition={{ duration: 0.2, ease: "easeOut" }}
-          onMouseLeave={onClose} // Close the menu when mouse leaves the entire panel
+          // onClick={onClose} was removed from here to prevent closing on internal clicks
           className="absolute left-0 top-full z-50 mt-2 bg-white border border-gray-200 rounded-lg shadow-xl overflow-hidden"
         >
           <div className="flex min-w-[800px]">
@@ -189,25 +187,21 @@ export default function CategoryMenu({
                 {categoriesCol1.map((category) => (
                   <div
                     key={category.id}
-                    className={`flex items-center justify-between px-3 py-2 text-sm cursor-pointer rounded transition-colors
-                      ${selectedCategory?.id === category.id // If this category is explicitly selected
+                    className={`flex items-center justify-between px-3 py-2 text-sm cursor-pointer rounded transition-colors ${selectedCategory?.id === category.id
                         ? "bg-white text-orange-600 font-medium"
-                        : hoveredCategory?.id === category.id // If no selection, but hovered
+                        : hoveredCategory?.id === category.id
                           ? "bg-gray-100 text-orange-600"
-                          : "text-gray-700 hover:bg-white hover:text-orange-600" // Default hover
-                      }
-                    `}
+                          : "text-gray-700 hover:bg-white hover:text-orange-600"
+                      }`}
                     onMouseEnter={() => {
-                        // Only update hovered if no category is currently selected by click
-                        if (!selectedCategory || selectedCategory.id !== category.id) {
-                            setHoveredCategory(category);
-                        }
+                      if (!selectedCategory) {
+                        setHoveredCategory(category);
+                      }
                     }}
                     onMouseLeave={() => {
-                        // Clear hovered state only if it's not the currently selected category
-                        if (hoveredCategory?.id === category.id && selectedCategory?.id !== category.id) {
-                            setHoveredCategory(null);
-                        }
+                      if (!selectedCategory) {
+                        setHoveredCategory(null);
+                      }
                     }}
                   >
                     <span
@@ -219,7 +213,7 @@ export default function CategoryMenu({
                     <Link
                       href={`/${createSlug(category.name)}`}
                       passHref
-                      onClick={handleCategoryArrowClick}
+                      onClick={onClose} // Simplified click handler
                       className="p-1 -mr-1 rounded hover:bg-gray-200"
                       aria-label={`Go to ${category.name} category page`}
                     >
@@ -236,23 +230,21 @@ export default function CategoryMenu({
                 {categoriesCol2.map((category) => (
                   <div
                     key={category.id}
-                    className={`flex items-center justify-between px-3 py-2 text-sm cursor-pointer rounded transition-colors
-                      ${selectedCategory?.id === category.id
+                    className={`flex items-center justify-between px-3 py-2 text-sm cursor-pointer rounded transition-colors ${selectedCategory?.id === category.id
                         ? "bg-white text-orange-600 font-medium"
                         : hoveredCategory?.id === category.id
                           ? "bg-gray-100 text-orange-600"
                           : "text-gray-700 hover:bg-white hover:text-orange-600"
-                      }
-                    `}
+                      }`}
                     onMouseEnter={() => {
-                        if (!selectedCategory || selectedCategory.id !== category.id) {
-                            setHoveredCategory(category);
-                        }
+                      if (!selectedCategory) {
+                        setHoveredCategory(category);
+                      }
                     }}
                     onMouseLeave={() => {
-                        if (hoveredCategory?.id === category.id && selectedCategory?.id !== category.id) {
-                            setHoveredCategory(null);
-                        }
+                      if (!selectedCategory) {
+                        setHoveredCategory(null);
+                      }
                     }}
                   >
                     <span
@@ -264,7 +256,7 @@ export default function CategoryMenu({
                     <Link
                       href={`/${createSlug(category.name)}`}
                       passHref
-                      onClick={handleCategoryArrowClick}
+                      onClick={onClose} // Simplified click handler
                       className="p-1 -mr-1 rounded hover:bg-gray-200"
                       aria-label={`Go to ${category.name} category page`}
                     >
@@ -275,24 +267,23 @@ export default function CategoryMenu({
               </div>
             </div>
 
-            {/* Right Content Column (Subcategories or Direct Category Link Card) */}
+            {/* Right Content Column */}
             <div className="w-80 bg-white p-4 flex-shrink-0">
               <div className="h-[400px] overflow-y-auto space-y-4 custom-scrollbar">
                 {!displaySourceCategory && (
                   <p className="text-gray-500 text-sm p-3 text-center">
-                    Hover over a category or click its name to browse.
+                    Hover over a category to see more.
                   </p>
                 )}
 
-                {displaySourceCategory && displaySourceCategory.subcategories.length > 0 ? (
-                  // Display Subcategories as cards
-                  displaySourceCategory.subcategories.map((subCategory) => (
+                {displaySourceCategory && displaySourceCategory.subcategories.length > 0
+                  ? displaySourceCategory.subcategories.map((subCategory) => (
                     <Link
                       key={subCategory.id}
                       href={`/${createSlug(displaySourceCategory.name)}/${createSlug(subCategory.name)}`}
                       passHref
                       className="flex items-center gap-4 p-3 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors border border-gray-100"
-                      onClick={handleSubCategoryClick}
+                      onClick={onClose} // Simplified click handler
                     >
                       <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0">
                         {getSubCategoryImage(subCategory) ? (
@@ -315,16 +306,12 @@ export default function CategoryMenu({
                           {subCategory.name}
                         </h4>
                         <div className="inline-flex items-center justify-center bg-orange-100 text-orange-700 rounded-full px-2 py-1 text-xs font-medium min-w-[24px]">
-                          {getProductCountForSubcategory(subCategory.id)
-                            .toString()
-                            .padStart(2, "0")}
+                          {getProductCountForSubcategory(subCategory.id).toString().padStart(2, "0")}
                         </div>
                       </div>
                     </Link>
                   ))
-                ) : (
-                  // Display "View All" card for categories with no subcategories
-                  displaySourceCategory && (
+                  : displaySourceCategory && (
                     <motion.div
                       key="no-subcategories-card"
                       initial={{ opacity: 0, y: 10 }}
@@ -359,13 +346,12 @@ export default function CategoryMenu({
                         href={`/${createSlug(displaySourceCategory.name)}`}
                         passHref
                         className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-colors duration-200"
-                        onClick={onClose} // Close menu on click
+                        onClick={onClose}
                       >
                         View All ({getProductCountForCategory(displaySourceCategory.id)})
                       </Link>
                     </motion.div>
-                  )
-                )}
+                  )}
               </div>
             </div>
           </div>
