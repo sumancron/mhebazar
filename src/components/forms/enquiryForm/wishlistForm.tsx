@@ -5,6 +5,8 @@ import api from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Trash2, ShoppingCart } from 'lucide-react';
+import Image from 'next/image';
+
 
 // Define or import this type based on your backend response
 interface WishlistItem {
@@ -108,11 +110,15 @@ export default function WishlistForm() {
         <Card key={item.id}>
           <CardContent className="p-4">
             <div className="flex items-center gap-4">
-              <img
-                src={item.product.images?.[0] || '/no-product.png'}
-                alt={item.product.name}
-                className="w-16 h-16 object-cover rounded"
-              />
+
+<Image
+  src={item.product.images?.[0] || '/no-product.png'}
+  alt={item.product.name}
+  width={64}
+  height={64}
+  className="object-cover rounded"
+/>
+
               <div className="flex-1">
                 <h3 className="font-semibold">{item.product.name}</h3>
                 <p className="text-gray-600 text-sm">
