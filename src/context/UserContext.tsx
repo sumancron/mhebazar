@@ -7,19 +7,16 @@ import React, {
   useState,
   ReactNode,
   useEffect,
-  useCallback // Import useCallback
+  useCallback
 } from "react";
-import Cookies from "js-cookie";
-import axios from "axios"; // Assuming you will use an axiosInstance from lib eventually
+import Cookies from "js-cookie"; // Still needed for refresh_token if not HttpOnly, and for general purpose cookies.
+import axios from "axios"; // Assuming axiosInstance is what you'll eventually use
 
-// Define the UserBannerItem interface
 interface UserBannerItem {
   id: number;
   url: string;
-  // Add other properties if your banner items have them
 }
 
-// Define the User interface based on your provided user object
 interface User {
   id: number;
   username: string;
@@ -36,7 +33,7 @@ interface User {
   };
   phone: string | null;
   address: string | null;
-  user_banner: UserBannerItem[]; // Corrected type
+  user_banner: UserBannerItem[];
   is_email_verified: boolean;
   is_account_locked: boolean;
   date_joined: string;
@@ -59,45 +56,62 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
   const API_KEY = process.env.X_API_KEY;
 
-  // Wrap fetchUser in useCallback to memoize it
-  const fetchUser = useCallback(async (accessToken: string) => {
+  const fetchUser = useCallback(async () => { // Removed accessToken parameter
     try {
+      console.log("[UserContext] Attempting to fetch user profile...");
+      // For HttpOnly access tokens, the browser automatically sends the cookie.
+      // So, we don't need to manually read it from `js-cookie` and pass it in the header here.
+      // Axios `withCredentials: true` ensures the cookie is sent.
       const userResponse = await axios.get(`${API_BASE_URL}/users/me/`, {
         headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "X-API-KEY": API_KEY,
+          "X-API-KEY": API_KEY, // Still need API key if it's not in cookie
         },
+        withCredentials: true, // This is crucial for sending HttpOnly cookies
       });
-      // Ensure the fetched data matches the User interface
-      setUser(userResponse.data as User); // Cast here as well for consistency
+
+      setUser(userResponse.data as User);
+      console.log("[UserContext] User data fetched successfully.");
     } catch (error) {
-      console.error("Failed to fetch user during context initialization:", error);
+      console.error("[UserContext] Failed to fetch user profile:", error);
       setUser(null);
-      Cookies.remove("access_token");
-      Cookies.remove("refresh_token");
+      // Clear all related cookies if user fetch fails, including refresh_token
+      Cookies.remove("access_token"); // This cookie might not exist if HttpOnly, but good to try.
+      Cookies.remove("refresh_token"); // This is often not HttpOnly in simple setups, so js-cookie can clear it.
     } finally {
       setIsLoading(false);
     }
   }, [API_BASE_URL, API_KEY]); // Dependencies for useCallback
 
   useEffect(() => {
-    const accessToken = Cookies.get("access_token");
-    if (accessToken) {
-      fetchUser(accessToken);
-    } else {
-      setIsLoading(false);
-    }
-  }, [fetchUser]); // Now fetchUser is a dependency and won't cause infinite re-renders
+    // We can still try to read a non-HttpOnly access token if it exists
+    // OR more importantly, trigger fetchUser if we think a user might be logged in.
+    // With HttpOnly tokens, we primarily rely on the backend setting them,
+    // and the browser sending them automatically.
+    // The presence of a refresh token (if not HttpOnly) can also indicate a session.
+
+    // If you are relying purely on HttpOnly access tokens:
+    // The initial load simply calls fetchUser without checking cookies via js-cookie
+    // as js-cookie cannot read HttpOnly cookies.
+    fetchUser();
+
+    // If your refresh token is NOT HttpOnly and stored by js-cookie:
+    // You might want to check for its existence before calling fetchUser.
+    // const refreshToken = Cookies.get("refresh_token");
+    // if (refreshToken) {
+    //   fetchUser();
+    // } else {
+    //   setIsLoading(false);
+    // }
+
+  }, [fetchUser]);
 
   const logout = () => {
     setUser(null);
-    Cookies.remove("access_token");
-    Cookies.remove("refresh_token");
-    // Optionally redirect to login page. In Next.js, useRouter is preferred
-    // If you plan to use useRouter here, you'd need to pass it into the context or make logout async
-    // For simplicity, sticking to window.location.href here if not changing context logic.
-    // If using router.push, you'd need to import it here or pass it from _app.tsx if UserProvider was there.
-    window.location.href = "/login"; // This works fine
+    Cookies.remove("access_token"); // Tries to remove it from frontend accessible cookies
+    Cookies.remove("refresh_token"); // Removes refresh token from frontend accessible cookies
+    // For HttpOnly cookies, you might need a backend endpoint to clear them on logout.
+    // For now, this is client-side logout.
+    window.location.href = "/login";
   };
 
   return (

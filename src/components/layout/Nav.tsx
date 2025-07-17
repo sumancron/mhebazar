@@ -472,7 +472,7 @@ export default function Navbar(): JSX.Element {
               ) : null}
 
               <Link
-                href="/subscription-plan"
+                href="/services/subscription-plan"
                 className="flex items-center gap-2 text-gray-600 px-4 py-3 hover:text-green-600 transition"
               >
                 <Tag className="w-4 h-4" />
