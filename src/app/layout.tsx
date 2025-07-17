@@ -5,6 +5,7 @@ import SiteLayout from "@/components/layout/SiteLayout";
 import { Suspense } from "react";
 import Loading from "./loading";
 import { Toaster } from "sonner";
+import { UserProvider } from "@/context/UserContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -42,11 +43,14 @@ export default function RootLayout({
           }}
         />
 
-        <SiteLayout>
-          <Suspense fallback={<Loading />}>
-            {children}
-          </Suspense>
-        </SiteLayout>
+        <UserProvider> {/* ✅ Move this above SiteLayout */}
+          <SiteLayout>
+            <Suspense fallback={<Loading />}>
+              {children}
+            </Suspense>
+          </SiteLayout>
+        </UserProvider>
+        
       </body>
     </html>
   );

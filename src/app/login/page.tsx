@@ -1,17 +1,22 @@
+// src/app/login/page.tsx
 "use client";
 import Link from "next/link";
 import axios from "axios";
 import { useState } from "react";
 import GoogleLoginButton from "@/components/elements/GoogleAuth";
 import { toast } from "sonner";
-import Cookies from 'js-cookie'
-
+import Cookies from "js-cookie";
+import { useUser } from "@/context/UserContext"; // Import useUser hook
+import { useRouter } from "next/navigation"; // Import useRouter for navigation
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberme, setRememberMe] = useState(false);
   const [error, setError] = useState("");
+
+  const { setUser } = useUser(); // Get setUser from context
+  const router = useRouter(); // Initialize router
 
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
   const API_KEY = process.env.X_API_KEY;
@@ -48,9 +53,12 @@ const LoginPage = () => {
           });
           userData = userResponse.data;
           console.log("User data fetched successfully:", userData);
+          setUser(userData); // Set user data in context
         } catch (err) {
           toast.error("Failed to fetch user profile. Please try again.");
           console.error("User fetch error:", err);
+          // If user data fetching fails, we might still want to proceed with token storage
+          // but the user object in context will remain null or previous state.
         }
       }
 
@@ -69,16 +77,15 @@ const LoginPage = () => {
         secure: true,
         sameSite: "Lax",
       });
-      
-      // Redirect based on user role
-      if (userData?.role?.id === 1) {
-        window.location.href = "/admin/";
-      } else if (userData?.role?.id === 2) {
-        window.location.href = "/vendor/dashboard/";
-      } else {
-        window.location.href = "/";
-      }
 
+      // Redirect based on user role using Next.js router
+      if (userData?.role?.id === 1) {
+        router.push("/admin");
+      } else if (userData?.role?.id === 2) {
+        router.push("/vendor/dashboard");
+      } else {
+        router.push("/");
+      }
     } catch (err: unknown) {
       if (axios.isAxiosError(err)) {
         const data = err.response?.data;
@@ -87,18 +94,25 @@ const LoginPage = () => {
           if (message.includes("No active account found")) {
             return "Invalid email or password. Please try again.";
           }
-          if (message.toLowerCase().includes("email") && message.toLowerCase().includes("required")) {
+          if (
+            message.toLowerCase().includes("email") &&
+            message.toLowerCase().includes("required")
+          ) {
             return "Please enter your email.";
           }
-          if (message.toLowerCase().includes("password") && message.toLowerCase().includes("required")) {
+          if (
+            message.toLowerCase().includes("password") &&
+            message.toLowerCase().includes("required")
+          ) {
             return "Please enter your password.";
           }
           return message || "Login failed. Please try again.";
         };
 
-        const rawMessage = typeof data === "string"
-          ? data
-          : data?.detail || data?.message || "Login failed";
+        const rawMessage =
+          typeof data === "string"
+            ? data
+            : data?.detail || data?.message || "Login failed";
 
         toast.error(getFriendlyError(rawMessage));
       } else {
@@ -113,10 +127,7 @@ const LoginPage = () => {
         <h1 className="text-center text-3xl sm:text-4xl font-bold text-green-600 mb-8">
           Welcome to MHE Bazar!
         </h1>
-        <form
-          className="flex flex-col gap-5"
-          onSubmit={handleLogin}
-        >
+        <form className="flex flex-col gap-5" onSubmit={handleLogin}>
           <div>
             <label className="block font-medium mb-1">Email</label>
             <input
@@ -125,7 +136,7 @@ const LoginPage = () => {
               placeholder="Enter your email Id!"
               className="w-full bg-gray-50 border border-gray-200 rounded px-4 py-3 outline-none focus:ring-2 focus:ring-green-500 text-base"
               value={email}
-              onChange={e => setEmail(e.target.value)}
+              onChange={(e) => setEmail(e.target.value)}
             />
           </div>
           <div>
@@ -136,7 +147,7 @@ const LoginPage = () => {
               placeholder="************"
               className="w-full bg-gray-50 border border-gray-200 rounded px-4 py-3 outline-none focus:ring-2 focus:ring-green-500 text-base"
               value={password}
-              onChange={e => setPassword(e.target.value)}
+              onChange={(e) => setPassword(e.target.value)}
             />
           </div>
           <div className="flex items-center justify-between">
@@ -145,7 +156,7 @@ const LoginPage = () => {
                 type="checkbox"
                 className="w-4 h-4 rounded border-gray-300"
                 checked={rememberme}
-                onChange={e => setRememberMe(e.target.checked)}
+                onChange={(e) => setRememberMe(e.target.checked)}
               />
               Remember me
             </label>
@@ -178,11 +189,16 @@ const LoginPage = () => {
           size="large"
           showIcon={true}
           onSuccess={(data) => {
-            console.log('Success:', data)
+            console.log("Success:", data);
             const accessToken = (data as { access: string }).access;
-            localStorage.setItem("access_token", accessToken);
+            localStorage.setItem("access_token", accessToken); // You might want to store this in cookies as well
+            // After successful Google login, you'd typically have another API call to get user details
+            // and then set them in the context similar to the regular login.
+            // For now, if Google login directly gives you a full user object, you'd do:
+            // setUser(data.userObject); // Assuming `data` contains the user object after Google login
+            router.push("/"); // Redirect after Google login
           }}
-          onError={(error) => console.log('Error:', error)}
+          onError={(error) => console.log("Error:", error)}
         />
         <div className="mt-8 text-center text-base">
           Do not have an account{" "}
