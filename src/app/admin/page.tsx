@@ -35,13 +35,14 @@ const CompleteDashboard = () => {
   useEffect(() => {
     const checkUser = async () => {
       let token = Cookies.get("access_token");
+      const refresh = Cookies.get("refresh_token");
 
       try {
         // If access token doesn't exist, try refreshing it
         if (!token) {
           const refreshResponse = await axios.post(
             `${API_BASE_URL}/token/refresh/`,
-            {},
+            {refresh},
             { withCredentials: true } // refresh_token read from HttpOnly cookie
           );
 
