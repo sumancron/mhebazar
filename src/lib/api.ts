@@ -58,6 +58,7 @@ api.interceptors.response.use(
       } catch (refreshError) {
         // Refresh failed – redirect to login or handle accordingly
         Cookies.remove("access_token");
+        Cookies.remove("refresh_token");
         if (typeof window !== "undefined") {
           window.location.href = "/login";
         }

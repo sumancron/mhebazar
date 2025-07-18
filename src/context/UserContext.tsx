@@ -66,9 +66,6 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     } catch (error) {
       console.error("[UserContext] Failed to fetch user profile:", error);
       setUser(null);
-      // Clear all related cookies if user fetch fails, including refresh_token
-      Cookies.remove("access_token"); // This cookie might not exist if HttpOnly, but good to try.
-      Cookies.remove("refresh_token"); // This is often not HttpOnly in simple setups, so js-cookie can clear it.
     } finally {
       setIsLoading(false);
     }
