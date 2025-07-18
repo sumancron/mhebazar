@@ -1,22 +1,19 @@
 // src/context/UserContext.tsx
-"use client";
+"use client"; // This directive marks the component as a Client Component
 
 import React, {
   createContext,
-  useContext,
   useState,
-  ReactNode,
+  useContext,
   useEffect,
-  useCallback
+  ReactNode,
 } from "react";
-import Cookies from "js-cookie"; // Still needed for refresh_token if not HttpOnly, and for general purpose cookies.
-import axios from "axios"; // Assuming axiosInstance is what you'll eventually use
+import Cookies from "js-cookie"; // Library to handle browser cookies
+import axios from "axios"; // For making HTTP requests
+import { toast } from "sonner"; // Assuming you have sonner for displaying toasts/notifications
 
-interface UserBannerItem {
-  id: number;
-  url: string;
-}
-
+// Define the structure of a User object based on your backend's /users/me endpoint response.
+// It's crucial that this interface accurately reflects the data you receive.
 interface User {
   id: number;
   username: string;
@@ -24,106 +21,127 @@ interface User {
   first_name: string;
   last_name: string;
   full_name: string;
-  role: {
-    id: number;
+  is_email_verified: boolean;
+  date_joined: string;
+  last_login: string;
+  role: { // The role object is key for authorization
+    id: number; // 1 for Admin, 2 for Vendor, 3 for User (as per your models.py)
     name: string;
     description: string;
-    created_at: string;
-    updated_at: string;
   };
-  phone: string | null;
-  address: string | null;
-  user_banner: UserBannerItem[];
-  is_email_verified: boolean;
-  is_account_locked: boolean;
-  date_joined: string;
-  last_login: string | null;
+  // Add any other user properties you receive from your backend's /users/me endpoint
 }
 
+// Define the shape of the UserContext, including the user object and helper states/functions.
 interface UserContextType {
-  user: User | null;
-  setUser: (user: User | null) => void;
-  isLoading: boolean;
-  logout: () => void;
+  user: User | null; // The current authenticated user, or null if not logged in
+  setUser: (user: User | null) => void; // Function to update the user state
+  isLoading: boolean; // True while user data is being fetched
+  isAuthenticated: boolean; // True if a user is logged in
+  isAdmin: boolean; // True if the logged-in user is an Admin
+  isVendor: boolean; // True if the logged-in user is a Vendor
+  isRegularUser: boolean; // True if the logged-in user is a regular User
 }
 
+// Create the React Context. Default value is undefined, and we'll check for it in useUser hook.
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
-export const UserProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+// Define the props for the UserProvider component. It will wrap other components.
+interface UserProviderProps {
+  children: ReactNode; // ReactNode allows any valid React child (elements, strings, etc.)
+}
 
+/**
+ * UserProvider component manages the global user state and authentication status.
+ * It fetches user data on initial load and provides it to all components wrapped within it.
+ */
+export const UserProvider = ({ children }: UserProviderProps) => {
+  const [user, setUser] = useState<User | null>(null); // State to hold user data
+  const [isLoading, setIsLoading] = useState(true); // State to track loading status
+
+  // Retrieve API base URL and API key from environment variables.
+  // These should be configured in your .env.local file (e.g., NEXT_PUBLIC_API_BASE_URL=http://localhost:8000/api)
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
   const API_KEY = process.env.X_API_KEY;
 
-  const fetchUser = useCallback(async () => { // Removed accessToken parameter
-    try {
-      console.log("[UserContext] Attempting to fetch user profile...");
-      // For HttpOnly access tokens, the browser automatically sends the cookie.
-      // So, we don't need to manually read it from `js-cookie` and pass it in the header here.
-      // Axios `withCredentials: true` ensures the cookie is sent.
-      const userResponse = await axios.get(`${API_BASE_URL}/users/me/`, {
-        headers: {
-          "X-API-KEY": API_KEY, // Still need API key if it's not in cookie
-        },
-        withCredentials: true, // This is crucial for sending HttpOnly cookies
-      });
+  /**
+   * Fetches user data from the backend using the access token.
+   * This function is called on component mount to re-authenticate the user if a token exists.
+   */
+  const fetchUser = React.useCallback(async () => {
+    // Get access token from cookies. Cookies are preferred for security and middleware access.
+    const accessToken = Cookies.get("access_token");
+    // Also check localStorage for access token, especially if Google login stores it there.
+    const localStorageAccessToken = localStorage.getItem("access_token");
 
-      setUser(userResponse.data as User);
-      console.log("[UserContext] User data fetched successfully.");
-    } catch (error) {
-      console.error("[UserContext] Failed to fetch user profile:", error);
-      setUser(null);
-      // Clear all related cookies if user fetch fails, including refresh_token
-      Cookies.remove("access_token"); // This cookie might not exist if HttpOnly, but good to try.
-      Cookies.remove("refresh_token"); // This is often not HttpOnly in simple setups, so js-cookie can clear it.
-    } finally {
-      setIsLoading(false);
+    // Prioritize cookie token, then localStorage token.
+    const tokenToUse = accessToken || localStorageAccessToken;
+
+    if (tokenToUse) {
+      try {
+        // Make an API call to your backend's /users/me/ endpoint to get user details.
+        const response = await axios.get(`${API_BASE_URL}/users/me/`, {
+          headers: {
+            Authorization: `Bearer ${tokenToUse}`, // Send the access token in the Authorization header
+            "X-API-KEY": API_KEY, // Include your custom API key if required by your backend
+          },
+        });
+        setUser(response.data); // Set the fetched user data into the state
+      } catch (error) {
+        console.error("Failed to fetch user data:", error);
+        // If fetching user data fails (e.g., token expired or invalid), clear all tokens
+        // and set user to null, effectively logging them out on the client side.
+        Cookies.remove("access_token");
+        localStorage.removeItem("access_token");
+        Cookies.remove("refresh_token"); // Also remove refresh token if access token is bad
+        setUser(null); // Clear user data from context
+        toast.error("Your session has expired. Please log in again."); // Notify the user
+      } finally {
+        setIsLoading(false); // Loading is complete, regardless of success or failure
+      }
+    } else {
+      setIsLoading(false); // No token found, so no loading needed
     }
-  }, [API_BASE_URL, API_KEY]); // Dependencies for useCallback
+  }, [API_BASE_URL, API_KEY]);
 
+  // useEffect hook to run fetchUser only once when the component mounts.
+  // This ensures the user's session is checked when the application loads.
   useEffect(() => {
-    // We can still try to read a non-HttpOnly access token if it exists
-    // OR more importantly, trigger fetchUser if we think a user might be logged in.
-    // With HttpOnly tokens, we primarily rely on the backend setting them,
-    // and the browser sending them automatically.
-    // The presence of a refresh token (if not HttpOnly) can also indicate a session.
-
-    // If you are relying purely on HttpOnly access tokens:
-    // The initial load simply calls fetchUser without checking cookies via js-cookie
-    // as js-cookie cannot read HttpOnly cookies.
     fetchUser();
+  }, [fetchUser]); // Empty dependency array means this effect runs only once after the initial render
 
-    // If your refresh token is NOT HttpOnly and stored by js-cookie:
-    // You might want to check for its existence before calling fetchUser.
-    // const refreshToken = Cookies.get("refresh_token");
-    // if (refreshToken) {
-    //   fetchUser();
-    // } else {
-    //   setIsLoading(false);
-    // }
+  // Derived states for easy access to authentication and role status.
+  const isAuthenticated = !!user; // True if `user` object is not null
+  const isAdmin = user?.role?.id === 1; // Check if user's role ID is 1 (Admin)
+  const isVendor = user?.role?.id === 2; // Check if user's role ID is 2 (Vendor)
+  const isRegularUser = user?.role?.id === 3; // Check if user's role ID is 3 (Regular User)
 
-  }, [fetchUser]);
-
-  const logout = () => {
-    setUser(null);
-    Cookies.remove("access_token"); // Tries to remove it from frontend accessible cookies
-    Cookies.remove("refresh_token"); // Removes refresh token from frontend accessible cookies
-    // For HttpOnly cookies, you might need a backend endpoint to clear them on logout.
-    // For now, this is client-side logout.
-    window.location.href = "/login";
-  };
-
+  // Provide the user data and helper states/functions to all children components.
   return (
-    <UserContext.Provider value={{ user, setUser, isLoading, logout }}>
+    <UserContext.Provider
+      value={{
+        user,
+        setUser,
+        isLoading,
+        isAuthenticated,
+        isAdmin,
+        isVendor,
+        isRegularUser,
+      }}
+    >
       {children}
     </UserContext.Provider>
   );
 };
 
+/**
+ * Custom hook to consume the UserContext.
+ * This hook makes it easy for any component to access the user's information.
+ */
 export const useUser = () => {
   const context = useContext(UserContext);
   if (context === undefined) {
+    // This error helps ensure that useUser is always called within a UserProvider.
     throw new Error("useUser must be used within a UserProvider");
   }
   return context;

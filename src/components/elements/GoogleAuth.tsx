@@ -20,7 +20,9 @@ declare global {
 }
 
 interface GoogleLoginButtonProps {
-  onSuccess?: (response: { access: string; refresh: string }) => void;
+  onSuccess?: (response: {
+    userObject(userObject: any): unknown; access: string; refresh: string 
+}) => void;
   onError?: (error: unknown) => void;
   variant?: "default" | "custom";
   buttonText?: string;
