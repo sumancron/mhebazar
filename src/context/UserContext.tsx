@@ -10,7 +10,7 @@ import React, {
   useCallback
 } from "react";
 import Cookies from "js-cookie"; // Still needed for refresh_token if not HttpOnly, and for general purpose cookies.
-import axios from "axios"; // Assuming axiosInstance is what you'll eventually use
+import api from "@/lib/api";
 
 interface UserBannerItem {
   id: number;
@@ -53,21 +53,13 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
-  const API_KEY = process.env.X_API_KEY;
-
   const fetchUser = useCallback(async () => { // Removed accessToken parameter
     try {
       console.log("[UserContext] Attempting to fetch user profile...");
       // For HttpOnly access tokens, the browser automatically sends the cookie.
       // So, we don't need to manually read it from `js-cookie` and pass it in the header here.
       // Axios `withCredentials: true` ensures the cookie is sent.
-      const userResponse = await axios.get(`${API_BASE_URL}/users/me/`, {
-        headers: {
-          "X-API-KEY": API_KEY, // Still need API key if it's not in cookie
-        },
-        withCredentials: true, // This is crucial for sending HttpOnly cookies
-      });
+      const userResponse = await api.get('/users/me/');
 
       setUser(userResponse.data as User);
       console.log("[UserContext] User data fetched successfully.");
@@ -80,7 +72,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     } finally {
       setIsLoading(false);
     }
-  }, [API_BASE_URL, API_KEY]); // Dependencies for useCallback
+  }, []); // Dependencies for useCallback
 
   useEffect(() => {
     // We can still try to read a non-HttpOnly access token if it exists
