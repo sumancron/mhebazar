@@ -15,6 +15,9 @@ const ROLES = {
 // Users can visit these pages whether they are logged in or not.
 const publicPaths = ["/login", "/register", "/forgot-password", "/"]; // Add more as needed, e.g., "/products", "/contact"
 
+// Define which paths are protected (require login)
+const protectedPrefixes = ["/admin", "/vendor", "/account"];
+
 /**
  * Middleware function to handle authentication and role-based authorization.
  * It runs before a request is completed, allowing for redirects or modifications.
@@ -114,46 +117,40 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next(); // Allow access to public paths
   }
 
-  // --- Protected Path Handling (requires authentication for all non-public paths) ---
-  // If the user is not authenticated and tries to access any path that is not public,
-  // redirect them to the login page.
-  if (!isAuthenticated) {
-    const response = NextResponse.redirect(new URL("/login", request.url));
-    // Clear any stale tokens just in case, before redirecting.
-    response.cookies.delete("access_token");
-    response.cookies.delete("refresh_token");
-    return response;
+  // --- Protected Path Handling ---
+  // If the path starts with a protected prefix and user is not authenticated, redirect to login
+  if (protectedPrefixes.some((prefix) => pathname.startsWith(prefix))) {
+    if (!isAuthenticated) {
+      const response = NextResponse.redirect(new URL("/login", request.url));
+      response.cookies.delete("access_token");
+      response.cookies.delete("refresh_token");
+      return response;
+    }
   }
 
   // --- Role-Based Access Control (User is authenticated at this point) ---
-
-  // Admin (Role ID 1): Can access any page. No restrictions.
-  if (userRole === ROLES.ADMIN) {
-    return NextResponse.next(); // Allow access
-  }
-
-  // Vendor (Role ID 2): Cannot access paths starting with "/admin".
-  // They can access all other paths, including "/vendor/*" paths.
-  if (userRole === ROLES.VENDOR) {
-    if (pathname.startsWith("/admin")) {
-      // Redirect vendors trying to access admin pages to their dashboard.
-      return NextResponse.redirect(new URL("/vendor/dashboard", request.url));
+  if (isAuthenticated) {
+    // Admin (Role ID 1): Can access any page.
+    if (userRole === ROLES.ADMIN) {
+      return NextResponse.next();
     }
-    return NextResponse.next(); // Allow access to other paths
-  }
-
-  // Regular User (Role ID 3): Cannot access paths starting with "/admin" or "/vendor".
-  // They can access all other general user pages.
-  if (userRole === ROLES.USER) {
-    if (pathname.startsWith("/admin") || pathname.startsWith("/vendor")) {
-      // Redirect regular users trying to access admin or vendor pages to the home page.
-      return NextResponse.redirect(new URL("/", request.url));
+    // Vendor (Role ID 2): Cannot access /admin
+    if (userRole === ROLES.VENDOR) {
+      if (pathname.startsWith("/admin")) {
+        return NextResponse.redirect(new URL("/vendor/dashboard", request.url));
+      }
+      return NextResponse.next();
     }
-    return NextResponse.next(); // Allow access to other paths
+    // Regular User (Role ID 3): Cannot access /admin or /vendor
+    if (userRole === ROLES.USER) {
+      if (pathname.startsWith("/admin") || pathname.startsWith("/vendor")) {
+        return NextResponse.redirect(new URL("/", request.url));
+      }
+      return NextResponse.next();
+    }
   }
 
-  // Fallback: If a user is authenticated but their role is unknown or not explicitly handled,
-  // you might choose to allow access (as done here) or redirect them to a default page.
+  // If not authenticated and not a protected path, allow access
   return NextResponse.next();
 }
 
