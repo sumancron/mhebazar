@@ -1,16 +1,57 @@
 "use client";
 
-import React, { useEffect } from 'react';
-import { FileText, ShoppingCart, Tag } from 'lucide-react';
-import { StatsCardProps } from '@/types';
+import React, { useEffect, useState, useCallback } from 'react';
+import { FileText, ShoppingCart, Tag, Check, X, Building, LucideIcon } from 'lucide-react';
 import AnalyticsDashboard from '@/components/admin/Graph';
-import axios from 'axios';
+import api from '@/lib/api'; // Use the configured axios instance
 import Cookies from 'js-cookie';
-// import api from '@/lib/api';
+import { toast } from "sonner"; // 👈 Import sonner toast
 
+// Shadcn UI Components
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+
+import { useUser } from '@/context/UserContext';
+
+// --- Type Definitions ---
+export interface StatsCardProps {
+  icon: LucideIcon;
+  number: string;
+  label: string;
+  color?: string;
+}
+
+export interface VendorApplication {
+  id: number;
+  company_name: string;
+  company_email: string;
+  company_address: string;
+  company_phone: string;
+  brand: string;
+  gst_no: string;
+  user: {
+    id: number;
+    first_name: string;
+    last_name: string;
+    email: string;
+    role: {
+      id: number;
+      name: string;
+    };
+  };
+}
+
+// --- Helper Components ---
 const StatsCard: React.FC<StatsCardProps> = ({ icon: Icon, number, label, color = "green" }) => (
   <div className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow duration-200 cursor-pointer relative overflow-hidden">
-    {/* <div className={`absolute top-0 left-0 w-20 h-20 bg-${color}-100 rounded-full opacity-50 -translate-x-4 -translate-y-4`}></div> */}
     <div className="relative z-10">
       <div className="mb-4">
         <div className={`w-10 h-10 bg-${color}-600 rounded-lg flex items-center justify-center`}>
@@ -30,78 +71,118 @@ const StatsCard: React.FC<StatsCardProps> = ({ icon: Icon, number, label, color 
   </div>
 );
 
-const CompleteDashboard = () => {
-  const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+console.log(useUser)
 
+// --- Main Dashboard Component ---
+const CompleteDashboard = () => {
+  const [applications, setApplications] = useState<VendorApplication[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [selectedVendor, setSelectedVendor] = useState<VendorApplication | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [rejectionReason, setRejectionReason] = useState("");
+
+  const VENDOR_ROLE_ID = 2; // Assuming '2' is the Vendor role ID
+
+  // --- Initial Auth Check ---
   useEffect(() => {
     const checkUser = async () => {
-      let token = Cookies.get("access_token");
-      const refresh = Cookies.get("refresh_token");
-
       try {
-        // If access token doesn't exist, try refreshing it
-        if (!token) {
-          const refreshResponse = await axios.post(
-            `${API_BASE_URL}/token/refresh/`,
-            {refresh},
-            { withCredentials: true } // refresh_token read from HttpOnly cookie
-          );
-
-          token = refreshResponse.data?.access;
-
-          if (token) {
-            Cookies.set("access_token", token, {
-              expires: 1 / 24, // 1 hour
-              secure: true,
-              sameSite: "Lax",
-            });
-          } else {
-            throw new Error("No new access token returned");
-          }
-        }
-
-        // After getting a valid access token, fetch user data
-        const userResponse = await axios.get(`${API_BASE_URL}/users/me/`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        const userData = userResponse.data;
-        console.log("User data fetched successfully:", userData);
-
-        // Redirect based on role
-        if (userData?.role?.id !== 1) {
+        const userResponse = await api.get('/users/me/');
+        if (userResponse.data?.role?.id !== 1) { // Assuming admin role ID is 1
           window.location.href = "/";
         }
-
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (err: any) {
-        console.error("Auth or user check failed:", err);
-
-        // If token refresh failed (e.g., 401), redirect to login
-        const status = err?.response?.status;
-
-        if (status === 401 || status === 403) {
-          // Refresh token likely expired or invalid
+        console.error("Auth check failed:", err);
+        if (err?.response?.status === 401 || err?.response?.status === 403) {
           Cookies.remove("access_token");
           window.location.href = "/login";
         }
       }
     };
-
     checkUser();
   }, []);
 
+  // --- Fetch Vendor Applications ---
+  const fetchApplications = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const response = await api.get('/vendors/');
+      const pending = response.data.filter(
+        (app: VendorApplication) => app.user.role.id !== VENDOR_ROLE_ID
+      );
+      setApplications(pending);
+    } catch (error) {
+      console.error("Failed to fetch vendor applications:", error);
+      toast.error("Error", {
+        description: "Could not fetch vendor applications.",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchApplications();
+  }, [fetchApplications]);
+
+  // --- Handler Functions for Approve/Reject ---
+  const handleApprove = async (vendorId: number) => {
+    try {
+      await api.post(`/vendors/${vendorId}/approve/`, { action: 'approve' });
+      toast.success("Success", {
+        description: "Vendor application has been approved.",
+      });
+      fetchApplications();
+    } catch (error) {
+      console.error("Failed to approve vendor:", error);
+      toast.error("Approval Failed", {
+        description: "An error occurred while approving the application.",
+      });
+    }
+  };
+
+  const handleOpenRejectModal = (vendor: VendorApplication) => {
+    setSelectedVendor(vendor);
+    setIsModalOpen(true);
+  };
+
+  const handleRejectSubmit = async () => {
+    if (!selectedVendor || !rejectionReason.trim()) {
+      toast.error("Validation Error", {
+        description: "Rejection reason is required.",
+      });
+      return;
+    }
+
+    try {
+      await api.post(`/vendors/${selectedVendor.id}/approve/`, {
+        action: 'reject',
+        reason: rejectionReason,
+      });
+      toast.success("Success", {
+        description: "Vendor application has been rejected and deleted.",
+      });
+      setIsModalOpen(false);
+      setSelectedVendor(null);
+      setRejectionReason("");
+      fetchApplications();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      console.error("Failed to reject vendor:", error);
+      const errorMessage = error.response?.data?.error || "An error occurred while rejecting the application.";
+      toast.error("Rejection Failed", {
+        description: errorMessage,
+      });
+    }
+  };
+
   return (
-    <div className="flex min-h-screen bg-gray-50">
-      {/* Dashboard Content */}
-      <div className="flex-1 flex">
+    <>
+      <div className="flex min-h-screen bg-gray-50">
         {/* Main Dashboard Section */}
         <div className="flex-1 p-6 min-h-screen overflow-y-auto">
           <h2 className="text-2xl font-bold text-gray-900 mb-6">Dashboard</h2>
-
-          {/* Stats Cards Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
             <StatsCard icon={FileText} number="482" label="Product Quote" color="green" />
             <StatsCard icon={ShoppingCart} number="155" label="Rent & Buy" color="green" />
@@ -109,28 +190,77 @@ const CompleteDashboard = () => {
             <StatsCard icon={FileText} number="180" label="Specification" color="green" />
             <StatsCard icon={FileText} number="44" label="Get Catalogue" color="green" />
           </div>
-
-          {/* Charts Section - Using the previously created AnalyticsDashboard component */}
           <AnalyticsDashboard />
         </div>
 
-        {/* Enquiry History Sidebar */}
-        <div className="w-80 bg-white border-l border-gray-200 p-6">
-          <h3 className="text-xl font-semibold text-gray-900 mb-6">Enquiry History</h3>
-          <div className="space-y-4">
-            {[1, 2, 3, 4, 5].map((item) => (
-              <div key={item} className="border-b border-gray-100 pb-4">
-                <h4 className="font-medium text-gray-900 mb-1">Username</h4>
-                <p className="text-sm text-gray-600">Lorem Ipsum is simply dummy text of the printing and typesetting industry.</p>
-              </div>
-            ))}
+        {/* Vendor Applications Sidebar */}
+        <div className="w-96 bg-white border-l border-gray-200 p-6 flex flex-col">
+          <h3 className="text-xl font-semibold text-gray-900 mb-6">Vendor Applications</h3>
+          <div className="space-y-4 flex-1 overflow-y-auto">
+            {isLoading ? (
+              <p className="text-gray-500">Loading applications...</p>
+            ) : applications.length > 0 ? (
+              applications.map((app) => (
+                <div key={app.id} className="border rounded-lg p-4 bg-gray-50">
+                  <div className="flex items-center mb-2">
+                    <Building className="w-5 h-5 mr-3 text-gray-600" />
+                    <h4 className="font-semibold text-gray-900">{app.company_name}</h4>
+                  </div>
+                  <p className="text-sm text-gray-600 mb-4 ml-8">
+                    Applied by: {app.user.first_name} {app.user.last_name}
+                  </p>
+                  <div className="flex justify-end space-x-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-red-600 border-red-500 hover:bg-red-50 hover:text-red-700"
+                      onClick={() => handleOpenRejectModal(app)}
+                    >
+                      <X className="w-4 h-4 mr-1" />
+                      Reject
+                    </Button>
+                    <Button
+                      size="sm"
+                      className="bg-green-600 hover:bg-green-700"
+                      onClick={() => handleApprove(app.id)}
+                    >
+                      <Check className="w-4 h-4 mr-1" />
+                      Approve
+                    </Button>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="text-gray-500 text-center mt-10">No pending applications.</p>
+            )}
           </div>
-          <button className="w-full mt-6 bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition-colors">
-            View All
-          </button>
         </div>
       </div>
-    </div>
+
+      {/* Rejection Modal */}
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Reject Vendor Application</DialogTitle>
+            <DialogDescription>
+              Provide a reason for rejecting the application for <span className="font-semibold">{selectedVendor?.company_name}</span>. This reason will be sent to the user.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <Textarea
+              placeholder="Type your reason here..."
+              value={rejectionReason}
+              onChange={(e) => setRejectionReason(e.target.value)}
+              className="min-h-[100px]"
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsModalOpen(false)}>Cancel</Button>
+            <Button variant="destructive" onClick={handleRejectSubmit}>Submit Rejection</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };
 
