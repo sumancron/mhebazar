@@ -1,7 +1,4 @@
-import axios, {
-  AxiosInstance,
-  type InternalAxiosRequestConfig,
-} from "axios";
+import axios, { AxiosInstance, type InternalAxiosRequestConfig } from "axios";
 import Cookies from "js-cookie";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/api";
@@ -40,7 +37,7 @@ api.interceptors.response.use(
       try {
         const refreshResponse = await axios.post(
           `${API_BASE_URL}/token/refresh/`,
-          {refresh},
+          { refresh },
           { withCredentials: true }
         );
 
