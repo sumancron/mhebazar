@@ -54,6 +54,22 @@ const LoginPage = () => {
           userData = userResponse.data;
           console.log("User data fetched successfully:", userData);
           setUser(userData); // Set user data in context
+
+          // --- UPDATED: Set user_role cookie for middleware ---
+          if (userData?.role?.id) {
+            // Set a non-HttpOnly cookie that the middleware can read.
+            // This cookie will contain the user's role ID.
+            // IMPORTANT: Removed 'secure' flag condition for development ease.
+            // Added 'path: /' to ensure cookie is available across the entire site.
+            Cookies.set("user_role", userData.role.id.toString(), {
+              expires: 7, // Expires in 7 days, or match your refresh token expiry
+              sameSite: "Lax",
+              path: '/', // Ensure cookie is available for all paths
+            });
+            console.log("Cookie 'user_role' set:", userData.role.id.toString());
+          }
+          // --- END UPDATED ---
+
         } catch (err) {
           toast.error("Failed to fetch user profile. Please try again.");
           console.error("User fetch error:", err);
@@ -66,17 +82,31 @@ const LoginPage = () => {
       if (accessToken && rememberme) {
         Cookies.set("access_token", accessToken, {
           expires: 1 / 24, // 1 hour = 1/24 of a day
-          secure: true,
+          // IMPORTANT: Removed 'secure' flag condition for development ease.
+          // Added 'path: /' to ensure cookie is available across the entire site.
           sameSite: "Lax",
+          path: '/', // Ensure cookie is available for all paths
         });
+        console.log("Cookie 'access_token' set (remember me):", accessToken);
+      } else if (accessToken) { // If not remember me, set a session-based token or short expiry
+         Cookies.set("access_token", accessToken, {
+          expires: 1 / 24, // Example: 1 hour, or adjust as needed for non-remembered sessions
+          sameSite: "Lax",
+          path: '/',
+        });
+        console.log("Cookie 'access_token' set (session):", accessToken);
       }
+
 
       // set refresh token in cookies
       Cookies.set("refresh_token", refreshToken, {
         expires: 7,
-        secure: true,
+        // IMPORTANT: Removed 'secure' flag condition for development ease.
+        // Added 'path: /' to ensure cookie is available across the entire site.
         sameSite: "Lax",
+        path: '/', // Ensure cookie is available for all paths
       });
+      console.log("Cookie 'refresh_token' set:", refreshToken);
 
       // Redirect based on user role using Next.js router
       if (userData?.role?.id === 1) {
@@ -191,12 +221,45 @@ const LoginPage = () => {
           onSuccess={(data) => {
             console.log("Success:", data);
             const accessToken = (data as { access: string }).access;
-            localStorage.setItem("access_token", accessToken); // You might want to store this in cookies as well
-            // After successful Google login, you'd typically have another API call to get user details
-            // and then set them in the context similar to the regular login.
+            // IMPORTANT: For Google Login, you *must* fetch user data here
+            // to get the role and set the 'user_role' cookie,
+            // similar to the regular handleLogin function.
+            // Without setting `user_role` cookie, middleware won't know the role.
+
+            // Example of how you would fetch user data and set cookies after Google login:
+            axios.get(`${API_BASE_URL}/users/me/`, {
+              headers: {
+                Authorization: `Bearer ${accessToken}`,
+                "X-API-KEY": API_KEY,
+              },
+            }).then(userResponse => {
+              const userData = userResponse.data;
+              setUser(userData);
+              if (userData?.role?.id) {
+                Cookies.set("user_role", userData.role.id.toString(), {
+                  expires: 7,
+                  sameSite: "Lax",
+                  path: '/',
+                });
+                console.log("Cookie 'user_role' set (Google login):", userData.role.id.toString());
+              }
+              // Also set access_token and refresh_token if your backend provides them via Google login
+              // Cookies.set("access_token", accessToken, { expires: 1/24, sameSite: "Lax", path: '/' });
+              // Cookies.set("refresh_token", data.refreshToken, { expires: 7, sameSite: "Lax", path: '/' }); // Assuming data has refreshToken
+              router.push("/"); // Redirect after Google login
+            }).catch(err => {
+              console.error("Failed to fetch user data after Google login:", err);
+              toast.error("Google login successful, but failed to get user profile.");
+              router.push("/login"); // Redirect to login if user data fetch fails
+            });
+
             // For now, if Google login directly gives you a full user object, you'd do:
-            // setUser(data.userObject); // Assuming `data` contains the user object after Google login
-            router.push("/"); // Redirect after Google login
+            // setUser(data.userObject); // Removed: Incorrect usage, see above for correct user fetch and setUser usage
+            // router.push("/"); // Redirect after Google login
+
+            // As a temporary measure for demonstration if GoogleLoginButton doesn't return full user data,
+            // we'll just redirect. But for full functionality, the above commented block is needed.
+            router.push("/");
           }}
           onError={(error) => console.log("Error:", error)}
         />

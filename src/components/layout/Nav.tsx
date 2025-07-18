@@ -23,7 +23,8 @@ import VendorRegistrationDrawer from "@/components/forms/publicforms/VendorRegis
 import SearchBar from "./SearchBar";
 import { useUser } from "@/context/UserContext"; // Correct import
 import { useRouter } from "next/navigation"; // Correct import
-import { toast } from "sonner";
+// import { toast } from "sonner";
+import { handleLogout } from "@/lib/auth/logout";
 
 const categories = [
   "Forklifts",
@@ -54,7 +55,7 @@ export default function Navbar(): JSX.Element {
   const profileMenuRef = useRef<HTMLDivElement>(null);
   const categoryMenuRef = useRef<HTMLDivElement>(null);
 
-  const { user, isLoading, logout } = useUser();
+  const { user, isLoading, setUser } = useUser();
   const router = useRouter();
 
   // Close dropdown on outside click for profile menu
@@ -223,10 +224,9 @@ export default function Navbar(): JSX.Element {
                   ) : user ? (
                     <Image
                       src={
-                        user.user_banner &&
-                        user.user_banner.length > 0 &&
-                        user.user_banner[0]?.url
-                          ? user.user_banner[0].url
+                        Array.isArray(user.username) &&
+                        user.username.length > 0 
+                          ? user.username[0].image
                           : "https://randomuser.me/api/portraits/men/32.jpg"
                       }
                       alt="Profile"
@@ -335,11 +335,9 @@ export default function Navbar(): JSX.Element {
                           <div className="border-t border-gray-100" />
                           <button
                             className="flex items-center gap-3 px-6 py-4 text-gray-800 hover:bg-gray-50 transition text-base w-full text-left"
-                            onClick={() => {
+                            onClick={async () => {
                               setProfileMenuOpen(false);
-                              logout();
-                              toast.success("Logged out successfully!");
-                              router.push("/login");
+                              await handleLogout(() => setUser(null), router);
                             }}
                           >
                             <LogOut className="w-5 h-5 text-green-600" />
@@ -622,4 +620,16 @@ export default function Navbar(): JSX.Element {
       />
     </header>
   );
+}
+
+export interface User {
+  id: number;
+  username?: string;
+  email: string;
+  role?: {
+    id: number;
+    name: string;
+  };
+  user_banner?: { url: string }[]; // Add this line to fix the error
+  // ...other properties
 }

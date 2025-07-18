@@ -8,7 +8,7 @@ import api from "@/lib/api";
 // --- IMPORTANT ---
 // Replace this with the actual path to your authentication hook.
 // This hook should provide the user's authentication status.
-import { useAuth } from "@/hooks/useAuth";
+import { useUser } from "@/context/UserContext";
 
 interface Props {
   open: boolean;
@@ -33,10 +33,8 @@ interface ApiError {
 export default function VendorRegistrationDrawer({ open, onClose }: Props) {
   const router = useRouter();
 
-  // Assumes your auth hook provides at least these two values.
-  // isLoading: true while checking auth status, false otherwise.
-  // isAuthenticated: true if user is logged in, false otherwise.
-  const { isAuthenticated, isLoading } = useAuth();
+  // Use useUser instead of useAuth
+  const { isAuthenticated, isLoading } = useUser();
 
   // State now only holds company data
   const [formData, setFormData] = useState<VendorFormData>({
