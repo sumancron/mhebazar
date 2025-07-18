@@ -21,7 +21,7 @@ declare global {
 
 interface GoogleLoginButtonProps {
   onSuccess?: (response: {
-    userObject(userObject: any): unknown; access: string; refresh: string 
+    userObject(userObject: never): unknown; access: string; refresh: string 
 }) => void;
   onError?: (error: unknown) => void;
   variant?: "default" | "custom";
@@ -151,6 +151,7 @@ const GoogleLoginButton = ({
     return () => {
       isMounted = false;
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [onError]);
 
   // Size classes
