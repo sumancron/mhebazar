@@ -6,6 +6,7 @@ import { StatsCardProps } from '@/types';
 import AnalyticsDashboard from '@/components/admin/Graph';
 import axios from 'axios';
 import Cookies from 'js-cookie';
+// import api from '@/lib/api';
 
 const StatsCard: React.FC<StatsCardProps> = ({ icon: Icon, number, label, color = "green" }) => (
   <div className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow duration-200 cursor-pointer relative overflow-hidden">
