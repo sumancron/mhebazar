@@ -1,3 +1,4 @@
+// components/publicforms/VendorRegistrationForm.tsx
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation"; // Correct hook for App Router
