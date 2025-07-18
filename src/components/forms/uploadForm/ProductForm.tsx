@@ -14,6 +14,8 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { X, FileText, Image as ImageIcon, Package, AlertCircle } from 'lucide-react'
 import Image from 'next/image'
 import Cookies from 'js-cookie'
+import api from '@/lib/api'
+import { useUser } from '@/context/UserContext'
 
 type FieldOption = {
   label: string
@@ -60,8 +62,9 @@ type ProductFormData = {
 
 const TYPE_OPTIONS = [
   { value: 'new', label: 'New' },
-  { value: 'old', label: 'Old' },
+  { value: 'used', label: 'Used' },
   { value: 'rental', label: 'Rental' },
+  { value: 'attachments', label: 'Attachments' },
 ]
 
 export default function ProductForm() {
@@ -187,8 +190,14 @@ export default function ProductForm() {
     setImageFiles(files => files.filter((_, i) => i !== idx))
   }
 
+  // user
+  const { user } = useUser();
+
   const onSubmit = async (data: ProductFormData) => {
     const formData = new FormData()
+    if (user?.id !== undefined) {
+      formData.append("user", String(user.id));
+    }
     formData.append('category', data.category)
     if (data.subcategory) formData.append('subcategory', data.subcategory)
     formData.append('name', data.name)
@@ -202,13 +211,14 @@ export default function ProductForm() {
     formData.append('product_details', JSON.stringify(dynamicValues))
     if (brochureFile) formData.append('brochure', brochureFile)
     imageFiles.forEach((img) => formData.append('images', img))
-
+  
     let token = Cookies.get("access_token");
+    const refresh = Cookies.get("refresh_token");
 
     if (!token) {
       const refreshResponse = await axios.post(
         `${API_BASE_URL}/token/refresh/`,
-        {},
+        {refresh},
         { withCredentials: true } // refresh_token read from HttpOnly cookie
       );
 
@@ -227,7 +237,7 @@ export default function ProductForm() {
 
     try {
       setIsSubmitting(true)
-      await axios.post(`${API_BASE_URL}/products/`, formData, {
+      await api.post(`${API_BASE_URL}/products/`, formData, {
         headers: { "Authorization": `Bearer ${token}`, 'Content-Type': 'multipart/form-data' },
       })
       setMessage('Product created successfully!')
