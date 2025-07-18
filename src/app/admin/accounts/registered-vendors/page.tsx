@@ -3,7 +3,9 @@ import VendorCard from "@/components/vendor-listing/VendorCard";
 // import Link from "next/link";
 
 import { Metadata } from "next";
+// import { useEffect } from "react";
 // import { UserPlusIcon } from "lucide-react";
+import api from "@/lib/api";
 
 export const metadata: Metadata = {
   title: "Vendors at MHEBazar",
@@ -16,28 +18,16 @@ type Vendor = {
   items: number;
 };
 
-const fallbackVendor: Vendor = {
-  id: 1,
-  name: "MHE Bazar",
-  logo: "/mhe-logo.png",
-  items: 1,
-};
-
-async function fetchVendors(): Promise<Vendor[]> {
-  try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/vendors-list`, {
-      cache: "no-store",
-    });
-    if (!res.ok) throw new Error("Failed to fetch");
-    const data = await res.json();
-    return data?.vendors ?? [fallbackVendor];
-  } catch {
-    return [fallbackVendor];
-  }
-}
 
 export default async function VendorsPage() {
-  const vendors = await fetchVendors();
+  let vendors: Vendor[] = [];
+  try {
+    const response = await api.get("/vendor/approved/");
+    vendors = response.data.results || [];
+  } catch {
+    // Optionally log error or show a message
+    vendors = [];
+  }
 
   return (
     <>
@@ -60,7 +50,7 @@ export default async function VendorsPage() {
       <main className="max-w-7xl mx-auto px-4 py-10">
         <h1 className="text-2xl font-semibold mb-6">Registered Vendors</h1>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 justify-items-center">
-          {vendors.map((vendor) => (
+          {vendors?.map(vendor => (
             <VendorCard key={vendor.id} vendor={vendor} />
           ))}
         </div>

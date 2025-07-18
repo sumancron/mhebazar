@@ -4,6 +4,7 @@ import Link from "next/link";
 
 import { Metadata } from "next";
 import { UserPlusIcon } from "lucide-react";
+import api from "@/lib/api";
 
 export const metadata: Metadata = {
   title: "Vendors at MHEBazar",
@@ -16,28 +17,15 @@ type Vendor = {
   items: number;
 };
 
-const fallbackVendor: Vendor = {
-  id: 1,
-  name: "MHE Bazar",
-  logo: "/mhe-logo.png",
-  items: 1,
-};
-
-async function fetchVendors(): Promise<Vendor[]> {
-  try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/vendors-list`, {
-      cache: "no-store",
-    });
-    if (!res.ok) throw new Error("Failed to fetch");
-    const data = await res.json();
-    return data?.vendors ?? [fallbackVendor];
-  } catch {
-    return [fallbackVendor];
-  }
-}
-
 export default async function VendorsPage() {
-  const vendors = await fetchVendors();
+  let vendors: Vendor[] = [];
+  try {
+    const response = await api.get("/vendor/approved/");
+    vendors = response.data.results || [];
+  } catch {
+    // Optionally log error or show a message
+    vendors = [];
+  }
 
   return (
 <>

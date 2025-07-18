@@ -19,8 +19,6 @@ import {
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 
-import { useUser } from '@/context/UserContext';
-
 // --- Type Definitions ---
 export interface StatsCardProps {
   icon: LucideIcon;
@@ -30,6 +28,8 @@ export interface StatsCardProps {
 }
 
 export interface VendorApplication {
+  username: string;
+  is_approved: boolean;
   id: number;
   company_name: string;
   company_email: string;
@@ -71,8 +71,6 @@ const StatsCard: React.FC<StatsCardProps> = ({ icon: Icon, number, label, color 
   </div>
 );
 
-console.log(useUser)
-
 // --- Main Dashboard Component ---
 const CompleteDashboard = () => {
   const [applications, setApplications] = useState<VendorApplication[]>([]);
@@ -80,8 +78,6 @@ const CompleteDashboard = () => {
   const [selectedVendor, setSelectedVendor] = useState<VendorApplication | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [rejectionReason, setRejectionReason] = useState("");
-
-  const VENDOR_ROLE_ID = 2; // Assuming '2' is the Vendor role ID
 
   // --- Initial Auth Check ---
   useEffect(() => {
@@ -108,8 +104,9 @@ const CompleteDashboard = () => {
     setIsLoading(true);
     try {
       const response = await api.get('/vendors/');
-      const pending = response.data.filter(
-        (app: VendorApplication) => app.user.role.id !== VENDOR_ROLE_ID
+      console.log(response)
+      const pending = response.data.results.filter(
+        (app: VendorApplication) => app.is_approved == false
       );
       setApplications(pending);
     } catch (error) {
@@ -207,7 +204,7 @@ const CompleteDashboard = () => {
                     <h4 className="font-semibold text-gray-900">{app.company_name}</h4>
                   </div>
                   <p className="text-sm text-gray-600 mb-4 ml-8">
-                    Applied by: {app.user.first_name} {app.user.last_name}
+                    Applied by: {app.username}
                   </p>
                   <div className="flex justify-end space-x-2">
                     <Button
