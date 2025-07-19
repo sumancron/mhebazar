@@ -24,7 +24,7 @@ export default function VendorCard({ vendor }: Props) {
   }, []);
 
   const href = isAdminPath
-    ? `/admin/accounts/registered-vendors/${vendor.name}`
+    ? `/admin/accounts/registered-vendors/${vendor.name}/?user=${vendor.id}`
     : `/vendor-listing/${vendor.name}`;
 
   return (

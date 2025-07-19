@@ -24,7 +24,7 @@ export default async function VendorsPage() {
   try {
     const response = await api.get("/vendor/approved/");
     vendors = response.data.results || [];
-  } catch {
+  } catch{
     // Optionally log error or show a message
     vendors = [];
   }

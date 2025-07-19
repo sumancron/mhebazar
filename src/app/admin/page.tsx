@@ -1,11 +1,13 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import React, { useEffect, useState, useCallback } from 'react';
-import { FileText, ShoppingCart, Tag, Check, X, Building, LucideIcon } from 'lucide-react';
+import { Check, X, Building, LucideIcon, PackageCheck, PackageX, UserCheck, UserX, Package } from 'lucide-react';
 import AnalyticsDashboard from '@/components/admin/Graph';
 import api from '@/lib/api'; // Use the configured axios instance
 import Cookies from 'js-cookie';
-import { toast } from "sonner"; // 👈 Import sonner toast
+import { toast } from "sonner";
+import Image from "next/image";
 
 // Shadcn UI Components
 import { Button } from "@/components/ui/button";
@@ -18,6 +20,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
+// import { Separator } from '@/components/ui/separator';
+
 
 // --- Type Definitions ---
 export interface StatsCardProps {
@@ -33,109 +38,118 @@ export interface VendorApplication {
   id: number;
   company_name: string;
   company_email: string;
-  company_address: string;
-  company_phone: string;
   brand: string;
-  gst_no: string;
-  user: {
-    id: number;
-    first_name: string;
-    last_name: string;
-    email: string;
-    role: {
-      id: number;
-      name: string;
-    };
-  };
+  user_name: string; // From the list view serializer
+}
+
+export interface Product {
+  id: number;
+  name: string;
+  is_active: boolean;
+  images: { image: string }[];
+  user: number;
+  user_name: string;
+  category_name: string;
+}
+
+// Grouped products structure
+type GroupedProducts = {
+  [key: string]: Product[];
 }
 
 // --- Helper Components ---
 const StatsCard: React.FC<StatsCardProps> = ({ icon: Icon, number, label, color = "green" }) => (
-  <div className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow duration-200 cursor-pointer relative overflow-hidden">
-    <div className="relative z-10">
-      <div className="mb-4">
-        <div className={`w-10 h-10 bg-${color}-600 rounded-lg flex items-center justify-center`}>
-          <Icon className="w-6 h-6 text-white" />
-        </div>
+  <div className={`bg-white rounded-lg border border-gray-200 p-6 hover:shadow-lg transition-shadow duration-300 cursor-pointer`}>
+    <div className="flex justify-between items-start">
+      <div className={`w-12 h-12 bg-${color}-100 rounded-lg flex items-center justify-center`}>
+        <Icon className={`w-6 h-6 text-${color}-600`} />
       </div>
-      <div className="mb-2">
-        <h2 className={`text-3xl font-bold text-${color}-600`}>{number}</h2>
-      </div>
-      <div className="flex items-center justify-between">
-        <span className="text-gray-500 text-sm">{label}</span>
-        <svg className={`w-4 h-4 text-${color}-600`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-        </svg>
-      </div>
+    </div>
+    <div className="mt-4">
+      <h2 className={`text-3xl font-bold text-gray-800`}>{number}</h2>
+      <p className="text-gray-500 text-sm">{label}</p>
     </div>
   </div>
 );
 
 // --- Main Dashboard Component ---
 const CompleteDashboard = () => {
-  const [applications, setApplications] = useState<VendorApplication[]>([]);
+  const [vendorApps, setVendorApps] = useState<VendorApplication[]>([]);
+  const [pendingProducts, setPendingProducts] = useState<GroupedProducts>({});
+  const [stats, setStats] = useState({ total_applications: 0, pending_applications: 0, approved_vendors: 0 });
   const [isLoading, setIsLoading] = useState(true);
   const [selectedVendor, setSelectedVendor] = useState<VendorApplication | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [rejectionReason, setRejectionReason] = useState("");
 
-  // --- Initial Auth Check ---
-  useEffect(() => {
-    const checkUser = async () => {
-      try {
-        const userResponse = await api.get('/users/me/');
-        if (userResponse.data?.role?.id !== 1) { // Assuming admin role ID is 1
-          window.location.href = "/";
-        }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } catch (err: any) {
-        console.error("Auth check failed:", err);
-        if (err?.response?.status === 401 || err?.response?.status === 403) {
-          Cookies.remove("access_token");
-          window.location.href = "/login";
-        }
-      }
-    };
-    checkUser();
-  }, []);
-
-  // --- Fetch Vendor Applications ---
-  const fetchApplications = useCallback(async () => {
+  // --- Auth Check and Data Fetching ---
+  const fetchData = useCallback(async () => {
     setIsLoading(true);
     try {
-      const response = await api.get('/vendors/');
-      console.log(response)
-      const pending = response.data.results.filter(
-        (app: VendorApplication) => app.is_approved == false
+      const [vendorResponse, productResponse, statsResponse] = await Promise.all([
+        api.get('/vendors/'),
+        api.get('/products/'),
+        api.get('/vendor/stats/') // Fetching stats
+      ]);
+
+      // Process Vendor Applications
+      const pendingVendors = vendorResponse.data.results.filter(
+        (app: any) => !app.is_approved
       );
-      setApplications(pending);
+      setVendorApps(pendingVendors);
+
+      // Process and Group Pending Products
+      const activeProducts = productResponse.data.results.filter(
+        (product: Product) => !product.is_active
+      );
+      const grouped = activeProducts.reduce((acc: GroupedProducts, product: Product) => {
+        const vendorName = product.user_name || 'Unknown Vendor';
+        if (!acc[vendorName]) {
+          acc[vendorName] = [];
+        }
+        acc[vendorName].push(product);
+        return acc;
+      }, {});
+      setPendingProducts(grouped);
+      setStats(statsResponse.data);
+
     } catch (error) {
-      console.error("Failed to fetch vendor applications:", error);
-      toast.error("Error", {
-        description: "Could not fetch vendor applications.",
-      });
+      console.error("Failed to fetch dashboard data:", error);
+      toast.error("Error", { description: "Could not fetch dashboard data." });
     } finally {
       setIsLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    fetchApplications();
-  }, [fetchApplications]);
+    const checkUserAndFetch = async () => {
+      try {
+        const userResponse = await api.get('/users/me/');
+        if (userResponse.data?.role?.name.toLowerCase() !== 'admin') {
+          window.location.href = "/";
+          return;
+        }
+        fetchData();
+      } catch (err: any) {
+        console.error("Auth check failed:", err);
+        if ([401, 403].includes(err?.response?.status)) {
+          Cookies.remove("access_token");
+          window.location.href = "/login";
+        }
+      }
+    };
+    checkUserAndFetch();
+  }, [fetchData]);
 
   // --- Handler Functions for Approve/Reject ---
-  const handleApprove = async (vendorId: number) => {
+  const handleVendorApprove = async (vendorId: number) => {
     try {
-      await api.post(`/vendors/${vendorId}/approve/`, { action: 'approve' });
-      toast.success("Success", {
-        description: "Vendor application has been approved.",
-      });
-      fetchApplications();
+      await api.post(`/api/vendors/${vendorId}/approve/`, { action: 'approve' });
+      toast.success("Vendor Approved", { description: "The vendor application has been approved." });
+      fetchData();
     } catch (error) {
       console.error("Failed to approve vendor:", error);
-      toast.error("Approval Failed", {
-        description: "An error occurred while approving the application.",
-      });
+      toast.error("Approval Failed", { description: "An error occurred." });
     }
   };
 
@@ -144,91 +158,139 @@ const CompleteDashboard = () => {
     setIsModalOpen(true);
   };
 
-  const handleRejectSubmit = async () => {
+  const handleVendorRejectSubmit = async () => {
     if (!selectedVendor || !rejectionReason.trim()) {
-      toast.error("Validation Error", {
-        description: "Rejection reason is required.",
-      });
-      return;
+      return toast.error("Validation Error", { description: "Rejection reason is required." });
     }
-
     try {
       await api.post(`/vendors/${selectedVendor.id}/approve/`, {
         action: 'reject',
         reason: rejectionReason,
       });
-      toast.success("Success", {
-        description: "Vendor application has been rejected and deleted.",
-      });
+      toast.success("Vendor Rejected", { description: "The application has been rejected and removed." });
       setIsModalOpen(false);
-      setSelectedVendor(null);
       setRejectionReason("");
-      fetchApplications();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      fetchData();
     } catch (error: any) {
       console.error("Failed to reject vendor:", error);
-      const errorMessage = error.response?.data?.error || "An error occurred while rejecting the application.";
-      toast.error("Rejection Failed", {
-        description: errorMessage,
-      });
+      toast.error("Rejection Failed", { description: error.response?.data?.error || "An error occurred." });
     }
   };
 
+  const handleProductAction = async (productId: number, action: 'approve' | 'reject') => {
+    // This assumes your product approval endpoint is structured like `/api/products/{id}/approve/`.
+    // Please adjust if your backend has a different URL pattern.
+    try {
+      await api.post(`/api/products/${productId}/${action}/`);
+      toast.success(`Product ${action === 'approve' ? 'Approved' : 'Rejected'}`, {
+        description: `The product has been successfully ${action === 'approve' ? 'approved' : 'rejected'}.`
+      });
+      fetchData();
+    } catch (error) {
+      console.error(`Failed to ${action} product:`, error);
+      toast.error("Action Failed", { description: `Could not ${action} the product.` });
+    }
+  };
+
+  const totalPendingProducts = Object.values(pendingProducts).reduce((sum, prods) => sum + prods.length, 0);
+
   return (
     <>
-      <div className="flex min-h-screen bg-gray-50">
-        {/* Main Dashboard Section */}
-        <div className="flex-1 p-6 min-h-screen overflow-y-auto">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Dashboard</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-            <StatsCard icon={FileText} number="482" label="Product Quote" color="green" />
-            <StatsCard icon={ShoppingCart} number="155" label="Rent & Buy" color="green" />
-            <StatsCard icon={Tag} number="0" label="Rental" color="green" />
-            <StatsCard icon={FileText} number="180" label="Specification" color="green" />
-            <StatsCard icon={FileText} number="44" label="Get Catalogue" color="green" />
-          </div>
-          <AnalyticsDashboard />
-        </div>
+      <div className="overflow-auto bg-gray-50 p-6 sm:p-8 lg:p-10 min-h-screen">
+        <h2 className="text-3xl font-bold text-gray-900 mb-8">Admin Dashboard</h2>
 
-        {/* Vendor Applications Sidebar */}
-        <div className="w-96 bg-white border-l border-gray-200 p-6 flex flex-col">
-          <h3 className="text-xl font-semibold text-gray-900 mb-6">Vendor Applications</h3>
-          <div className="space-y-4 flex-1 overflow-y-auto">
-            {isLoading ? (
-              <p className="text-gray-500">Loading applications...</p>
-            ) : applications.length > 0 ? (
-              applications.map((app) => (
-                <div key={app.id} className="border rounded-lg p-4 bg-gray-50">
-                  <div className="flex items-center mb-2">
-                    <Building className="w-5 h-5 mr-3 text-gray-600" />
-                    <h4 className="font-semibold text-gray-900">{app.company_name}</h4>
-                  </div>
-                  <p className="text-sm text-gray-600 mb-4 ml-8">
-                    Applied by: {app.username}
-                  </p>
-                  <div className="flex justify-end space-x-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="text-red-600 border-red-500 hover:bg-red-50 hover:text-red-700"
-                      onClick={() => handleOpenRejectModal(app)}
-                    >
-                      <X className="w-4 h-4 mr-1" />
-                      Reject
-                    </Button>
-                    <Button
-                      size="sm"
-                      className="bg-green-600 hover:bg-green-700"
-                      onClick={() => handleApprove(app.id)}
-                    >
-                      <Check className="w-4 h-4 mr-1" />
-                      Approve
-                    </Button>
-                  </div>
+        <div className="flex flex-col lg:flex-row gap-10">
+          {/* Left Section */}
+          <div className="flex-1 space-y-10">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <StatsCard icon={Building} number={String(stats.total_applications)} label="Total Vendors" color="blue" />
+              <StatsCard icon={UserCheck} number={String(stats.approved_vendors)} label="Approved Vendors" color="green" />
+              <StatsCard icon={UserX} number={String(stats.pending_applications)} label="Pending Applications" color="yellow" />
+              <StatsCard icon={Package} number={String(totalPendingProducts)} label="Pending Products" color="orange" />
+            </div>
+
+            <AnalyticsDashboard />
+          </div>
+
+          {/* Right Section - Notifications */}
+          <div className="w-full lg:w-1/3 space-y-8">
+            <div>
+              <h3 className="text-2xl font-semibold text-gray-800 mb-4">Pending Actions</h3>
+              {isLoading ? (
+                <p className="text-gray-500">Loading pending actions...</p>
+              ) : (vendorApps.length === 0 && totalPendingProducts === 0) ? (
+                <div className="text-center py-10 bg-white rounded-lg border border-gray-200 shadow-sm">
+                  <Check className="mx-auto h-12 w-12 text-green-500" />
+                  <h4 className="mt-3 text-lg font-medium text-gray-900">All Caught Up!</h4>
+                  <p className="mt-1 text-sm text-gray-500">There are no pending applications or products to review.</p>
                 </div>
-              ))
-            ) : (
-              <p className="text-gray-500 text-center mt-10">No pending applications.</p>
+              ) : null}
+            </div>
+
+            {/* Vendor Applications */}
+            {vendorApps.length > 0 && (
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="flex items-center gap-2 text-lg text-blue-700"><Building /> Vendor Applications</CardTitle>
+                  <CardDescription>Review and process new vendor sign-ups.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4 pt-2">
+                  {vendorApps.map((app) => (
+                    <div key={app.id} className="border rounded-lg p-4 flex items-center justify-between bg-white shadow-sm">
+                      <div>
+                        <p className="font-semibold text-gray-900">{app.company_name}</p>
+                        <p className="text-sm text-gray-500">Applied by: {app.user_name || app.username}</p>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Button size="sm" variant="outline" className="text-red-600 border-red-500 hover:bg-red-50" onClick={() => handleOpenRejectModal(app)}>
+                          <X className="w-4 h-4 mr-1" />Reject
+                        </Button>
+                        <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white" onClick={() => handleVendorApprove(app.id)}>
+                          <Check className="w-4 h-4 mr-1" />Approve
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Product Approvals */}
+            {totalPendingProducts > 0 && (
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="flex items-center gap-2 text-orange-700"><Package /> Product Approvals</CardTitle>
+                  <CardDescription>Review new products submitted by vendors.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6 pt-2">
+                  {Object.entries(pendingProducts).map(([vendorName, products]) => (
+                    <div key={vendorName}>
+                      <h4 className="font-semibold text-gray-700 mb-3">From: {vendorName}</h4>
+                      <div className="border rounded-lg p-4 space-y-4 bg-white shadow-sm">
+                        {products.map(product => (
+                          <div key={product.id} className="flex items-center justify-between">
+                            <div className="flex items-center gap-4">
+                              <Image src={product.images?.[0]?.image || '/no-product.png'} alt={product.name} width={48} height={48} className="rounded bg-gray-100 object-contain" />
+                              <div>
+                                <p className="font-medium text-gray-900">{product.name}</p>
+                                <p className="text-sm text-gray-500">{product.category_name}</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <Button size="sm" variant="outline" className="text-red-600 border-red-500 hover:bg-red-50" onClick={() => handleProductAction(product.id, 'reject')}>
+                                <PackageX className="w-4 h-4 mr-1" />Reject
+                              </Button>
+                              <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white" onClick={() => handleProductAction(product.id, 'approve')}>
+                                <PackageCheck className="w-4 h-4 mr-1" />Approve
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
             )}
           </div>
         </div>
@@ -253,7 +315,7 @@ const CompleteDashboard = () => {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsModalOpen(false)}>Cancel</Button>
-            <Button variant="destructive" onClick={handleRejectSubmit}>Submit Rejection</Button>
+            <Button variant="destructive" onClick={handleVendorRejectSubmit}>Submit Rejection</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
