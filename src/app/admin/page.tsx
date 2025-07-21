@@ -87,7 +87,7 @@ const CompleteDashboard = () => {
     setIsLoading(true);
     try {
       const [vendorResponse, productResponse, statsResponse] = await Promise.all([
-        api.get('/vendors/'),
+        api.get('/vendor/'),
         api.get('/products/'),
         api.get('/vendor/stats/') // Fetching stats
       ]);
@@ -144,7 +144,7 @@ const CompleteDashboard = () => {
   // --- Handler Functions for Approve/Reject ---
   const handleVendorApprove = async (vendorId: number) => {
     try {
-      await api.post(`/vendors/${vendorId}/approve/`, { action: 'approve' });
+      await api.post(`/vendor/${vendorId}/approve/`, { action: 'approve' });
       toast.success("Vendor Approved", { description: "The vendor application has been approved." });
       fetchData();
     } catch (error) {
@@ -163,7 +163,7 @@ const CompleteDashboard = () => {
       return toast.error("Validation Error", { description: "Rejection reason is required." });
     }
     try {
-      await api.post(`/vendors/${selectedVendor.id}/approve/`, {
+      await api.post(`/vendor/${selectedVendor.id}/approve/`, {
         action: 'reject',
         reason: rejectionReason,
       });

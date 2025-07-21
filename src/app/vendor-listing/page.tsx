@@ -28,31 +28,31 @@ export default async function VendorsPage() {
   }
 
   return (
-<>
-  <Breadcrumb
-    items={[
-      { label: "Home", href: "/" },
-      { label: "Vendors", href: "/vendors" },
-    ]}
-  />
+    <>
+      <Breadcrumb
+        items={[
+          { label: "Home", href: "/" },
+          { label: "vendors", href: "/vendors" },
+        ]}
+      />
 
-  <div className="max-w-7xl mx-auto px-4 flex justify-end items-center mt-6">
-    <Link href="/become-vendor" passHref>
-      <div className="inline-flex items-center gap-2 bg-[#5CA131] hover:scale-105 text-white font-medium px-5 py-2 rounded-lg shadow transition">
-        <UserPlusIcon className="w-5 h-5" />
-        Become a Vendor
+      <div className="max-w-7xl mx-auto px-4 flex justify-end items-center mt-6">
+        <Link href="/become-vendor" passHref>
+          <div className="inline-flex items-center gap-2 bg-[#5CA131] hover:scale-105 text-white font-medium px-5 py-2 rounded-lg shadow transition">
+            <UserPlusIcon className="w-5 h-5" />
+            Become a Vendor
+          </div>
+        </Link>
       </div>
-    </Link>
-  </div>
 
-  <main className="max-w-7xl mx-auto px-4 py-10">
-    <h1 className="text-2xl font-semibold mb-6">Vendors at MHEBazar</h1>
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 justify-items-center">
-      {vendors.map((vendor) => (
-        <VendorCard key={vendor.id} vendor={vendor} />
-      ))}
-    </div>
-  </main>
-</>
+      <main className="max-w-7xl mx-auto px-4 py-10">
+        <h1 className="text-2xl font-semibold mb-6">Vendors at MHEBazar</h1>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 justify-items-center">
+          {vendors.map((vendor) => (
+            <VendorCard key={vendor.id} vendor={vendor} />
+          ))}
+        </div>
+      </main>
+    </>
   );
 }

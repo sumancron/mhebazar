@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 import { useState, useEffect } from "react";
-import { ShoppingCart, Download, FileText , Bell, AlertCircle, CheckCircle, Clock } from "lucide-react";
+import { ShoppingCart, Download, FileText, Bell, AlertCircle, CheckCircle, Clock } from "lucide-react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -86,7 +86,7 @@ interface Notification {
 const vendorApi = {
   async getDashboardData(): Promise<VendorDashboardData> {
     try {
-      const response = await api.get('/vendors/dashboard/');
+      const response = await api.get('/vendor/dashboard/');
       return response.data;
     } catch (error) {
       console.error('Error fetching vendor dashboard data:', error);
