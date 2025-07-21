@@ -144,7 +144,7 @@ const CompleteDashboard = () => {
   // --- Handler Functions for Approve/Reject ---
   const handleVendorApprove = async (vendorId: number) => {
     try {
-      await api.post(`/api/vendors/${vendorId}/approve/`, { action: 'approve' });
+      await api.post(`/vendors/${vendorId}/approve/`, { action: 'approve' });
       toast.success("Vendor Approved", { description: "The vendor application has been approved." });
       fetchData();
     } catch (error) {
