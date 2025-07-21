@@ -30,13 +30,27 @@ api.interceptors.response.use(
     const originalRequest = error.config;
     const refresh = Cookies.get("refresh_token");
 
-    // Prevent infinite loop
+    // The URL for the refresh token endpoint
+    const refreshTokenUrl = "/token/refresh/";
+
+    // Check if the failed request was for the refresh token endpoint
+    if (originalRequest.url === refreshTokenUrl) {
+      // If refresh fails, redirect to login and don't retry
+      Cookies.remove("access_token");
+      Cookies.remove("refresh_token");
+      if (typeof window !== "undefined") {
+        window.location.href = "/login";
+      }
+      return Promise.reject(error);
+    }
+
+    // Prevent infinite loop for other requests
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
 
       try {
         const refreshResponse = await axios.post(
-          `${API_BASE_URL}/token/refresh/`,
+          `${API_BASE_URL}${refreshTokenUrl}`, // Use the defined URL
           { refresh },
           { withCredentials: true }
         );
@@ -46,18 +60,20 @@ api.interceptors.response.use(
         if (newAccessToken) {
           // Store new token in cookie
           Cookies.set("access_token", newAccessToken, {
-            expires: 1 / 24,
+            expires: 1 / 24, // 1 hour
             secure: true,
             sameSite: "Lax",
           });
 
           // Update original request header and retry it
+          api.defaults.headers.common['Authorization'] = `Bearer ${newAccessToken}`;
           originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
           return api(originalRequest);
         }
       } catch (refreshError) {
         // Refresh failed – redirect to login or handle accordingly
         Cookies.remove("access_token");
+        Cookies.remove("refresh_token"); // Also remove the refresh token
         if (typeof window !== "undefined") {
           window.location.href = "/login";
         }

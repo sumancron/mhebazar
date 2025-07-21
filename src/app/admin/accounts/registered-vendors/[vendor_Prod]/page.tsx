@@ -1,290 +1,221 @@
 "use client";
 
-import React, { useState, useMemo } from 'react';
-import { ChevronLeft, ChevronRight, Mail, Eye, FileSpreadsheet } from 'lucide-react';
+import React, { useState, useMemo, useEffect } from 'react';
+// Correctly import useSearchParams
+import { useSearchParams, useRouter } from 'next/navigation';
+import { Eye, FileSpreadsheet, Trash2, CheckCircle } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { toast } from 'sonner';
+import api from '@/lib/api';
 
 const VendorProducts = () => {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   const [currentPage, setCurrentPage] = useState(1);
   const [sortBy, setSortBy] = useState('Latest');
   const [showCount, setShowCount] = useState(10);
   const [selectedCategory, setSelectedCategory] = useState('All');
-  const [selectedProducts, setSelectedProducts] = useState(new Set());
+  const [selectedProducts, setSelectedProducts] = useState<Set<number>>(new Set());
   const [selectAll, setSelectAll] = useState(false);
 
-  // Sample product data
-  const allProducts = useMemo(() => [
-    {
-      id: 1,
-      title: "Lithium-Iron Battery",
-      category: "Battery",
-      subCategory: "Lithium-Iron Battery",
-      status: "Available",
-      image: "/api/placeholder/60/60",
-      rating: 4,
-      dateAdded: new Date('2024-01-15'),
-      approved: true
-    },
-    {
-      id: 2,
-      title: "MHE Bazar Used Toyota 2.5t Electric (lead-acid) Forklift (model-7fbmf25) 2500kg 7FBMF25",
-      category: "Forklift",
-      subCategory: "Electric Lead-Acid Forklift",
-      status: "Available",
-      image: "/api/placeholder/60/60",
-      rating: 4,
-      dateAdded: new Date('2024-01-20'),
-      approved: true
-    },
-    {
-      id: 3,
-      title: "Used Bt Sit Down Reach Truck (model-rrb2) 1600kg RRB2",
-      category: "Reach Truck",
-      subCategory: "Sit Down Reach Truck",
-      status: "Available",
-      image: "/api/placeholder/60/60",
-      rating: 4,
-      dateAdded: new Date('2024-01-25'),
-      approved: true
-    },
-    {
-      id: 4,
-      title: "Used Toyota 2t Electric (lead-acid) Forklift (model-7fbmf20) 2000kg 7FBMF20",
-      category: "Forklift",
-      subCategory: "Electric Lead-Acid Forklift",
-      status: "Available",
-      image: "/api/placeholder/60/60",
-      rating: 4,
-      dateAdded: new Date('2024-01-30'),
-      approved: true
-    },
-    {
-      id: 5,
-      title: "Used Toyota 3t Diesel Forklift (model-fdzn30) 3000kg FDZN30",
-      category: "Forklift",
-      subCategory: "Diesel Forklift",
-      status: "Available",
-      image: "/api/placeholder/60/60",
-      rating: 4,
-      dateAdded: new Date('2024-02-05'),
-      approved: true
-    },
-    {
-      id: 6,
-      title: "High Capacity Lithium Battery Pack",
-      category: "Battery",
-      subCategory: "Lithium-Iron Battery",
-      status: "Available",
-      image: "/api/placeholder/60/60",
-      rating: 5,
-      dateAdded: new Date('2024-02-10'),
-      approved: false
-    },
-    {
-      id: 7,
-      title: "Electric Pallet Jack 2000kg",
-      category: "Forklift",
-      subCategory: "Electric Lead-Acid Forklift",
-      status: "Available",
-      image: "/api/placeholder/60/60",
-      rating: 3,
-      dateAdded: new Date('2024-02-15'),
-      approved: true
-    },
-    {
-      id: 8,
-      title: "Stand-up Reach Truck 1500kg",
-      category: "Reach Truck",
-      subCategory: "Stand Up Reach Truck",
-      status: "Available",
-      image: "/api/placeholder/60/60",
-      rating: 4,
-      dateAdded: new Date('2024-02-20'),
-      approved: true
-    },
-    {
-      id: 9,
-      title: "Warehouse Battery Charger",
-      category: "Battery",
-      subCategory: "Battery Charger",
-      status: "Available",
-      image: "/api/placeholder/60/60",
-      rating: 4,
-      dateAdded: new Date('2024-02-25'),
-      approved: true
-    },
-    {
-      id: 10,
-      title: "Heavy Duty Forklift 5000kg",
-      category: "Forklift",
-      subCategory: "Diesel Forklift",
-      status: "Available",
-      image: "/api/placeholder/60/60",
-      rating: 5,
-      dateAdded: new Date('2024-03-01'),
-      approved: true
+  // Use useSearchParams to get the vendor ID from the query string
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const vendorId = searchParams.get('user');
+
+  // Fetch products for the specific vendor
+  useEffect(() => {
+    if (!vendorId) {
+      setError("Vendor ID is missing from the URL query parameter.");
+      setLoading(false);
+      return;
     }
-  ], []);
+
+    const fetchProducts = async () => {
+      setLoading(true);
+      try {
+        const response = await api.get(`products/?user=${vendorId}`);
+
+        // ✅ FIX: Ensure the API response is an array before setting state
+        if (Array.isArray(response.data.results)) {
+          setProducts(response.data.results);
+        } else {
+          // Log a warning and set an empty array if the response is not as expected
+          console.warn("API response for products was not an array:", response.data.results);
+          setProducts([]);
+        }
+
+        setError(null);
+      } catch (err) {
+        console.error("Failed to fetch products:", err);
+        setError("Could not load vendor products. Please try again later.");
+        toast.error("Failed to fetch products!");
+        setProducts([]); // Also ensure products is an array on error
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, [vendorId]); // Re-fetch if vendorId from the query string changes
+
+  console.log(products)
 
   // Filter and sort products
   const filteredAndSortedProducts = useMemo(() => {
-    let filtered = allProducts;
+    let filtered = products;
 
-    // Filter by category
     if (selectedCategory !== 'All') {
-      filtered = filtered.filter(product => product.category === selectedCategory);
+      filtered = filtered.filter(product => product.category_name === selectedCategory);
     }
 
-    // Sort products
-    filtered = [...filtered].sort((a, b) => {
+    return [...filtered].sort((a, b) => {
       switch (sortBy) {
-        case 'Latest':
-          return new Date(b.dateAdded).getTime() - new Date(a.dateAdded).getTime();
-        case 'Oldest':
-          return new Date(a.dateAdded).getTime() - new Date(b.dateAdded).getTime();
-        case 'Name A-Z':
-          return a.title.localeCompare(b.title);
-        case 'Name Z-A':
-          return b.title.localeCompare(a.title);
-        default:
-          return 0;
+        case 'Latest': return new Date(b.dateAdded).getTime() - new Date(a.dateAdded).getTime();
+        case 'Oldest': return new Date(a.dateAdded).getTime() - new Date(b.dateAdded).getTime();
+        case 'Name A-Z': return a.name.localeCompare(b.name);
+        case 'Name Z-A': return b.name.localeCompare(a.name);
+        default: return 0;
       }
     });
+  }, [products, selectedCategory, sortBy]);
 
-    return filtered;
-  }, [allProducts, selectedCategory, sortBy]);
-
-  // Pagination
+  // Pagination logic
   const totalPages = Math.ceil(filteredAndSortedProducts.length / showCount);
   const startIndex = (currentPage - 1) * showCount;
   const endIndex = startIndex + showCount;
   const currentProducts = filteredAndSortedProducts.slice(startIndex, endIndex);
 
-  // Reset to first page when filters change
-  React.useEffect(() => {
+  // Reset page number when filters change
+  useEffect(() => {
     setCurrentPage(1);
+    setSelectAll(false);
+    setSelectedProducts(new Set());
   }, [selectedCategory, sortBy, showCount]);
 
-  // Get unique categories for filter
-  const categories = ['All', ...new Set(allProducts.map(product => product.category))];
+  const categories = ['All', ...Array.from(new Set(products.map(p => p.category_name)))];
+  const totalProducts = products.length;
+  const notApprovedCount = products.filter(p => !p.is_active).length;
 
-  // Calculate stats
-  const totalProducts = allProducts.length;
-  const notApprovedCount = allProducts.filter(product => !product.approved).length;
-
-  // Handle pagination
-  const handlePageChange = (newPage:number) => {
-    if (newPage >= 1 && newPage <= totalPages) {
-      setCurrentPage(newPage);
-    }
+  const handlePageChange = (newPage: number) => {
+    if (newPage >= 1 && newPage <= totalPages) setCurrentPage(newPage);
   };
 
-  // Handle select all
   const handleSelectAll = () => {
-    if (selectAll) {
+    const newSelectAll = !selectAll;
+    setSelectAll(newSelectAll);
+    if (newSelectAll) {
+      setSelectedProducts(new Set(currentProducts.map(p => p.id)));
+    } else {
       setSelectedProducts(new Set());
-    } else {
-      setSelectedProducts(new Set(currentProducts.map(product => product.id)));
     }
-    setSelectAll(!selectAll);
   };
 
-  // Handle individual product selection
-  const handleProductSelect = (productId:number) => {
+  const handleProductSelect = (productId: number) => {
     const newSelected = new Set(selectedProducts);
-    if (newSelected.has(productId)) {
-      newSelected.delete(productId);
-    } else {
-      newSelected.add(productId);
-    }
+    if (newSelected.has(productId)) newSelected.delete(productId);
+    else newSelected.add(productId);
     setSelectedProducts(newSelected);
-    setSelectAll(newSelected.size === currentProducts.length);
+    setSelectAll(newSelected.size === currentProducts.length && currentProducts.length > 0);
   };
 
-  // Handle approve selected products
-  const handleApproveSelected = () => {
+  const handleApproveSelected = async () => {
     if (selectedProducts.size === 0) {
-      alert('Please select products to approve');
+      toast.error('Please select products to approve.');
       return;
     }
-    alert(`Approved ${selectedProducts.size} products`);
-    setSelectedProducts(new Set());
-    setSelectAll(false);
-  };
 
-  // Handle export to Excel
-  const handleExportExcel = () => {
-    const dataToExport = selectedProducts.size > 0
-      ? filteredAndSortedProducts.filter(product => selectedProducts.has(product.id))
-      : filteredAndSortedProducts;
+    try {
+      await api.patch('products/bulk-update-status/', {
+        ids: Array.from(selectedProducts),
+        is_active: true,
+      }
+      );
 
-    alert(`Exporting ${dataToExport.length} products to Excel`);
-  };
-
-  // Handle send email
-  const handleSendEmail = (productId:number) => {
-    const product = allProducts.find(p => p.id === productId);
-    if (product) {
-      alert(`Sending email for: ${product.title}`);
-    } else {
-      alert('Product not found');
+      toast.success(`Approved ${selectedProducts.size} products.`);
+      setProducts(prev =>
+        prev.map(p =>
+          selectedProducts.has(p.id) ? { ...p, is_active: true } : p
+        )
+      );
+      setSelectedProducts(new Set());
+      setSelectAll(false);
+    } catch (err) {
+      console.error("Failed to approve products:", err);
+      toast.error("An error occurred while approving products.");
     }
   };
 
-  // Handle view product
-  const handleViewProduct = (productId:number) => {
-    const product = allProducts.find(p => p.id === productId);
-    if (product) {
-      alert(`Viewing product: ${product.title}`);
-    } else {
-      alert('Product not found');
+
+  const handleDeleteProduct = async (productId: number, productTitle: string) => {
+    if (window.confirm(`Are you sure you want to delete "${productTitle}"?`)) {
+      try {
+        await api.delete(`products/${productId}/`);
+        toast.success(`Product "${productTitle}" deleted.`);
+        setProducts(prev => prev.filter(p => p.id !== productId));
+      } catch (err) {
+        console.error("Failed to delete product:", err);
+        toast.error("Failed to delete the product.");
+      }
     }
   };
 
-  const StarRating = ({ rating }: { rating: number }) => {
-    return (
-      <div className="flex space-x-1">
-        {[1, 2, 3, 4, 5].map((star) => (
-          <div
-            key={star}
-            className={`w-2 h-2 rounded-full ${star <= rating ? 'bg-green-500' : 'bg-gray-300'}`}
-          />
-        ))}
-      </div>
-    );
+  const handleViewProduct = (productId: number) => {
+    router.push(`/admin/products/edit/${productId}`);
   };
+
+  const StarRating = ({ average_rating }: { average_rating: number }) => (
+    <div className="flex space-x-1">
+      {[1, 2, 3, 4, 5].map((star) => (
+        <div
+          key={star}
+          className={`w-2 h-2 rounded-full ${star <= average_rating ? 'bg-yellow-300' : 'bg-gray-300'}`}
+        />
+      ))}
+    </div>
+  );
 
   const PaginationButton = ({ onClick, disabled, children, isActive = false }: { onClick: () => void, disabled: boolean, children: React.ReactNode, isActive?: boolean }) => (
     <button
       onClick={onClick}
       disabled={disabled}
       className={`px-3 py-1 rounded-md text-sm transition-colors ${isActive
-          ? 'bg-green-600 text-white hover:bg-green-700'
-          : disabled
-            ? 'text-gray-400 cursor-not-allowed'
-            : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100 border border-gray-200'
+        ? 'bg-green-600 text-white hover:bg-green-700'
+        : disabled
+          ? 'text-gray-400 cursor-not-allowed'
+          : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100 border border-gray-200'
         }`}
     >
       {children}
     </button>
   );
 
+  if (loading) {
+    return <div className="flex justify-center items-center h-screen">Loading products...</div>;
+  }
+
+  if (error) {
+    return <div className="flex justify-center items-center h-screen text-red-500 p-4 text-center">{error}</div>;
+  }
+
   return (
     <div className="bg-gray-50 p-6 overflow-y-auto">
       <div className="w-full mx-auto">
-        {/* Header */}
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">MHE Bazar</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Vendor Products</h1>
           <div className="flex space-x-2">
             <button
               onClick={handleApproveSelected}
-              className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 flex items-center space-x-2 transition-colors"
+              className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 flex items-center space-x-2 transition-colors disabled:bg-gray-400"
+              disabled={selectedProducts.size === 0}
             >
-              <span>✓</span>
-              <span>Approve</span>
+              <CheckCircle className="w-4 h-4" />
+              <span>Approve Selected</span>
             </button>
             <button
-              onClick={handleExportExcel}
+              onClick={() => { /* Implement export logic */ }}
               className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 flex items-center space-x-2 transition-colors"
             >
               <FileSpreadsheet className="w-4 h-4" />
@@ -293,86 +224,77 @@ const VendorProducts = () => {
           </div>
         </div>
 
-        {/* Filter Bar */}
+        {/* --- START: Implemented Filter Bar --- */}
         <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center space-x-6">
-              <div className="flex items-center space-x-4">
-                <button className="text-gray-900 font-medium border-b-2 border-blue-500 pb-1">
-                  All
-                </button>
-                <span className="text-sm text-gray-600">Total Products: {totalProducts}</span>
-                <span className="text-sm text-gray-600">Not Approved: {notApprovedCount}</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <span className="text-sm text-gray-600">Filter</span>
-                <select
-                  className="border border-gray-300 rounded px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  value={selectedCategory}
-                  onChange={(e) => setSelectedCategory(e.target.value)}
-                >
-                  {categories.map(category => (
-                    <option key={category} value={category}>{category}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
+          <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-2">
-                <span className="text-sm text-gray-600">Sort by</span>
+                <label htmlFor="show-count" className="text-sm text-gray-600">Show</label>
                 <select
-                  className="border border-gray-300 rounded px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
-                >
-                  <option value="Latest">Latest</option>
-                  <option value="Oldest">Oldest</option>
-                  <option value="Name A-Z">Name A-Z</option>
-                  <option value="Name Z-A">Name Z-A</option>
-                </select>
-              </div>
-              <div className="flex items-center space-x-2">
-                <span className="text-sm text-gray-600">Show</span>
-                <select
-                  className="border border-gray-300 rounded px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  id="show-count"
                   value={showCount}
                   onChange={(e) => setShowCount(Number(e.target.value))}
+                  className="border rounded-md px-2 py-1 text-sm focus:ring-green-500 focus:border-green-500"
                 >
-                  <option value={5}>5</option>
                   <option value={10}>10</option>
                   <option value={20}>20</option>
                   <option value={50}>50</option>
                 </select>
               </div>
+              <div className="flex items-center space-x-2">
+                <label htmlFor="sort-by" className="text-sm text-gray-600">Sort by</label>
+                <select
+                  id="sort-by"
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className="border rounded-md px-2 py-1 text-sm focus:ring-green-500 focus:border-green-500"
+                >
+                  <option>Latest</option>
+                  <option>Oldest</option>
+                  <option>Name A-Z</option>
+                  <option>Name Z-A</option>
+                </select>
+              </div>
+              <div className="flex items-center space-x-2">
+                <label htmlFor="category" className="text-sm text-gray-600">Category</label>
+                <select
+                  id="category"
+                  value={selectedCategory}
+                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  className="border rounded-md px-2 py-1 text-sm focus:ring-green-500 focus:border-green-500"
+                >
+                  {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                </select>
+              </div>
+            </div>
+            <div className="text-sm text-gray-600">
+              Total: <span className="font-medium">{totalProducts}</span> products | Pending Approval: <span className="font-medium text-yellow-700">{notApprovedCount}</span>
             </div>
           </div>
         </div>
+        {/* --- END: Implemented Filter Bar --- */}
 
-        {/* Product List */}
-        <div className="bg-white rounded-lg shadow-sm">
+
+        <div className="bg-white rounded-lg shadow-sm overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow className="bg-gray-50">
-                <TableHead className="w-12">
-                  <input
-                    type="checkbox"
-                    className="rounded"
-                    checked={selectAll}
-                    onChange={handleSelectAll}
-                  />
+                <TableHead className="w-12 px-4">
+                  <input type="checkbox" className="rounded" checked={selectAll} onChange={handleSelectAll} />
                 </TableHead>
                 <TableHead className="w-1/3">Title</TableHead>
-                <TableHead className="w-1/6">Category</TableHead>
-                <TableHead className="w-1/6">Sub-category</TableHead>
-                <TableHead className="w-1/12">Status</TableHead>
-                <TableHead className="w-1/4 text-right">Enquiry Status</TableHead>
+                <TableHead>Category</TableHead>
+                <TableHead>Sub-category</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Approved</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {currentProducts.length > 0 ? (
                 currentProducts.map((product) => (
                   <TableRow key={product.id} className="hover:bg-gray-50">
-                    <TableCell>
+                    <TableCell className="px-4">
                       <input
                         type="checkbox"
                         className="rounded"
@@ -382,54 +304,38 @@ const VendorProducts = () => {
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center space-x-3">
-                        <div className="w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center overflow-hidden">
-                          <div className="w-full h-full bg-gradient-to-br from-blue-400 to-purple-600 flex items-center justify-center">
-                            <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
-                              <span className="text-xs font-bold text-gray-700">IMG</span>
-                            </div>
-                          </div>
-                        </div>
+                        <img src={product.image || ""} alt={product.name} className="w-16 h-16 object-cover rounded-lg bg-gray-200" />
                         <div>
                           <h3 className="font-medium text-gray-900 text-sm leading-tight">
-                            {product.title}
+                            {product.name}
                           </h3>
-                          <StarRating rating={product.rating} />
+                          <StarRating average_rating={product.average_rating} />
                         </div>
                       </div>
                     </TableCell>
+                    <TableCell><span className="text-sm text-gray-600">{product.category_name}</span></TableCell>
+                    <TableCell><span className="text-sm text-gray-600">{product.subcategory_name}</span></TableCell>
+                    <TableCell><span className="text-sm text-gray-600">{product.type}</span></TableCell>
                     <TableCell>
-                      <span className="text-sm text-gray-600">{product.category}</span>
-                    </TableCell>
-                    <TableCell>
-                      <span className="text-sm text-gray-600">{product.subCategory}</span>
-                    </TableCell>
-                    <TableCell>
-                      <span className="text-sm text-gray-600">{product.status}</span>
+                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${product.is_active
+                        ? 'bg-green-100 text-green-800'
+                        : 'bg-yellow-100 text-yellow-800'
+                        }`}>
+                        {product.is_active ? 'Approved' : 'Pending'}
+                      </span>
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end space-x-2">
-                        <button
-                          onClick={() => handleSendEmail(product.id)}
-                          className="px-3 py-1 bg-green-100 text-green-700 rounded text-sm hover:bg-green-200 flex items-center space-x-1 transition-colors"
-                        >
-                          <Mail className="w-3 h-3" />
-                          <span>Send email</span>
-                        </button>
-                        <button
-                          onClick={() => handleViewProduct(product.id)}
-                          className="px-3 py-1 bg-blue-100 text-blue-700 rounded text-sm hover:bg-blue-200 flex items-center space-x-1 transition-colors"
-                        >
-                          <Eye className="w-3 h-3" />
-                          <span>View</span>
-                        </button>
+                        <button onClick={() => handleViewProduct(product.id)} className="p-2 text-gray-500 hover:text-blue-600" title="View/Update Product"><Eye className="w-4 h-4" /></button>
+                        <button onClick={() => handleDeleteProduct(product.id, product.name)} className="p-2 text-gray-500 hover:text-red-600" title="Delete Product"><Trash2 className="w-4 h-4" /></button>
                       </div>
                     </TableCell>
                   </TableRow>
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-gray-500">
-                    No products found matching your criteria.
+                  <TableCell colSpan={7} className="text-center py-8 text-gray-500">
+                    No products found for this vendor.
                   </TableCell>
                 </TableRow>
               )}
@@ -437,70 +343,25 @@ const VendorProducts = () => {
           </Table>
         </div>
 
-        {/* Pagination */}
+        {/* --- START: Implemented Pagination --- */}
         <div className="flex justify-between items-center mt-6">
+          <span className="text-sm text-gray-600">
+            Showing {Math.min(startIndex + 1, filteredAndSortedProducts.length)} to {Math.min(endIndex, filteredAndSortedProducts.length)} of {filteredAndSortedProducts.length} results
+          </span>
           <div className="flex items-center space-x-2">
-            <PaginationButton
-              onClick={() => handlePageChange(currentPage - 1)}
-              disabled={currentPage === 1}
-            >
-              <ChevronLeft className="w-4 h-4" />
+            <PaginationButton onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1}>
+              Previous
             </PaginationButton>
-
-            {/* Page numbers */}
-            {currentPage > 2 && totalPages > 4 && (
-              <>
-                <PaginationButton
-                  onClick={() => handlePageChange(1)}
-                  isActive={currentPage === 1}
-                  disabled={false}
-                >
-                  1
-                </PaginationButton>
-                {currentPage > 3 && totalPages > 5 && (
-                  <span className="px-2 text-gray-400">...</span>
-                )}
-              </>
-            )}
-
-            {Array.from({ length: totalPages }, (_, idx) => idx + 1)
-              .filter(p => p === 1 || p === totalPages || (p >= currentPage - 1 && p <= currentPage + 1))
-              .map((p) => (
-                <PaginationButton
-                  key={p}
-                  onClick={() => handlePageChange(p)}
-                  isActive={currentPage === p}
-                  disabled={false}
-                >
-                  {p}
-                </PaginationButton>
-              ))}
-
-            {currentPage < totalPages - 2 && totalPages > 5 && (
-              <span className="px-2 text-gray-400">...</span>
-            )}
-            {currentPage < totalPages - 1 && totalPages > 4 && (
-              <PaginationButton
-                onClick={() => handlePageChange(totalPages)}
-                isActive={currentPage === totalPages}
-                disabled={false}
-              >
-                {totalPages}
-              </PaginationButton>
-            )}
-
-            <PaginationButton
-              onClick={() => handlePageChange(currentPage + 1)}
-              disabled={currentPage === totalPages}
-            >
-              <ChevronRight className="w-4 h-4" />
+            <span className="text-sm text-gray-500">
+              Page {currentPage} of {totalPages > 0 ? totalPages : 1}
+            </span>
+            <PaginationButton onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages || totalPages === 0}>
+              Next
             </PaginationButton>
-          </div>
-
-          <div className="text-sm text-gray-600">
-            Showing {startIndex + 1} to {Math.min(endIndex, filteredAndSortedProducts.length)} of {filteredAndSortedProducts.length} entries
           </div>
         </div>
+        {/* --- END: Implemented Pagination --- */}
+
       </div>
     </div>
   );

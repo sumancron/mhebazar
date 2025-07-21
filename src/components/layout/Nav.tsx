@@ -322,7 +322,7 @@ export default function Navbar(): JSX.Element {
                                 Admin Panel
                               </div>
                               <Link
-                                href="/admin/dashboard"
+                                href="/admin/"
                                 className="flex items-center gap-3 px-6 py-3 text-gray-800 hover:bg-gray-50 transition text-base"
                                 onClick={() => setProfileMenuOpen(false)}
                               >
