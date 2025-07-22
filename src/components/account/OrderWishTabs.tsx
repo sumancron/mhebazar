@@ -1,23 +1,24 @@
+// src/components/account/OrderWishTabs.tsx
 "use client";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useState } from "react";
 
 interface Order {
-  id: string;
-  status: "In Transit" | "Cancelled" | "Delivered";
+  id: string; // This is now order_number (string) from backend
+  status: "Pending" | "Confirmed" | "In Transit" | "Shipped" | "Delivered" | "Cancelled"; // Updated status types, added "Shipped"
   statusColor: string;
-  product: {
+  product: { // Simplified to represent the main product in the order for display
     title: string;
     image: string;
-    price: string;
+    price: string; // Formatted price (e.g., "₹ 4500.00")
   };
 }
 interface WishlistItem {
   id: string;
   title: string;
   image: string;
-  price: string;
+  price: string; // Formatted price (e.g., "₹ 4500.00" or "₹ ******")
 }
 type TabType = "orders" | "wishlist";
 
@@ -25,11 +26,14 @@ const tabs = [
   { label: "My Orders", value: "orders" },
   { label: "Wishlist", value: "wishlist" },
 ];
+// Updated statusTabs to reflect common order states from backend, mapped by component
 const statusTabs = [
   { label: "All", value: "all" },
-  { label: "In Progress", value: "In Transit" },
-  { label: "Delivered", value: "Delivered" },
-  { label: "Cancelled", value: "Cancelled" },
+  { label: "Pending", value: "Pending" }, // Corresponds to 'pending'
+  { label: "Confirmed", value: "Confirmed" }, // Corresponds to 'confirmed'
+  { label: "In Progress", value: "In Transit" }, // Corresponds to 'shipped' (in_transit, out_for_delivery)
+  { label: "Delivered", value: "Delivered" }, // Corresponds to 'delivered'
+  { label: "Cancelled", value: "Cancelled" }, // Corresponds to 'cancelled'
 ];
 
 export default function AccountTabsUI({
@@ -48,7 +52,13 @@ export default function AccountTabsUI({
   const filteredOrders =
     status === "all"
       ? orders
-      : orders.filter((o) => o.status === status);
+      : orders.filter((o) => {
+          if (status === "In Transit") {
+            // Include 'shipped' as 'In Transit'
+            return o.status === "In Transit" || o.status === "Shipped"; // Assuming backend maps shipped to In Transit
+          }
+          return o.status === status;
+        });
 
   // Tab click handler
   const handleTabClick = (tab: TabType) => {
@@ -81,29 +91,31 @@ export default function AccountTabsUI({
         <h1 className="text-2xl sm:text-3xl font-bold mb-6">
           {activeTab === "orders" ? "My Orders" : "Wishlist"}
         </h1>
-        {/* Status Tabs */}
-        <div className="flex gap-6 mb-4 text-base font-medium">
-          {statusTabs.map((tab) => (
-            <button
-              key={tab.value}
-              className={`pb-2 transition ${
-                status === tab.value
-                  ? "text-green-600 border-b-2 border-green-600"
-                  : "text-gray-500 hover:text-green-600"
-              }`}
-              onClick={() => setStatus(tab.value)}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
+        {/* Status Tabs (only for orders) */}
+        {activeTab === "orders" && (
+          <div className="flex gap-6 mb-4 text-base font-medium overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0">
+            {statusTabs.map((tab) => (
+              <button
+                key={tab.value}
+                className={`pb-2 transition whitespace-nowrap ${
+                  status === tab.value
+                    ? "text-green-600 border-b-2 border-green-600"
+                    : "text-gray-500 hover:text-green-600"
+                }`}
+                onClick={() => setStatus(tab.value)}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+        )}
         {/* List */}
         {activeTab === "orders" ? (
           <div className="flex flex-col gap-6">
             {filteredOrders.length > 0 ? (
               filteredOrders.map((order, idx) => (
                 <div
-                  key={idx}
+                  key={idx} // Using index is okay here if IDs are not unique or for mapping transformed data
                   className="flex items-center bg-white rounded-2xl shadow-[0_4px_16px_0_rgba(0,0,0,0.03)] px-6 py-6"
                 >
                   <Image
@@ -111,20 +123,21 @@ export default function AccountTabsUI({
                     alt={order.product.title}
                     width={80}
                     height={80}
-                    className="rounded-lg object-contain mr-6"
+                    className="rounded-lg object-contain mr-6 flex-shrink-0"
+                    unoptimized={order.product.image.startsWith('http')}
                   />
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-1">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-2 mb-1">
                       <span
                         className={`text-xs px-3 py-1 rounded-full font-semibold ${order.statusColor}`}
                       >
                         {order.status}
                       </span>
-                      <span className="font-bold text-gray-800 text-base">
+                      <span className="font-bold text-gray-800 text-base truncate">
                         Order ID: {order.id}
                       </span>
                     </div>
-                    <div className="text-gray-700 text-base mb-1 truncate max-w-xs sm:max-w-md">
+                    <div className="text-gray-700 text-base mb-1 truncate max-w-[calc(100%-1rem)]">
                       {order.product.title}
                     </div>
                     <div className="text-green-700 font-bold text-lg">
@@ -150,10 +163,11 @@ export default function AccountTabsUI({
                     alt={item.title}
                     width={80}
                     height={80}
-                    className="rounded-lg object-contain mr-6"
+                    className="rounded-lg object-contain mr-6 flex-shrink-0"
+                    unoptimized={item.image.startsWith('http')}
                   />
-                  <div>
-                    <div className="font-bold text-gray-800 text-base mb-1">
+                  <div className="flex-1 min-w-0">
+                    <div className="font-bold text-gray-800 text-base mb-1 truncate">
                       {item.title}
                     </div>
                     <div className="text-green-700 font-bold text-lg">
