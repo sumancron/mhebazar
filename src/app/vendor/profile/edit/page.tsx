@@ -310,7 +310,11 @@ export default function Frame() {
               <img
                 className="w-full h-full object-cover"
                 alt="Profile photo"
-                src={API_BASE_URL + profilePhotoPreview}
+                src={
+                  profilePhotoPreview.startsWith("data:")
+                    ? profilePhotoPreview
+                    : API_BASE_URL + profilePhotoPreview
+                }
               />
             ) : (
               <div className="text-center">
