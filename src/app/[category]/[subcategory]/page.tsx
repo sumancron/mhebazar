@@ -276,7 +276,7 @@ export default function SubCategoryPage({
   const handleFilterChange = useCallback((
     filterValue: string | number,
     filterType: "category" | "subcategory" | "type" | "price_range" | "manufacturer" | "rating",
-    newValue?: number | string | null // For direct value updates
+    newValue?: string | number | { min: number | ""; max: number | ""; } | null // For direct value updates
   ) => {
     const currentPath = `/${urlCategorySlug}/${urlSubcategorySlug}`;
     const newSearchParams = new URLSearchParams(searchParams.toString());
@@ -336,7 +336,7 @@ export default function SubCategoryPage({
 
         router.push(`${currentPath}?${newSearchParams.toString()}`);
     }
-  }, [validCategoryName, validSubcategoryName, urlCategorySlug, router, searchParams]);
+  }, [urlCategorySlug, urlSubcategorySlug, searchParams, router, validCategoryName, validSubcategoryName]);
 
 
   // Construct breadcrumb items

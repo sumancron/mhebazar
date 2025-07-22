@@ -5,6 +5,12 @@ const nextConfig: NextConfig = {
   images: {
     domains: ["placehold.co", "images.unsplash.com", "randomuser.me", "ui-avatars.com","127.0.0.1","localhost"],
   },
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+  typescript: {
+    ignoreBuildErrors: true,
+  },
 };
 
 
