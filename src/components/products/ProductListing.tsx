@@ -6,6 +6,7 @@ import { Grid, List, MenuIcon, X } from "lucide-react";
 import { ProductCardContainer } from "@/components/elements/Product";
 import SideFilter from "@/components/products/SideFilter";
 import Image from "next/image";
+import { Toaster } from "sonner"; // Import Toaster for sonner
 
 // Types
 export interface Product {
@@ -82,7 +83,7 @@ function ProductGrid({
                     <button className="w-full sm:w-auto bg-green-500 hover:bg-green-600 text-white px-4 sm:px-6 py-2 rounded-md transition-colors duration-200 text-sm font-medium"
                       disabled={!product.is_active || product.stock_quantity === 0}
                     >
-                      Add to Cart
+                      Add to Cart {/* This button isn't connected to the actual logic directly here, ProductCardContainer handles it */}
                     </button>
                     <button className="w-full sm:w-auto bg-yellow-400 hover:bg-yellow-500 text-black px-4 sm:px-6 py-2 rounded-md transition-colors duration-200 text-sm font-medium"
                       disabled={!product.is_active || product.stock_quantity === 0}
@@ -178,6 +179,7 @@ export default function ProductListing({
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <Toaster position="top-right" richColors /> {/* Add Sonner Toaster here */}
       <div className="flex flex-col lg:flex-row">
         {/* Sidebar Desktop */}
         <div className="hidden lg:block flex-shrink-0 w-72">
