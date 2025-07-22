@@ -249,7 +249,7 @@ export const ProductCardContainer = ({
       return;
     }
     try {
-      const response = await api.post(`/wishlist/`, { user: user.id, product: productId });
+      const response = await api.post(`/wishlist/`, { product: productId });
       console.log("Added to wishlist:", response.data);
       return response.data;
     } catch (error: unknown) {
