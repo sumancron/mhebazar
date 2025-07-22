@@ -165,7 +165,7 @@ export default function Frame() {
     formData.append('profile_photo', profilePhotoFile);
 
     try {
-      const response = await api.post(`/users/${user?.id}/`, formData, {
+      const response = await api.patch(`/users/${user?.id}/`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
