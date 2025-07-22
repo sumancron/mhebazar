@@ -258,7 +258,7 @@ export default function CategoryOrTypePage({
   const handleFilterChange = useCallback((
     filterValue: string | number,
     filterType: "category" | "subcategory" | "type" | "price_range" | "manufacturer" | "rating",
-    newValue?: number | string | null // For direct value updates
+    newValue?: string | number | { min: number | ""; max: number | ""; } | null // For direct value updates
   ) => {
     const currentPath = `/${urlParamSlug}`;
     const newSearchParams = new URLSearchParams(searchParams.toString());
