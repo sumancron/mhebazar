@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent } from "@/components/ui/card";
+// import { Card, CardContent } from "@/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -15,8 +15,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { X, Plus, Folder, Image as ImageIcon } from "lucide-react";
-import Image from "next/image";
+import { X, Plus, Image as ImageIcon } from "lucide-react";
+// import Image from "next/image";
 import Cookies from "js-cookie";
 
 type FieldOption = {
@@ -172,219 +172,164 @@ export default function CategoryForm(): JSX.Element {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 py-8 px-2 sm:px-4">
-      {/* Header Bar */}
-      <div className="max-w-3xl mx-auto mb-6">
-        <div className="flex items-center gap-4 bg-gradient-to-r from-[#5CA131] to-[#47881F] text-white rounded-xl px-8 py-6 shadow-lg">
-          <div className="bg-white/20 p-3 rounded-lg">
-            <Folder className="w-8 h-8 text-white" />
-          </div>
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">
-              Create New Category
-            </h1>
-            <p className="text-white/90 mt-1">
-              Define a new product category with custom fields
-            </p>
-          </div>
+    <div className="min-h-screen bg-white">
+      <div className="max-w-md mx-auto bg-white">
+        {/* Header */}
+        <div className="flex items-center justify-between p-4 border-b">
+          <h1 className="text-lg font-semibold text-gray-900">Create New Category</h1>
+          <button className="text-gray-400 hover:text-gray-600">
+            <X className="w-5 h-5" />
+          </button>
         </div>
-      </div>
 
-      <Card className="max-w-3xl mx-auto shadow-2xl rounded-2xl border-0 overflow-hidden">
-        <CardContent className="p-8 sm:p-12">
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-10">
+        <div className="p-4">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             {/* Basic Info Section */}
-            <div className="space-y-6">
-              <div className="flex items-center gap-3 pb-4 border-b border-gray-200">
-                <div className="bg-[#5CA131] p-2 rounded-lg">
-                  <Folder className="w-5 h-5 text-white" />
-                </div>
-                <h2 className="text-xl font-semibold text-gray-800">Basic Information</h2>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
-                  <Label className="text-sm font-medium text-gray-700 mb-2 block">
+                  <Label className="text-sm text-gray-600 mb-1 block">
                     Category Name <span className="text-red-500">*</span>
                   </Label>
                   <Input
                     {...register("name", { required: true })}
                     placeholder="Enter category name"
-                    className="h-12 border-gray-300 focus:border-[#5CA131] focus:ring-[#5CA131]"
+                    className="h-10 border-gray-300 text-sm"
                   />
                   {errors.name && (
-                    <p className="text-red-500 text-sm mt-1">Name is required</p>
+                    <p className="text-red-500 text-xs mt-1">Name is required</p>
                   )}
                 </div>
 
                 <div>
-                  <Label className="text-sm font-medium text-gray-700 mb-2 block">
+                  <Label className="text-sm text-gray-600 mb-1 block">
                     Meta Title
                   </Label>
                   <Input
                     {...register("meta_title")}
                     placeholder="Meta title for SEO"
-                    className="h-12 border-gray-300 focus:border-[#5CA131] focus:ring-[#5CA131]"
+                    className="h-10 border-gray-300 text-sm"
                   />
                 </div>
+              </div>
 
-                <div className="md:col-span-2">
-                  <Label className="text-sm font-medium text-gray-700 mb-2 block">
-                    Description
-                  </Label>
-                  <Textarea
-                    {...register("description")}
-                    placeholder="Describe this category..."
-                    className="min-h-[100px] border-gray-300 focus:border-[#5CA131] focus:ring-[#5CA131]"
-                  />
-                </div>
+              <div>
+                <Label className="text-sm text-gray-600 mb-1 block">
+                  Description
+                </Label>
+                <Textarea
+                  {...register("description")}
+                  placeholder="Describe this category..."
+                  className="border-gray-300 min-h-[80px] text-sm resize-none"
+                />
+              </div>
 
-                <div>
-                  <Label className="text-sm font-medium text-gray-700 mb-2 block">
-                    Meta Description
-                  </Label>
-                  <Input
-                    {...register("meta_description")}
-                    placeholder="Meta description for SEO"
-                    className="h-12 border-gray-300 focus:border-[#5CA131] focus:ring-[#5CA131]"
-                  />
-                </div>
+              <div>
+                <Label className="text-sm text-gray-600 mb-1 block">
+                  Meta Description
+                </Label>
+                <Input
+                  {...register("meta_description")}
+                  placeholder="Meta description for SEO"
+                  className="h-10 border-gray-300 text-sm"
+                />
               </div>
             </div>
 
             {/* Images Section */}
-            <div className="space-y-6">
-              <div className="flex items-center gap-3 pb-4 border-b border-gray-200">
-                <div className="bg-[#5CA131] p-2 rounded-lg">
-                  <ImageIcon className="w-5 h-5 text-white" />
-                </div>
-                <h2 className="text-xl font-semibold text-gray-800">Images</h2>
+            <div className="space-y-4">
+              {/* Category Image Upload */}
+              <div>
+                <Label className="text-sm text-gray-600 mb-1 block">Category Image</Label>
+                <input
+                  id="cat-image-input"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleCatImageChange}
+                  style={{ display: "none" }}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="w-full h-10 border-gray-300 text-gray-600 text-sm"
+                  onClick={() => document.getElementById("cat-image-input")?.click()}
+                >
+                  <ImageIcon className="w-4 h-4 mr-2" />
+                  Select Image
+                </Button>
+                {catImageFiles.length > 0 && (
+                  <div className="grid grid-cols-4 gap-2 mt-2">
+                    {catImageFiles.map((file, idx) => (
+                      <div key={idx} className="relative group">
+                        <div className="aspect-square bg-gray-100 rounded overflow-hidden flex items-center justify-center">
+                          <ImageIcon className="w-6 h-6 text-gray-400" />
+                        </div>
+                        <button
+                          type="button"
+                          className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={() => removeCatImage(idx)}
+                          aria-label="Remove image"
+                        >
+                          <X size={10} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div>
-                  <Label className="text-sm font-medium text-gray-700 mb-3 block">
-                    Category Image
-                  </Label>
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-4">
-                      <input
-                        id="cat-image-input"
-                        type="file"
-                        accept="image/*"
-                        onChange={handleCatImageChange}
-                        style={{ display: "none" }}
-                      />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="h-12 px-6 bg-white border-2 border-[#5CA131] text-[#5CA131] hover:bg-[#5CA131] hover:text-white transition-all"
-                        onClick={() =>
-                          document.getElementById("cat-image-input")?.click()
-                        }>
-                        <Plus className="w-4 h-4 mr-2" />
-                        Select Image
-                      </Button>
-                      <span className="text-sm text-gray-500">
-                        Square format preferred
-                      </span>
-                    </div>
-                    <div className="flex gap-3">
-                      {catImageFiles.map((file, idx) => (
-                        <div key={idx} className="relative group">
-                          <div className="w-24 h-24 rounded-xl overflow-hidden border-2 border-gray-200">
-                            <Image
-                              src={URL.createObjectURL(file)}
-                              alt="Preview"
-                              fill
-                              className="object-cover"
-                              unoptimized
-                            />
-                          </div>
-                          <button
-                            type="button"
-                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-lg hover:bg-red-600 transition-colors"
-                            onClick={() => removeCatImage(idx)}
-                            aria-label="Remove image">
-                            <X size={14} />
-                          </button>
+              {/* Category Banner Upload */}
+              <div>
+                <Label className="text-sm text-gray-600 mb-1 block">Category Banner</Label>
+                <input
+                  id="cat-banner-input"
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handleCatBannerChange}
+                  style={{ display: "none" }}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="w-full h-10 border-gray-300 text-gray-600 text-sm"
+                  onClick={() => document.getElementById("cat-banner-input")?.click()}
+                >
+                  <ImageIcon className="w-4 h-4 mr-2" />
+                  Select Banner(s)
+                </Button>
+                {catBannerFiles.length > 0 && (
+                  <div className="grid grid-cols-4 gap-2 mt-2">
+                    {catBannerFiles.map((file, idx) => (
+                      <div key={idx} className="relative group">
+                        <div className="aspect-square bg-gray-100 rounded overflow-hidden flex items-center justify-center">
+                          <ImageIcon className="w-6 h-6 text-gray-400" />
                         </div>
-                      ))}
-                    </div>
+                        <button
+                          type="button"
+                          className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={() => removeCatBanner(idx)}
+                          aria-label="Remove image"
+                        >
+                          <X size={10} />
+                        </button>
+                      </div>
+                    ))}
                   </div>
-                </div>
-
-                <div>
-                  <Label className="text-sm font-medium text-gray-700 mb-3 block">
-                    Category Banner
-                  </Label>
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-4">
-                      <input
-                        id="cat-banner-input"
-                        type="file"
-                        accept="image/*"
-                        onChange={handleCatBannerChange}
-                        style={{ display: "none" }}
-                      />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="h-12 px-6 bg-white border-2 border-[#5CA131] text-[#5CA131] hover:bg-[#5CA131] hover:text-white transition-all"
-                        onClick={() =>
-                          document.getElementById("cat-banner-input")?.click()
-                        }>
-                        <Plus className="w-4 h-4 mr-2" />
-                        Select Banner
-                      </Button>
-                      <span className="text-sm text-gray-500">
-                        Wide format optional
-                      </span>
-                    </div>
-                    <div className="flex gap-3">
-                      {catBannerFiles.map((file, idx) => (
-                        <div key={idx} className="relative group">
-                          <div className="w-24 h-24 rounded-xl overflow-hidden border-2 border-gray-200">
-                            <Image
-                              src={URL.createObjectURL(file)}
-                              alt="Preview"
-                              fill
-                              className="object-cover"
-                              unoptimized
-                            />
-                          </div>
-                          <button
-                            type="button"
-                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-lg hover:bg-red-600 transition-colors"
-                            onClick={() => removeCatBanner(idx)}
-                            aria-label="Remove image">
-                            <X size={14} />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
+                )}
               </div>
             </div>
 
             {/* Product Details Fields */}
-            <div className="space-y-6">
-              <div className="flex items-center justify-between pb-4 border-b border-gray-200">
-                <div className="flex items-center gap-3">
-                  <div className="bg-[#5CA131] p-2 rounded-lg">
-                    <Plus className="w-5 h-5 text-white" />
-                  </div>
-                  <div>
-                    <h2 className="text-xl font-semibold text-gray-800">Product Detail Fields</h2>
-                    <p className="text-sm text-gray-600 mt-1">
-                      Define custom fields for products in this category
-                    </p>
-                  </div>
-                </div>
+            <div className="space-y-4 pt-4 border-t">
+              <div className="flex items-center justify-between">
+                <h2 className="text-md font-semibold text-gray-800">Product Detail Fields</h2>
                 <Button
                   type="button"
-                  className="bg-[#5CA131] hover:bg-[#47881F] text-white px-6 py-3 rounded-lg shadow-lg transition-all"
+                  variant="outline"
+                  size="sm"
                   onClick={() =>
                     append({
                       name: "",
@@ -393,64 +338,48 @@ export default function CategoryForm(): JSX.Element {
                       required: false,
                       options: [],
                     })
-                  }>
+                  }
+                >
                   <Plus className="w-4 h-4 mr-2" />
                   Add Field
                 </Button>
               </div>
 
-              <div className="space-y-6">
+
+              <div className="space-y-4">
                 {fields.map((field, fieldIndex) => {
                   const fieldType = watch(`product_details.${fieldIndex}.type`);
                   const showOptions = ["select", "radio", "checkbox"].includes(fieldType);
 
                   return (
-                    <div
-                      key={field.id}
-                      className="bg-gray-50 rounded-xl p-6 border border-gray-200 space-y-6">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div key={field.id} className="p-4 border rounded-lg space-y-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
-                          <Label className="text-sm font-medium text-gray-700 mb-2 block">
+                          <Label className="text-sm text-gray-600 mb-1 block">
                             Field Name <span className="text-red-500">*</span>
                           </Label>
                           <Input
                             placeholder="e.g. 'material'"
-                            {...register(`product_details.${fieldIndex}.name`, {
-                              required: true,
-                            })}
-                            className="h-11 border-gray-300 focus:border-[#5CA131] focus:ring-[#5CA131]"
+                            {...register(`product_details.${fieldIndex}.name`, { required: true })}
+                            className="h-10 border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500"
                           />
-                          {errors.product_details?.[fieldIndex]?.name && (
-                            <p className="text-red-500 text-sm mt-1">
-                              Field name is required
-                            </p>
-                          )}
                         </div>
 
                         <div>
-                          <Label className="text-sm font-medium text-gray-700 mb-2 block">
+                          <Label className="text-sm text-gray-600 mb-1 block">
                             Display Label <span className="text-red-500">*</span>
                           </Label>
                           <Input
                             placeholder="e.g. 'Material Type'"
-                            {...register(`product_details.${fieldIndex}.label`, {
-                              required: true,
-                            })}
-                            className="h-11 border-gray-300 focus:border-[#5CA131] focus:ring-[#5CA131]"
+                            {...register(`product_details.${fieldIndex}.label`, { required: true })}
+                            className="h-10 border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500"
                           />
-                          {errors.product_details?.[fieldIndex]?.label && (
-                            <p className="text-red-500 text-sm mt-1">
-                              Label is required
-                            </p>
-                          )}
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
-                          <Label className="text-sm font-medium text-gray-700 mb-2 block">
-                            Field Type <span className="text-red-500">*</span>
-                          </Label>
+                          <Label className="text-sm text-gray-600 mb-1 block">Field Type</Label>
                           <Select
                             onValueChange={(value: ProductDetailField["type"]) => {
                               const updatedField = {
@@ -465,10 +394,10 @@ export default function CategoryForm(): JSX.Element {
                               <SelectValue placeholder="Select field type" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="text">Text Input</SelectItem>
+                              <SelectItem value="text">Text</SelectItem>
                               <SelectItem value="textarea">Text Area</SelectItem>
                               <SelectItem value="select">Dropdown</SelectItem>
-                              <SelectItem value="radio">Radio Buttons</SelectItem>
+                              <SelectItem value="radio">Radio</SelectItem>
                               <SelectItem value="checkbox">Checkbox</SelectItem>
                             </SelectContent>
                           </Select>
@@ -480,87 +409,61 @@ export default function CategoryForm(): JSX.Element {
                               type="checkbox"
                               id={`required-${fieldIndex}`}
                               {...register(`product_details.${fieldIndex}.required`)}
-                              className="h-4 w-4 rounded border-gray-300 text-[#5CA131] focus:ring-[#5CA131]"
+                              className="border-gray-300 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
                             />
-                            <Label htmlFor={`required-${fieldIndex}`} className="text-sm font-medium text-gray-700">
-                              Required Field
+                            <Label htmlFor={`required-${fieldIndex}`} className="text-sm font-medium">
+                              Required
                             </Label>
                           </div>
                         </div>
                       </div>
 
-                      {fieldType === "text" && (
-                        <div>
-                          <Label className="text-sm font-medium text-gray-700 mb-2 block">
-                            Placeholder (optional)
-                          </Label>
-                          <Input
-                            placeholder="e.g. 'Enter material type'"
-                            {...register(`product_details.${fieldIndex}.placeholder`)}
-                            className="h-11 border-gray-300 focus:border-[#5CA131] focus:ring-[#5CA131]"
-                          />
-                        </div>
-                      )}
-
                       {showOptions && (
-                        <div className="space-y-4">
-                          <Label className="text-sm font-medium text-gray-700 block">
-                            Options
-                          </Label>
-                          <div className="space-y-3">
-                            {watch(`product_details.${fieldIndex}.options`)?.map(
-                              (option, optionIndex) => (
-                                <div
-                                  key={optionIndex}
-                                  className="flex gap-3 items-center p-3 bg-white rounded-lg border border-gray-200">
-                                  <Input
-                                    placeholder="Option label"
-                                    {...register(
-                                      `product_details.${fieldIndex}.options.${optionIndex}.label`,
-                                      { required: true }
-                                    )}
-                                    className="h-10 border-gray-300 focus:border-[#5CA131] focus:ring-[#5CA131]"
-                                  />
-                                  <Input
-                                    placeholder="Option value"
-                                    {...register(
-                                      `product_details.${fieldIndex}.options.${optionIndex}.value`,
-                                      { required: true }
-                                    )}
-                                    className="h-10 border-gray-300 focus:border-[#5CA131] focus:ring-[#5CA131]"
-                                  />
-                                  <Button
-                                    type="button"
-                                    variant="outline"
-                                    size="sm"
-                                    className="text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300 px-3 py-2"
-                                    onClick={() => removeOption(fieldIndex, optionIndex)}>
-                                    <X className="w-4 h-4" />
-                                  </Button>
-                                </div>
-                              )
-                            )}
-                          </div>
+                        <div className="space-y-3 pt-2">
+                          <Label className="text-sm text-gray-600 block">Options</Label>
+                          {watch(`product_details.${fieldIndex}.options`)?.map((option, optionIndex) => (
+                            <div key={optionIndex} className="flex gap-2 items-center">
+                              <Input
+                                placeholder="Label"
+                                {...register(`product_details.${fieldIndex}.options.${optionIndex}.label`)}
+                                className="h-10 border-gray-300 text-sm"
+                              />
+                              <Input
+                                placeholder="Value"
+                                {...register(`product_details.${fieldIndex}.options.${optionIndex}.value`)}
+                                className="h-10 border-gray-300 text-sm"
+                              />
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                className="text-red-500 hover:bg-red-50"
+                                onClick={() => removeOption(fieldIndex, optionIndex)}
+                              >
+                                <X className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          ))}
                           <Button
                             type="button"
                             variant="outline"
                             size="sm"
-                            className="border-[#5CA131] text-[#5CA131] hover:bg-[#5CA131] hover:text-white"
-                            onClick={() => addOption(fieldIndex)}>
-                            <Plus className="w-4 h-4 mr-2" />
+                            onClick={() => addOption(fieldIndex)}
+                          >
                             Add Option
                           </Button>
                         </div>
                       )}
 
-                      <div className="flex justify-end pt-4 border-t border-gray-200">
+                      <div className="flex justify-end pt-3 border-t">
                         <Button
                           type="button"
-                          variant="outline"
+                          variant="ghost"
                           size="sm"
-                          className="text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300"
-                          onClick={() => remove(fieldIndex)}>
-                          <X className="w-4 h-4 mr-2" />
+                          className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                          onClick={() => remove(fieldIndex)}
+                        >
+                          <X className="w-4 h-4 mr-1" />
                           Remove Field
                         </Button>
                       </div>
@@ -571,24 +474,25 @@ export default function CategoryForm(): JSX.Element {
             </div>
 
             {/* Submit Section */}
-            <div className="bg-gradient-to-r from-[#5CA131] to-[#47881F] rounded-xl p-6 text-center">
+            <div className="pt-4">
               <Button
                 type="submit"
                 disabled={isSubmitting}
-                className="bg-white text-[#5CA131] hover:bg-gray-50 font-bold text-lg py-4 px-12 rounded-xl shadow-lg border-2 border-white transition-all disabled:opacity-70">
-                {isSubmitting ? "Creating Category..." : "Create Category"}
+                className="w-full"
+              >
+                {isSubmitting ? "Creating..." : "Create Category"}
               </Button>
 
               {message && (
-                <p className={`text-sm mt-4 font-medium ${message.includes("successfully") ? "text-white" : "text-red-100"
-                  }`}>
-                  {message}
-                </p>
+                <div className={`p-3 mt-4 rounded text-center text-xs ${message.includes("successfully")
+                  ? 'bg-green-50 text-green-800 border border-green-200'
+                  : 'bg-red-50 text-red-800 border border-red-200'
+                  }`}>{message}</div>
               )}
             </div>
           </form>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }
