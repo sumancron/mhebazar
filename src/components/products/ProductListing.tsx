@@ -2,8 +2,8 @@
 "use client";
 
 import React, { useState } from "react";
-import { Grid, List, MenuIcon, X, Heart, Share, ArrowRight, IndianRupee, ShoppingCart } from "lucide-react";
-// import { ProductCardContainer } from "@/components/elements/Product";
+import { Grid, List, MenuIcon, X } from "lucide-react";
+import { ProductCardContainer } from "@/components/elements/Product";
 import SideFilter from "@/components/products/SideFilter";
 import Image from "next/image";
 
@@ -50,8 +50,9 @@ function ProductGrid({
         {products.map((product: Product) => (
           <div
             key={product.id}
-            className={`flex flex-col sm:flex-row bg-white rounded-2xl shadow-sm border border-[#ecf0f7] overflow-hidden ${(!product.is_active || (product.direct_sale && product.stock_quantity === 0)) ? 'opacity-50 pointer-events-none' : ''
-              }`}
+            className={`flex flex-col sm:flex-row bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden ${
+              (!product.is_active || (product.direct_sale && product.stock_quantity === 0)) ? 'opacity-50 pointer-events-none' : ''
+            }`}
           >
             <div className="w-full sm:w-48 h-48 sm:h-32 flex-shrink-0 relative">
               <Image
@@ -59,55 +60,38 @@ function ProductGrid({
                 alt={product.title}
                 width={300}
                 height={300}
-                className="object-cover w-full h-full rounded-t-2xl sm:rounded-l-2xl sm:rounded-t-none"
+                className="object-cover w-full h-full rounded-t-lg sm:rounded-l-lg sm:rounded-t-none"
                 quality={85}
               />
-              {/* Action buttons for list view */}
-              <div className="absolute top-4 left-4 flex flex-col gap-2.5">
-                <div className="bg-[#f3faff] hover:bg-[#f3faff] p-2.5 rounded-full border-0 cursor-pointer">
-                  <Heart className="h-4 w-4 text-gray-600" />
-                </div>
-                <div className="bg-[#f3faff] hover:bg-[#f3faff] p-2.5 rounded-full border-0 cursor-pointer">
-                  <Share className="h-4 w-4 text-gray-600" />
-                </div>
-                <div className="bg-[#f3faff] hover:bg-[#f3faff] p-2.5 rounded-full border-0 cursor-pointer">
-                  <ArrowRight className="h-4 w-4 text-gray-600" />
-                </div>
-              </div>
             </div>
-            <div className="flex-1 p-4">
-              <h3 className="font-bold text-base text-[#434344] leading-6 font-['Inter-Bold',Helvetica] mb-2 line-clamp-2">
+            <div className="flex-1 p-3 sm:p-4">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-1 sm:mb-2 line-clamp-2">
                 {product.title}
               </h3>
-              <p className="text-xs sm:text-sm text-gray-600 mb-4 line-clamp-2">
+              <p className="text-xs sm:text-sm text-gray-600 mb-2 line-clamp-2">
                 {product.subtitle}
               </p>
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0">
                 {!product.hide_price && (
-                  <div className="flex items-center gap-2">
-                    <IndianRupee className="w-6 h-6 text-[#5ca131]" />
-                    <span className="font-semibold text-2xl text-[#5ca131] leading-7 font-['Inter-SemiBold',Helvetica]">
-                      {product.price.toLocaleString("en-IN")}
-                    </span>
-                  </div>
+                  <span className="text-lg sm:text-2xl font-bold text-green-600">
+                    {product.currency} {product.price.toLocaleString("en-IN")}
+                  </span>
                 )}
                 {product.direct_sale ? (
-                  <div className="flex items-start gap-2.5">
-                    <button
-                      className="h-auto rounded-lg bg-[#5ca131] hover:bg-[#4a8a29] p-[13px] text-white transition-colors duration-200"
+                  <div className="flex gap-2">
+                    <button className="w-full sm:w-auto bg-green-500 hover:bg-green-600 text-white px-4 sm:px-6 py-2 rounded-md transition-colors duration-200 text-sm font-medium"
                       disabled={!product.is_active || product.stock_quantity === 0}
                     >
-                      <ShoppingCart className="w-5 h-5" />
+                      Add to Cart
                     </button>
-                    <button
-                      className="h-auto flex-1 rounded-lg border border-[#5ca131] text-[#5ca131] hover:text-[#5ca131] hover:bg-transparent py-[11px] px-4 font-medium text-[16px] leading-[24px] transition-colors duration-200"
+                    <button className="w-full sm:w-auto bg-yellow-400 hover:bg-yellow-500 text-black px-4 sm:px-6 py-2 rounded-md transition-colors duration-200 text-sm font-medium"
                       disabled={!product.is_active || product.stock_quantity === 0}
                     >
                       Buy Now
                     </button>
                   </div>
                 ) : (
-                  <button className="h-auto rounded-lg bg-blue-500 hover:bg-blue-600 text-white px-6 py-[11px] font-medium text-[16px] leading-[24px] transition-colors duration-200">
+                  <button className="w-full sm:w-auto bg-blue-500 hover:bg-blue-600 text-white px-4 sm:px-6 py-2 rounded-md transition-colors duration-200 text-sm font-medium">
                     Get a Quote
                   </button>
                 )}
@@ -122,68 +106,19 @@ function ProductGrid({
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 md:gap-6 justify-items-center">
       {products.map((product: Product) => (
-        <div
+        <ProductCardContainer
           key={product.id}
-          className={`w-[260px] h-[430px] rounded-2xl border border-[#ecf0f7] p-0 overflow-hidden bg-white shadow-sm ${(!product.is_active || (product.direct_sale && product.stock_quantity === 0)) ? 'opacity-50 pointer-events-none' : ''
-            }`}
-        >
-          <div className="relative">
-            <Image
-              src={product.image}
-              alt={product.title}
-              width={260}
-              height={220}
-              className="w-full h-[220px] object-cover"
-              quality={85}
-            />
-            <div className="absolute top-4 left-4 flex flex-col gap-2.5">
-              <div className="bg-[#f3faff] hover:bg-[#f3faff] p-2.5 rounded-full border-0 shadow-none cursor-pointer">
-                <Heart className="h-5 w-5 text-gray-600" />
-              </div>
-              <div className="bg-[#f3faff] hover:bg-[#f3faff] p-2.5 rounded-full border-0 shadow-none cursor-pointer">
-                <Share className="h-5 w-5 text-gray-600" />
-              </div>
-              <div className="bg-[#f3faff] hover:bg-[#f3faff] p-2.5 rounded-full border-0 shadow-none cursor-pointer">
-                <ArrowRight className="h-5 w-5 text-gray-600" />
-              </div>
-            </div>
-          </div>
-          <div className="p-4 flex flex-col gap-4 h-[210px]">
-            <div className="flex flex-col gap-4 flex-1">
-              <h3 className="font-bold text-base text-[#434344] leading-6 font-['Inter-Bold',Helvetica] line-clamp-2">
-                {product.title}
-              </h3>
-              {!product.hide_price && (
-                <div className="flex items-center gap-2">
-                  <IndianRupee className="w-6 h-6 text-[#5ca131]" />
-                  <span className="font-semibold text-2xl text-[#5ca131] leading-7 font-['Inter-SemiBold',Helvetica]">
-                    {product.price.toLocaleString("en-IN")}
-                  </span>
-                </div>
-              )}
-            </div>
-            {product.direct_sale ? (
-              <div className="flex items-start gap-2.5 w-full">
-                <button
-                  className="h-auto rounded-lg bg-[#5ca131] hover:bg-[#4a8a29] shadow-xs p-[13px] text-white transition-colors duration-200"
-                  disabled={!product.is_active || product.stock_quantity === 0}
-                >
-                  <ShoppingCart className="w-5 h-5" />
-                </button>
-                <button
-                  className="h-auto flex-1 rounded-lg border border-[#5ca131] text-[#5ca131] hover:text-[#5ca131] hover:bg-transparent py-[11px] shadow-xs font-medium text-[16px] leading-[24px] transition-colors duration-200"
-                  disabled={!product.is_active || product.stock_quantity === 0}
-                >
-                  Buy Now
-                </button>
-              </div>
-            ) : (
-                <button className="h-auto rounded-lg bg-[#5ca131] hover:bg-[#4a8a29] shadow-xs p-[13px] text-white transition-colors duration-200">
-                Get a Quote
-              </button>
-            )}
-          </div>
-        </div>
+          id={parseInt(product.id, 10)}
+          image={product.image}
+          title={product.title}
+          subtitle={product.subtitle}
+          price={product.price}
+          currency={product.currency}
+          directSale={product.direct_sale}
+          is_active={product.is_active}
+          hide_price={product.hide_price}
+          stock_quantity={product.stock_quantity}
+        />
       ))}
     </div>
   );
@@ -261,15 +196,17 @@ export default function ProductListing({
 
         {/* Sidebar Mobile Drawer */}
         <div
-          className={`fixed inset-0 z-50 bg-black/40 transition-opacity duration-300 lg:hidden ${mobileFilterOpen
+          className={`fixed inset-0 z-50 bg-black/40 transition-opacity duration-300 lg:hidden ${
+            mobileFilterOpen
               ? "opacity-100 pointer-events-auto"
               : "opacity-0 pointer-events-none"
-            }`}
+          }`}
           onClick={() => setMobileFilterOpen(false)}
         >
           <aside
-            className={`absolute left-0 top-0 h-full w-full max-w-xs sm:max-w-sm bg-white shadow-xl transition-transform duration-300 ${mobileFilterOpen ? "translate-x-0" : "-translate-x-full"
-              }`}
+            className={`absolute left-0 top-0 h-full w-full max-w-xs sm:max-w-sm bg-white shadow-xl transition-transform duration-300 ${
+              mobileFilterOpen ? "translate-x-0" : "-translate-x-full"
+            }`}
             onClick={(e: React.MouseEvent<HTMLElement>) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between p-4 border-b">
@@ -332,20 +269,22 @@ export default function ProductListing({
                   <div className="flex items-center border border-gray-300 rounded-md overflow-hidden">
                     <button
                       onClick={() => handleViewChange("grid")}
-                      className={`p-1.5 sm:p-2 transition ${currentView === "grid"
+                      className={`p-1.5 sm:p-2 transition ${
+                        currentView === "grid"
                           ? "bg-green-500 text-white"
                           : "text-gray-500 hover:bg-gray-100"
-                        }`}
+                      }`}
                       aria-label="Grid View"
                     >
                       <Grid className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                     </button>
                     <button
                       onClick={() => handleViewChange("list")}
-                      className={`p-1.5 sm:p-2 transition ${currentView === "list"
+                      className={`p-1.5 sm:p-2 transition ${
+                        currentView === "list"
                           ? "bg-green-500 text-white"
                           : "text-gray-500 hover:bg-gray-100"
-                        }`}
+                      }`}
                       aria-label="List View"
                     >
                       <List className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
@@ -383,10 +322,11 @@ export default function ProductListing({
                   <button
                     key={page}
                     onClick={() => onPageChange(page)}
-                    className={`px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 ${currentPage === page
+                    className={`px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 ${
+                      currentPage === page
                         ? "text-white bg-green-500 border border-green-500 hover:bg-green-600"
                         : "text-gray-500 bg-white border border-gray-300 hover:bg-gray-100"
-                      }`}
+                    }`}
                   >
                     {page}
                   </button>
