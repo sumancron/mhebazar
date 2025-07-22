@@ -10,6 +10,15 @@ import axios from "axios";
 import { useUser } from "@/context/UserContext";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import QuoteForm from "../forms/enquiryForm/quotesForm";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 
 // Helper function for SEO-friendly slug
 const slugify = (text: string): string => {
@@ -85,17 +94,30 @@ const ProductCard = ({
 
   return (
     <div
-      className={`bg-white rounded-lg shadow-md overflow-hidden flex flex-col items-start w-[240px] h-[340px] text-sm relative ${
-        !isAvailable ? 'opacity-50 pointer-events-none' : ''
-      }`}
+      className={`bg-white rounded-2xl shadow-sm border border-[#ecf0f7] overflow-hidden ${!isAvailable ? 'opacity-50 pointer-events-none' : ''
+        }`}
     >
       {/* Image Container */}
-      <div className="relative bg-gray-50 pt-2 pb-1 px-2 w-full flex-shrink-0 h-[55%] flex justify-center items-center">
+      <div className="w-full sm:w-48 h-48 sm:h-32 flex-shrink-0 relative">
+
+        {/* Product Image */}
+        <Link href={productDetailUrl} className="flex justify-center items-center h-full w-full">
+          <Image
+            src={image}
+            alt={title}
+            width={300}
+            height={300}
+            className="object-cover w-full h-full rounded-t-2xl sm:rounded-l-2xl sm:rounded-t-none"
+            quality={85}
+          />
+        </Link>
+
+
         {/* Action Icons Top-Left */}
-        <div className="absolute top-2 left-2 flex flex-col gap-1 z-10">
+        <div className="absolute top-4 left-4 flex flex-col gap-2.5">
           <button
             onClick={() => onWishlistClick(id)}
-            className="w-7 h-7 bg-white rounded-full shadow flex items-center justify-center hover:bg-gray-100 transition-colors"
+            className="bg-[#f3faff] hover:bg-[#f3faff] p-2.5 rounded-full border-0 cursor-pointer"
             aria-label="Add to wishlist"
             disabled={!isPurchasable}
           >
@@ -103,7 +125,7 @@ const ProductCard = ({
           </button>
           <button
             onClick={() => onCompareClick(productData)}
-            className="w-7 h-7 bg-white rounded-full shadow flex items-center justify-center hover:bg-gray-100 transition-colors"
+            className="bg-[#f3faff] hover:bg-[#f3faff] p-2.5 rounded-full border-0 cursor-pointer"
             aria-label="Compare"
             disabled={!isPurchasable}
           >
@@ -111,25 +133,13 @@ const ProductCard = ({
           </button>
           <button
             onClick={() => onShareClick(window.location.origin + productDetailUrl, title)}
-            className="w-7 h-7 bg-white rounded-full shadow flex items-center justify-center hover:bg-gray-100 transition-colors"
+            className="bg-[#f3faff] hover:bg-[#f3faff] p-2.5 rounded-full border-0 cursor-pointer"
             aria-label="Share"
           >
             <Share2 className="w-3.5 h-3.5 text-gray-600" />
           </button>
         </div>
 
-        {/* Product Image */}
-        <Link href={productDetailUrl} className="flex justify-center items-center h-full w-full">
-          <Image
-            src={image}
-            alt={title}
-            className="max-w-full max-h-full object-contain"
-            width={200}
-            height={400}
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-            quality={75}
-          />
-        </Link>
       </div>
 
       {/* Content */}
@@ -191,7 +201,7 @@ const ProductCard = ({
             ) : (
               <button
                 onClick={() => onAddToCartClick(id)}
-                className="w-full bg-green-500 hover:bg-green-600 text-white font-medium py-2 px-3 rounded-md transition-colors text-sm flex items-center justify-center gap-2"
+                className="h-auto rounded-lg bg-[#5ca131] hover:bg-[#4a8a29] p-[13px] text-white transition-colors duration-200"
                 aria-label="Add to cart"
                 disabled={!isPurchasable}
               >
@@ -201,31 +211,44 @@ const ProductCard = ({
 
             <button
               onClick={() => onBuyNowClick(id)}
-              className="w-full bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-medium py-2 px-3 rounded-md transition-colors text-sm"
+              className="h-auto flex-1 rounded-lg border border-[#5ca131] text-[#5ca131] hover:text-[#5ca131] hover:bg-transparent py-[11px] px-4 font-medium text-[16px] leading-[24px] transition-colors duration-200"
               aria-label="Buy now"
               disabled={!isPurchasable}
             >
               Buy Now
             </button>
             {!isPurchasable && (
-              <button
-                onClick={() => toast.info('Request a quote logic here!')}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-3 rounded-md transition-colors text-sm mt-2"
-                aria-label="Get a quote"
-              >
-                Get a Quote
-              </button>
+              <Dialog>
+                <DialogTrigger>
+                  <button
+                    // onClick={() => toast.info('Request a quote logic here!')}
+                    className="h-auto rounded-lg bg-[#5ca131] hover:bg-[#4a8a29] p-[13px] text-white transition-colors duration-200"
+                    aria-label="Get a quote"
+                  >
+                    Get a Quote
+                  </button>
+                </DialogTrigger>
+                <DialogContent>
+                  <QuoteForm />
+                </DialogContent>
+              </Dialog>
             )}
           </div>
         ) : (
-          <button
-            onClick={() => toast.info('Request a quote logic here!')}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-3 rounded-md transition-colors text-sm"
-            aria-label="Get a quote"
-            disabled={!is_active}
-          >
-            Get a Quote
-          </button>
+          <Dialog>
+            <DialogTrigger>
+              <button
+                className="h-auto rounded-lg bg-[#5ca131] hover:bg-[#4a8a29] p-[13px] text-white transition-colors duration-200"
+                aria-label="Get a quote"
+                disabled={!is_active}
+              >
+                Get a Quote
+              </button>
+            </DialogTrigger>
+            <DialogContent>
+              <QuoteForm />
+            </DialogContent>
+          </Dialog>
         )}
       </div>
     </div>
@@ -428,9 +451,9 @@ export const ProductCardContainer = ({
     } catch (error) {
       console.error("Error increasing quantity:", error);
       if (axios.isAxiosError(error) && error.response && error.response.data?.quantity) {
-          toast.error(`Failed to increase quantity: ${error.response.data.quantity[0]}`);
+        toast.error(`Failed to increase quantity: ${error.response.data.quantity[0]}`);
       } else {
-          toast.error("Failed to increase quantity.");
+        toast.error("Failed to increase quantity.");
       }
     }
   }, [user]); // Depends on user
@@ -455,9 +478,9 @@ export const ProductCardContainer = ({
     } catch (error) {
       console.error("Error decreasing quantity:", error);
       if (axios.isAxiosError(error) && error.response && error.response.data?.quantity) {
-          toast.error(`Failed to decrease quantity: ${error.response.data.quantity[0]}`);
+        toast.error(`Failed to decrease quantity: ${error.response.data.quantity[0]}`);
       } else {
-          toast.error("Failed to decrease quantity.");
+        toast.error("Failed to decrease quantity.");
       }
     }
   }, [user, handleRemoveFromCart]); // Depends on user and handleRemoveFromCart

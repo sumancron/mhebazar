@@ -25,7 +25,7 @@ const formFields = [
   { id: "phone", placeholder: "Phone", type: "tel" },
 ];
 
-const Frame = (): JSX.Element => {
+const QuoteForm = (): JSX.Element => {
   return (
     <Dialog defaultOpen={true}>
       <DialogContent className="sm:max-w-[736px] p-0 border-none">
@@ -127,4 +127,4 @@ const Frame = (): JSX.Element => {
   );
 };
 
-export default Frame;
+export default QuoteForm;
