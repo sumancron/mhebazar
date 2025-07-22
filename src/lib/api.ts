@@ -1,3 +1,4 @@
+// api.ts - Fixed Axios instance with improved token handling
 import axios, { AxiosInstance, type InternalAxiosRequestConfig } from "axios";
 import Cookies from "js-cookie";
 
@@ -8,7 +9,7 @@ const api: AxiosInstance = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
-  withCredentials: true, // Allow backend to read refresh_token cookie
+  withCredentials: true,
 });
 
 // REQUEST INTERCEPTOR
@@ -25,58 +26,64 @@ api.interceptors.request.use(
 
 // RESPONSE INTERCEPTOR – Refresh token on 401
 api.interceptors.response.use(
-  response => response, // If response is OK, pass it through
+  response => response,
   async error => {
     const originalRequest = error.config;
     const refresh = Cookies.get("refresh_token");
+    const isRemembered = Cookies.get("remember_me") === "true";
 
-    // The URL for the refresh token endpoint
     const refreshTokenUrl = "/token/refresh/";
 
-    // Check if the failed request was for the refresh token endpoint
+    // If refresh fails, redirect to login and don't retry
     if (originalRequest.url === refreshTokenUrl) {
-      // If refresh fails, redirect to login and don't retry
-      Cookies.remove("access_token");
-      Cookies.remove("refresh_token");
-      if (typeof window !== "undefined") {
-        window.location.href = "/login";
-      }
+      clearAllTokens();
+      redirectToLogin();
       return Promise.reject(error);
     }
 
-    // Prevent infinite loop for other requests
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    // Handle 401 errors with token refresh
+    if (error.response?.status === 401 && !originalRequest._retry && refresh) {
       originalRequest._retry = true;
 
       try {
         const refreshResponse = await axios.post(
-          `${API_BASE_URL}${refreshTokenUrl}`, // Use the defined URL
+          `${API_BASE_URL}${refreshTokenUrl}`,
           { refresh },
           { withCredentials: true }
         );
 
         const newAccessToken = refreshResponse.data?.access;
+        const newRefreshToken = refreshResponse.data?.refresh; // Some backends return new refresh token
 
         if (newAccessToken) {
-          // Store new token in cookie
+          // Set token expiry based on remember me preference
+          const tokenExpiry = isRemembered ? 7 : undefined; // 7 days or session
+
           Cookies.set("access_token", newAccessToken, {
-            expires: 1 / 24, // 1 hour
-            secure: true,
+            expires: tokenExpiry,
+            secure: process.env.NODE_ENV === "production",
             sameSite: "Lax",
+            path: "/",
           });
 
-          // Update original request header and retry it
+          // Update refresh token if provided
+          if (newRefreshToken) {
+            Cookies.set("refresh_token", newRefreshToken, {
+              expires: isRemembered ? 7 : undefined,
+              secure: process.env.NODE_ENV === "production",
+              sameSite: "Lax",
+              path: "/",
+            });
+          }
+
+          // Update request and retry
           api.defaults.headers.common['Authorization'] = `Bearer ${newAccessToken}`;
           originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
           return api(originalRequest);
         }
       } catch (refreshError) {
-        // Refresh failed – redirect to login or handle accordingly
-        Cookies.remove("access_token");
-        Cookies.remove("refresh_token"); // Also remove the refresh token
-        if (typeof window !== "undefined") {
-          window.location.href = "/login";
-        }
+        clearAllTokens();
+        redirectToLogin();
         return Promise.reject(refreshError);
       }
     }
@@ -84,5 +91,26 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+// Helper functions
+const clearAllTokens = () => {
+  Cookies.remove("access_token", { path: "/" });
+  Cookies.remove("refresh_token", { path: "/" });
+  Cookies.remove("user_role", { path: "/" });
+  Cookies.remove("remember_me", { path: "/" });
+
+  // Clear from localStorage as fallback
+  if (typeof window !== "undefined") {
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_token");
+    localStorage.removeItem("user_role");
+  }
+};
+
+const redirectToLogin = () => {
+  if (typeof window !== "undefined") {
+    window.location.href = "/login";
+  }
+};
 
 export default api;

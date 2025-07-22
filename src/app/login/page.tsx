@@ -1,4 +1,4 @@
-// src/app/login/page.tsx
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 import Link from "next/link";
 import axios from "axios";
@@ -6,24 +6,67 @@ import { useState } from "react";
 import GoogleLoginButton from "@/components/elements/GoogleAuth";
 import { toast } from "sonner";
 import Cookies from "js-cookie";
-import { useUser } from "@/context/UserContext"; // Import useUser hook
-import { useRouter } from "next/navigation"; // Import useRouter for navigation
+import { useUser } from "@/context/UserContext";
+import { useRouter } from "next/navigation";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [rememberme, setRememberMe] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const { setUser } = useUser(); // Get setUser from context
-  const router = useRouter(); // Initialize router
+  const { setUser } = useUser();
+  const router = useRouter();
 
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
   const API_KEY = process.env.X_API_KEY;
 
+  const setTokens = (accessToken: string, refreshToken: string, userData: any) => {
+    // Determine expiry based on remember me
+    const tokenExpiry = rememberMe ? 7 : undefined; // 7 days or session (undefined = session)
+
+    const cookieOptions = {
+      expires: tokenExpiry,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "Lax" as const,
+      path: "/",
+    };
+
+    // Set tokens
+    Cookies.set("access_token", accessToken, cookieOptions);
+    Cookies.set("refresh_token", refreshToken, cookieOptions);
+
+    // Set remember me preference
+    Cookies.set("remember_me", rememberMe.toString(), cookieOptions);
+
+    // Set user role
+    if (userData?.role?.id) {
+      Cookies.set("user_role", userData.role.id.toString(), cookieOptions);
+    }
+
+    console.log(`Tokens set with ${rememberMe ? '7-day' : 'session'} expiry`);
+  };
+
+  const fetchUserData = async (accessToken: string) => {
+    try {
+      const userResponse = await axios.get(`${API_BASE_URL}/users/me/`, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "X-API-KEY": API_KEY,
+        },
+      });
+      return userResponse.data;
+    } catch (err) {
+      console.error("User fetch error:", err);
+      throw new Error("Failed to fetch user profile");
+    }
+  };
+
   const handleLogin = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
     setError("");
+    setIsLoading(true);
 
     try {
       const response = await axios.post(
@@ -34,89 +77,41 @@ const LoginPage = () => {
             "X-API-KEY": API_KEY,
             "Content-Type": "application/json",
           },
-          withCredentials: true, // Allow cookies to be set by backend
+          withCredentials: true,
         }
       );
 
-      const accessToken = response.data?.access;
-      const refreshToken = response.data?.refresh;
-      let userData = null;
+      // const { access: accessToken, refresh: refreshToken } = response.data;
+      const accessToken = response?.data?.access;
+      const refreshToken = response?.data?.refresh;
 
-      // Fetch user info using access token
-      if (accessToken) {
-        try {
-          const userResponse = await axios.get(`${API_BASE_URL}/users/me/`, {
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
-              "X-API-KEY": API_KEY,
-            },
-          });
-          userData = userResponse.data;
-          console.log("User data fetched successfully:", userData);
-          setUser(userData); // Set user data in context
-
-          // --- UPDATED: Set user_role cookie for middleware ---
-          if (userData?.role?.id) {
-            // Set a non-HttpOnly cookie that the middleware can read.
-            // This cookie will contain the user's role ID.
-            // IMPORTANT: Removed 'secure' flag condition for development ease.
-            // Added 'path: /' to ensure cookie is available across the entire site.
-            Cookies.set("user_role", userData.role.id.toString(), {
-              expires: 7, // Expires in 7 days, or match your refresh token expiry
-              sameSite: "Lax",
-              path: '/', // Ensure cookie is available for all paths
-            });
-            console.log("Cookie 'user_role' set:", userData.role.id.toString());
-          }
-          // --- END UPDATED ---
-
-        } catch (err) {
-          toast.error("Failed to fetch user profile. Please try again.");
-          console.error("User fetch error:", err);
-          // If user data fetching fails, we might still want to proceed with token storage
-          // but the user object in context will remain null or previous state.
-        }
+      if (!accessToken || !refreshToken) {
+        throw new Error("Invalid response: missing tokens");
       }
 
-      // Store access token (non-HttpOnly) only if needed (optional)
-      if (accessToken && rememberme) {
-        Cookies.set("access_token", accessToken, {
-          expires: 1 / 24, // 1 hour = 1/24 of a day
-          // IMPORTANT: Removed 'secure' flag condition for development ease.
-          // Added 'path: /' to ensure cookie is available across the entire site.
-          sameSite: "Lax",
-          path: '/', // Ensure cookie is available for all paths
-        });
-        console.log("Cookie 'access_token' set (remember me):", accessToken);
-      } else if (accessToken) { // If not remember me, set a session-based token or short expiry
-         Cookies.set("access_token", accessToken, {
-          expires: 1 / 24, // Example: 1 hour, or adjust as needed for non-remembered sessions
-          sameSite: "Lax",
-          path: '/',
-        });
-        console.log("Cookie 'access_token' set (session):", accessToken);
-      }
+      // Fetch user data
+      const userData = await fetchUserData(accessToken);
 
+      // Set user in context
+      setUser(userData);
 
-      // set refresh token in cookies
-      Cookies.set("refresh_token", refreshToken, {
-        expires: 7,
-        // IMPORTANT: Removed 'secure' flag condition for development ease.
-        // Added 'path: /' to ensure cookie is available across the entire site.
-        sameSite: "Lax",
-        path: '/', // Ensure cookie is available for all paths
-      });
-      console.log("Cookie 'refresh_token' set:", refreshToken);
+      // Set tokens with appropriate expiry
+      setTokens(accessToken, refreshToken, userData);
 
-      // Redirect based on user role using Next.js router
-      if (userData?.role?.id === 1) {
+      toast.success("Login successful!");
+
+      // Redirect based on user role
+      const roleId = userData?.role?.id;
+      if (roleId === 1) {
         router.push("/admin");
-      } else if (userData?.role?.id === 2) {
+      } else if (roleId === 2) {
         router.push("/vendor/dashboard");
       } else {
         router.push("/");
       }
     } catch (err: unknown) {
+      console.error("Login error:", err);
+
       if (axios.isAxiosError(err)) {
         const data = err.response?.data;
 
@@ -124,31 +119,89 @@ const LoginPage = () => {
           if (message.includes("No active account found")) {
             return "Invalid email or password. Please try again.";
           }
-          if (
-            message.toLowerCase().includes("email") &&
-            message.toLowerCase().includes("required")
-          ) {
+          if (message.toLowerCase().includes("email") && message.toLowerCase().includes("required")) {
             return "Please enter your email.";
           }
-          if (
-            message.toLowerCase().includes("password") &&
-            message.toLowerCase().includes("required")
-          ) {
+          if (message.toLowerCase().includes("password") && message.toLowerCase().includes("required")) {
             return "Please enter your password.";
           }
           return message || "Login failed. Please try again.";
         };
 
-        const rawMessage =
-          typeof data === "string"
-            ? data
-            : data?.detail || data?.message || "Login failed";
+        const rawMessage = typeof data === "string"
+          ? data
+          : data?.detail || data?.message || "Login failed";
 
-        toast.error(getFriendlyError(rawMessage));
+        const friendlyMessage = getFriendlyError(rawMessage);
+        setError(friendlyMessage);
+        toast.error(friendlyMessage);
       } else {
-        toast.error("Something went wrong during login. Please try again.");
+        const errorMessage = "Something went wrong during login. Please try again.";
+        setError(errorMessage);
+        toast.error(errorMessage);
       }
+    } finally {
+      setIsLoading(false);
     }
+  };
+
+  const handleGoogleSuccess = async (data: any) => {
+    try {
+      setIsLoading(true);
+      const accessToken = data.access;
+
+      if (!accessToken) {
+        throw new Error("No access token received from Google login");
+      }
+
+      // Fetch user data
+      const userData = await fetchUserData(accessToken);
+      setUser(userData);
+
+      // For Google login, we'll treat it as "remember me" by default
+      // You can modify this behavior as needed
+      const refreshToken = data.refresh || ""; // Adjust based on your Google login response
+
+      // Set tokens (Google login defaults to remembered session)
+      const cookieOptions = {
+        expires: 7, // 7 days for Google login
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "Lax" as const,
+        path: "/",
+      };
+
+      Cookies.set("access_token", accessToken, cookieOptions);
+      if (refreshToken) {
+        Cookies.set("refresh_token", refreshToken, cookieOptions);
+      }
+      Cookies.set("remember_me", "true", cookieOptions);
+
+      if (userData?.role?.id) {
+        Cookies.set("user_role", userData.role.id.toString(), cookieOptions);
+      }
+
+      toast.success("Google login successful!");
+
+      // Redirect based on role
+      const roleId = userData?.role?.id;
+      if (roleId === 1) {
+        router.push("/admin");
+      } else if (roleId === 2) {
+        router.push("/vendor/dashboard");
+      } else {
+        router.push("/");
+      }
+    } catch (err) {
+      console.error("Google login error:", err);
+      toast.error("Google login failed. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGoogleError = (error: any) => {
+    console.error("Google login error:", error);
+    toast.error("Google login failed. Please try again.");
   };
 
   return (
@@ -167,6 +220,7 @@ const LoginPage = () => {
               className="w-full bg-gray-50 border border-gray-200 rounded px-4 py-3 outline-none focus:ring-2 focus:ring-green-500 text-base"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              disabled={isLoading}
             />
           </div>
           <div>
@@ -178,6 +232,7 @@ const LoginPage = () => {
               className="w-full bg-gray-50 border border-gray-200 rounded px-4 py-3 outline-none focus:ring-2 focus:ring-green-500 text-base"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              disabled={isLoading}
             />
           </div>
           <div className="flex items-center justify-between">
@@ -185,10 +240,11 @@ const LoginPage = () => {
               <input
                 type="checkbox"
                 className="w-4 h-4 rounded border-gray-300"
-                checked={rememberme}
+                checked={rememberMe}
                 onChange={(e) => setRememberMe(e.target.checked)}
+                disabled={isLoading}
               />
-              Remember me
+              Remember me for 7 days
             </label>
             <Link
               href="/forgot-password"
@@ -198,13 +254,16 @@ const LoginPage = () => {
             </Link>
           </div>
           {error && (
-            <div className="text-red-500 text-sm text-center">{error}</div>
+            <div className="text-red-500 text-sm text-center bg-red-50 p-3 rounded">
+              {error}
+            </div>
           )}
           <button
             type="submit"
-            className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold rounded py-3 text-lg transition-colors"
+            disabled={isLoading}
+            className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold rounded py-3 text-lg transition-colors"
           >
-            Sign In
+            {isLoading ? "Signing In..." : "Sign In"}
           </button>
         </form>
         <div className="flex items-center my-6">
@@ -215,53 +274,12 @@ const LoginPage = () => {
         <GoogleLoginButton
           variant="custom"
           buttonText="Continue with Google Account"
-          className="bg-white w-full "
+          className="bg-white w-full"
           size="large"
           showIcon={true}
-          onSuccess={(data) => {
-            console.log("Success:", data);
-            const accessToken = (data as { access: string }).access;
-            // IMPORTANT: For Google Login, you *must* fetch user data here
-            // to get the role and set the 'user_role' cookie,
-            // similar to the regular handleLogin function.
-            // Without setting `user_role` cookie, middleware won't know the role.
-
-            // Example of how you would fetch user data and set cookies after Google login:
-            axios.get(`${API_BASE_URL}/users/me/`, {
-              headers: {
-                Authorization: `Bearer ${accessToken}`,
-                "X-API-KEY": API_KEY,
-              },
-            }).then(userResponse => {
-              const userData = userResponse.data;
-              setUser(userData);
-              if (userData?.role?.id) {
-                Cookies.set("user_role", userData.role.id.toString(), {
-                  expires: 7,
-                  sameSite: "Lax",
-                  path: '/',
-                });
-                console.log("Cookie 'user_role' set (Google login):", userData.role.id.toString());
-              }
-              // Also set access_token and refresh_token if your backend provides them via Google login
-              // Cookies.set("access_token", accessToken, { expires: 1/24, sameSite: "Lax", path: '/' });
-              // Cookies.set("refresh_token", data.refreshToken, { expires: 7, sameSite: "Lax", path: '/' }); // Assuming data has refreshToken
-              router.push("/"); // Redirect after Google login
-            }).catch(err => {
-              console.error("Failed to fetch user data after Google login:", err);
-              toast.error("Google login successful, but failed to get user profile.");
-              router.push("/login"); // Redirect to login if user data fetch fails
-            });
-
-            // For now, if Google login directly gives you a full user object, you'd do:
-            // setUser(data.userObject); // Removed: Incorrect usage, see above for correct user fetch and setUser usage
-            // router.push("/"); // Redirect after Google login
-
-            // As a temporary measure for demonstration if GoogleLoginButton doesn't return full user data,
-            // we'll just redirect. But for full functionality, the above commented block is needed.
-            router.push("/");
-          }}
-          onError={(error) => console.log("Error:", error)}
+          onSuccess={handleGoogleSuccess}
+          onError={handleGoogleError}
+          disabled={isLoading}
         />
         <div className="mt-8 text-center text-base">
           Do not have an account{" "}
