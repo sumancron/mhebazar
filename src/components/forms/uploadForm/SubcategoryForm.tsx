@@ -7,10 +7,10 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+// import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { X, Plus, Minus, Settings } from 'lucide-react'
-import Image from 'next/image'
+import { X, Plus, ImageIcon } from 'lucide-react'
+// import Image from 'next/image'
 import Cookies from 'js-cookie'
 
 type FieldOption = {
@@ -197,28 +197,28 @@ export default function SubcategoryForm() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-6 space-y-6">
-      <Card className="shadow-lg border-0 bg-gradient-to-br from-white to-gray-50">
-        <CardHeader className="bg-gradient-to-r from-[#5CA131] to-[#47881F] text-white rounded-t-lg">
-          <CardTitle className="text-2xl font-bold flex items-center gap-2">
-            <Settings className="w-6 h-6" />
-            Create Subcategory
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-8">
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-            {/* Basic Information Section */}
-            <div className="space-y-6">
-              <div className="border-l-4 border-[#5CA131] pl-4">
-                <h3 className="text-lg font-semibold text-gray-800 mb-4">Basic Information</h3>
-              </div>
+    <div className="min-h-screen bg-white">
+      <div className="max-w-md mx-auto bg-white">
+        {/* Header */}
+        <div className="flex items-center justify-between p-4 border-b">
+          <h1 className="text-lg font-semibold text-gray-900">Create Subcategory</h1>
+          <button className="text-gray-400 hover:text-gray-600">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium text-gray-700">Category *</Label>
+        <div className="p-4">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            {/* Basic Information Section */}
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-sm text-gray-600 mb-1 block">
+                    Category <span className="text-red-500">*</span>
+                  </Label>
                   <Select onValueChange={(val) => setValue('category', val)} disabled={loading}>
-                    <SelectTrigger className="h-11 border-gray-300 focus:border-[#5CA131] focus:ring-[#5CA131]">
-                      <SelectValue placeholder={loading ? "Loading categories..." : "Select a category"} />
+                    <SelectTrigger className="h-10 border-gray-300 text-sm text-gray-500">
+                      <SelectValue placeholder={loading ? "Loading..." : "Select a category"} />
                     </SelectTrigger>
                     <SelectContent>
                       {Array.isArray(categories) && categories.length > 0 ? (
@@ -230,56 +230,51 @@ export default function SubcategoryForm() {
                       ) : (
                         !loading && (
                           <div className="px-2 py-1 text-sm text-gray-500">
-                            No categories available
+                            No categories found
                           </div>
                         )
                       )}
                     </SelectContent>
                   </Select>
-                  {errors.category && <p className="text-red-500 text-sm">Category is required</p>}
+                  {errors.category && <p className="text-red-500 text-xs mt-1">Category is required</p>}
                 </div>
 
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium text-gray-700">Name *</Label>
+                <div>
+                  <Label className="text-sm text-gray-600 mb-1 block">
+                    Name <span className="text-red-500">*</span>
+                  </Label>
                   <Input
                     {...register('name', { required: true })}
-                    className="h-11 border-gray-300 focus:border-[#5CA131] focus:ring-[#5CA131]"
+                    className="h-10 border-gray-300 text-sm"
                     placeholder="Enter subcategory name"
                   />
-                  {errors.name && <p className="text-red-500 text-sm">Name is required</p>}
+                  {errors.name && <p className="text-red-500 text-xs mt-1">Name is required</p>}
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label className="text-sm font-medium text-gray-700">Description</Label>
+              <div>
+                <Label className="text-sm text-gray-600 mb-1 block">Description</Label>
                 <Textarea
                   {...register('description')}
-                  className="min-h-[100px] border-gray-300 focus:border-[#5CA131] focus:ring-[#5CA131]"
+                  className="min-h-[80px] border-gray-300 text-sm resize-none"
                   placeholder="Enter subcategory description"
                 />
               </div>
-            </div>
 
-            {/* SEO Section */}
-            <div className="space-y-6">
-              <div className="border-l-4 border-[#5CA131] pl-4">
-                <h3 className="text-lg font-semibold text-gray-800 mb-4">SEO Information</h3>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium text-gray-700">Meta Title</Label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-sm text-gray-600 mb-1 block">Meta Title</Label>
                   <Input
                     {...register('meta_title')}
-                    className="h-11 border-gray-300 focus:border-[#5CA131] focus:ring-[#5CA131]"
+                    className="h-10 border-gray-300 text-sm"
                     placeholder="Enter meta title"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium text-gray-700">Meta Description</Label>
+                <div>
+                  <Label className="text-sm text-gray-600 mb-1 block">Meta Description</Label>
                   <Input
                     {...register('meta_description')}
-                    className="h-11 border-gray-300 focus:border-[#5CA131] focus:ring-[#5CA131]"
+                    className="h-10 border-gray-300 text-sm"
                     placeholder="Enter meta description"
                   />
                 </div>
@@ -287,108 +282,89 @@ export default function SubcategoryForm() {
             </div>
 
             {/* Media Section */}
-            <div className="space-y-6">
-              <div className="border-l-4 border-[#5CA131] pl-4">
-                <h3 className="text-lg font-semibold text-gray-800 mb-4">Media Files</h3>
+            <div className="space-y-4 pt-4 border-t">
+              <div>
+                <Label className="text-sm text-gray-600 mb-1 block">Subcategory Image</Label>
+                <input
+                  id="sub-image-input"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleSubImageChange}
+                  style={{ display: 'none' }}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => document.getElementById('sub-image-input')?.click()}
+                  className="w-full h-10 border-gray-300 text-gray-600 text-sm"
+                >
+                  <ImageIcon className="w-4 h-4 mr-2" />
+                  Select Image
+                </Button>
+                {subImageFiles?.length > 0 && (
+                  <div className="grid grid-cols-4 gap-2 mt-2">
+                    {subImageFiles.map((file, idx) => (
+                      <div key={idx} className="relative group">
+                        <div className="aspect-square bg-gray-100 rounded overflow-hidden flex items-center justify-center">
+                          <ImageIcon className="w-6 h-6 text-gray-400" />
+                        </div>
+                        <button
+                          type="button"
+                          className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={() => removeSubImage(idx)}
+                        >
+                          <X size={10} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-3">
-                  <Label className="text-sm font-medium text-gray-700">Subcategory Image</Label>
-                  <div>
-                    <input
-                      id="sub-image-input"
-                      type="file"
-                      accept="image/*"
-                      onChange={handleSubImageChange}
-                      style={{ display: 'none' }}
-                    />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => document.getElementById('sub-image-input')?.click()}
-                      className="w-full h-11 border-2 border-dashed border-[#5CA131] text-[#5CA131] hover:bg-[#5CA131] hover:text-white transition-colors"
-                    >
-                      <Plus className="w-4 h-4 mr-2" />
-                      Select Image
-                    </Button>
-                  </div>
-                  <div className="flex gap-2 mt-3">
-                    {subImageFiles?.map((file, idx) => (
-                      <div key={idx} className="relative w-20 h-20 rounded-lg overflow-hidden border-2 border-gray-200">
-                        <Image
-                          src={URL.createObjectURL(file)}
-                          alt="Preview"
-                          fill
-                          className="object-cover"
-                          unoptimized
-                        />
+              <div>
+                <Label className="text-sm text-gray-600 mb-1 block">Subcategory Banner</Label>
+                <input
+                  id="sub-banner-input"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleSubBannerChange}
+                  style={{ display: 'none' }}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => document.getElementById('sub-banner-input')?.click()}
+                  className="w-full h-10 border-gray-300 text-gray-600 text-sm"
+                >
+                  <ImageIcon className="w-4 h-4 mr-2" />
+                  Select Banner
+                </Button>
+                {subBannerFiles?.length > 0 && (
+                  <div className="grid grid-cols-4 gap-2 mt-2">
+                    {subBannerFiles.map((file, idx) => (
+                      <div key={idx} className="relative group">
+                        <div className="aspect-square bg-gray-100 rounded overflow-hidden flex items-center justify-center">
+                          <ImageIcon className="w-6 h-6 text-gray-400" />
+                        </div>
                         <button
                           type="button"
-                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-md hover:bg-red-600 transition-colors"
-                          onClick={() => removeSubImage(idx)}
-                          aria-label="Remove image"
-                        >
-                          <X size={14} />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  <Label className="text-sm font-medium text-gray-700">Subcategory Banner</Label>
-                  <div>
-                    <input
-                      id="sub-banner-input"
-                      type="file"
-                      accept="image/*"
-                      onChange={handleSubBannerChange}
-                      style={{ display: 'none' }}
-                    />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => document.getElementById('sub-banner-input')?.click()}
-                      className="w-full h-11 border-2 border-dashed border-[#5CA131] text-[#5CA131] hover:bg-[#5CA131] hover:text-white transition-colors"
-                    >
-                      <Plus className="w-4 h-4 mr-2" />
-                      Select Banner
-                    </Button>
-                  </div>
-                  <div className="flex gap-2 mt-3">
-                    {subBannerFiles?.map((file, idx) => (
-                      <div key={idx} className="relative w-20 h-20 rounded-lg overflow-hidden border-2 border-gray-200">
-                        <Image
-                          src={URL.createObjectURL(file)}
-                          alt="Preview"
-                          fill
-                          className="object-cover"
-                          unoptimized
-                        />
-                        <button
-                          type="button"
-                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-md hover:bg-red-600 transition-colors"
+                          className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
                           onClick={() => removeSubBanner(idx)}
-                          aria-label="Remove image"
                         >
-                          <X size={14} />
+                          <X size={10} />
                         </button>
                       </div>
                     ))}
                   </div>
-                </div>
+                )}
               </div>
             </div>
 
             {/* Product Details Section */}
-            <div className="space-y-6">
-              <div className="border-l-4 border-[#5CA131] pl-4">
-                <h3 className="text-lg font-semibold text-gray-800 mb-2">Product Details Fields</h3>
-                <p className="text-sm text-gray-600">
-                  Define the fields that will appear in the product form for this category
-                </p>
-              </div>
+            <div className="space-y-4 pt-4 border-t">
+              <h3 className="text-md font-semibold text-gray-800">Product Detail Fields</h3>
 
               <div className="space-y-4">
                 {fields?.map((field, fieldIndex) => {
@@ -396,33 +372,25 @@ export default function SubcategoryForm() {
                   const showOptions = ['select', 'radio', 'checkbox'].includes(fieldType)
 
                   return (
-                    <Card key={field.id} className="border-2 border-gray-200 hover:border-[#5CA131] transition-colors">
-                      <CardContent className="p-6">
-                        <div className="space-y-4">
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                              <Label className="text-sm font-medium text-gray-700">Field Name *</Label>
-                              <Input
-                                placeholder="e.g. 'material'"
-                                {...register(`product_details.${fieldIndex}.name`, { required: true })}
-                                className="h-10 border-gray-300 focus:border-[#5CA131] focus:ring-[#5CA131]"
-                              />
-                              {errors.product_details?.[fieldIndex]?.name && (
-                                <p className="text-red-500 text-sm">Field name is required</p>
-                              )}
-                            </div>
-                            <div className="space-y-2">
-                              <Label className="text-sm font-medium text-gray-700">Display Label *</Label>
-                              <Input
-                                placeholder="e.g. 'Material Type'"
-                                {...register(`product_details.${fieldIndex}.label`, { required: true })}
-                                className="h-10 border-gray-300 focus:border-[#5CA131] focus:ring-[#5CA131]"
-                              />
-                              {errors.product_details?.[fieldIndex]?.label && (
-                                <p className="text-red-500 text-sm">Label is required</p>
-                              )}
-                            </div>
-                          </div>
+                    <div key={field.id} className="p-4 border rounded-lg space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div>
+                          <Label className="text-sm text-gray-600 mb-1 block">Field Name *</Label>
+                          <Input
+                            placeholder="e.g. 'material'"
+                            {...register(`product_details.${fieldIndex}.name`, { required: true })}
+                            className="h-10 border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500"
+                          />
+                        </div>
+                        <div>
+                          <Label className="text-sm text-gray-600 mb-1 block">Display Label *</Label>
+                          <Input
+                            placeholder="e.g. 'Material Type'"
+                            {...register(`product_details.${fieldIndex}.label`, { required: true })}
+                            className="h-10 border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500"
+                          />
+                        </div>
+                      </div>
 
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-2">
@@ -465,77 +433,65 @@ export default function SubcategoryForm() {
                             </div>
                           </div>
 
-                          {fieldType === 'text' && (
-                            <div className="space-y-2">
-                              <Label className="text-sm font-medium text-gray-700">Placeholder (optional)</Label>
-                              <Input
-                                placeholder="e.g. 'Enter material type'"
-                                {...register(`product_details.${fieldIndex}.placeholder`)}
-                                className="h-10 border-gray-300 focus:border-[#5CA131] focus:ring-[#5CA131]"
-                              />
-                            </div>
-                          )}
-
-                          {showOptions && (
-                            <div className="space-y-3">
-                              <Label className="text-sm font-medium text-gray-700">Options</Label>
-                              <div className="space-y-2">
-                                {watch(`product_details.${fieldIndex}.options`)?.map((option, optionIndex) => (
-                                  <div key={optionIndex} className="flex gap-2 items-center">
-                                    <Input
-                                      placeholder="Option label"
-                                      {...register(`product_details.${fieldIndex}.options.${optionIndex}.label`, {
-                                        required: true,
-                                      })}
-                                      className="h-10 border-gray-300 focus:border-[#5CA131] focus:ring-[#5CA131]"
-                                    />
-                                    <Input
-                                      placeholder="Option value"
-                                      {...register(`product_details.${fieldIndex}.options.${optionIndex}.value`, {
-                                        required: true,
-                                      })}
-                                      className="h-10 border-gray-300 focus:border-[#5CA131] focus:ring-[#5CA131]"
-                                    />
-                                    <Button
-                                      type="button"
-                                      variant="outline"
-                                      size="sm"
-                                      onClick={() => removeOption(fieldIndex, optionIndex)}
-                                      className="text-red-500 border-red-300 hover:bg-red-50 hover:border-red-400"
-                                    >
-                                      <Minus className="w-4 h-4" />
-                                    </Button>
-                                  </div>
-                                ))}
-                              </div>
-                              <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                onClick={() => addOption(fieldIndex)}
-                                className="border-[#5CA131] text-[#5CA131] hover:bg-[#5CA131] hover:text-white"
-                              >
-                                <Plus className="w-4 h-4 mr-2" />
-                                Add Option
-                              </Button>
-                            </div>
-                          )}
-
-                          <div className="flex justify-end pt-4 border-t">
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={() => remove(fieldIndex)}
-                              className="text-red-500 border-red-300 hover:bg-red-50 hover:border-red-400"
-                            >
-                              <Minus className="w-4 h-4 mr-2" />
-                              Remove Field
-                            </Button>
-                          </div>
+                      {fieldType === 'text' && (
+                        <div>
+                          <Label className="text-sm text-gray-600 mb-1 block">Placeholder (optional)</Label>
+                          <Input
+                            placeholder="e.g. 'Enter material type'"
+                            {...register(`product_details.${fieldIndex}.placeholder`)}
+                            className="h-10 border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500"
+                          />
                         </div>
-                      </CardContent>
-                    </Card>
+                      )}
+
+                      {showOptions && (
+                        <div className="space-y-3 pt-2">
+                          <Label className="text-sm text-gray-600 block">Options</Label>
+                          <div className="space-y-2">
+                            {watch(`product_details.${fieldIndex}.options`)?.map((option, optionIndex) => (
+                              <div key={optionIndex} className="flex gap-2 items-center">
+                                <Input
+                                  placeholder="Option label"
+                                  {...register(`product_details.${fieldIndex}.options.${optionIndex}.label`, { required: true })}
+                                  className="h-10 border-gray-300 text-sm"
+                                />
+                                <Input
+                                  placeholder="Option value"
+                                  {...register(`product_details.${fieldIndex}.options.${optionIndex}.value`, { required: true })}
+                                  className="h-10 border-gray-300 text-sm"
+                                />
+                                <Button
+                                  type="button"
+                                  variant="ghost" size="icon"
+                                  onClick={() => removeOption(fieldIndex, optionIndex)}
+                                  className="text-red-500 hover:bg-red-50"
+                                >
+                                  <X className="w-4 h-4" />
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
+                          <Button
+                            type="button" variant="outline" size="sm"
+                            onClick={() => addOption(fieldIndex)}
+                          >
+                            <Plus className="w-4 h-4 mr-2" />
+                            Add Option
+                          </Button>
+                        </div>
+                      )}
+
+                      <div className="flex justify-end pt-3 border-t">
+                        <Button
+                          type="button" variant="ghost" size="sm"
+                          onClick={() => remove(fieldIndex)}
+                          className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                        >
+                          <X className="w-4 h-4 mr-1" />
+                          Remove Field
+                        </Button>
+                      </div>
+                    </div>
                   )
                 })}
 
@@ -553,33 +509,33 @@ export default function SubcategoryForm() {
                   }
                   className="w-full h-12 border-2 border-dashed border-[#5CA131] text-[#5CA131] hover:bg-[#5CA131] hover:text-white transition-colors"
                 >
-                  <Plus className="w-5 h-5 mr-2" />
+                  <Plus className="w-4 h-4 mr-2" />
                   Add Product Field
                 </Button>
               </div>
             </div>
 
-            <div className="pt-6 border-t">
+            <div className="pt-4">
               <Button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full h-12 bg-[#5CA131] hover:bg-[#47881F] text-white font-medium text-lg transition-colors shadow-md"
+                className="w-full h-10"
               >
-                {isSubmitting ? 'Creating Subcategory...' : 'Create Subcategory'}
+                {isSubmitting ? 'Creating...' : 'Create Subcategory'}
               </Button>
             </div>
 
             {message && (
-              <div className={`text-center p-4 rounded-lg ${message.includes('success')
-                  ? 'bg-green-50 text-green-700 border border-green-200'
-                  : 'bg-red-50 text-red-700 border border-red-200'
+              <div className={`p-3 rounded text-center text-xs ${message.includes('success')
+                ? 'bg-green-50 text-green-800 border border-green-200'
+                : 'bg-red-50 text-red-800 border border-red-200'
                 }`}>
                 {message}
               </div>
             )}
           </form>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   )
 }

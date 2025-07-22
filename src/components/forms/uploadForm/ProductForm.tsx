@@ -7,12 +7,11 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+// import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select'
 import { Checkbox } from '@/components/ui/checkbox'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { X, FileText, Image as ImageIcon, Package, AlertCircle } from 'lucide-react'
-import Image from 'next/image'
 import api from '@/lib/api'
 import { useUser } from '@/context/UserContext'
 
@@ -314,7 +313,7 @@ export default function ProductForm() {
       case 'text':
         return (
           <Input
-            className="border-gray-300 focus:border-[#5CA131] focus:ring-[#5CA131]"
+            className="h-10 border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-sm"
             placeholder={field.placeholder}
             value={dynamicValues[field.name] || ''}
             onChange={(e) => handleDynamicValueChange(field.name, e.target.value)}
@@ -324,7 +323,7 @@ export default function ProductForm() {
       case 'textarea':
         return (
           <Textarea
-            className="border-gray-300 focus:border-[#5CA131] focus:ring-[#5CA131] min-h-[100px]"
+            className="border-gray-300 focus:border-blue-500 focus:ring-blue-500 min-h-[80px] text-sm"
             placeholder={field.placeholder}
             value={dynamicValues[field.name] || ''}
             onChange={(e) => handleDynamicValueChange(field.name, e.target.value)}
@@ -338,7 +337,7 @@ export default function ProductForm() {
             value={dynamicValues[field.name] || ''}
             required={field.required}
           >
-            <SelectTrigger className="border-gray-300 focus:border-[#5CA131] focus:ring-[#5CA131]">
+            <SelectTrigger className="h-10 border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-sm">
               <SelectValue placeholder={`Select ${field.label}`} />
             </SelectTrigger>
             <SelectContent>
@@ -370,7 +369,7 @@ export default function ProductForm() {
                   <RadioGroupItem
                     value={option.value}
                     id={`${field.name}-${option.value}`}
-                    className="border-gray-300 text-[#5CA131] focus:ring-[#5CA131]"
+                    className="border-gray-300 text-blue-600 focus:ring-blue-500"
                   />
                   <Label htmlFor={`${field.name}-${option.value}`} className="text-sm font-medium">
                     {option.label}
@@ -398,7 +397,7 @@ export default function ProductForm() {
                         : currentValues.filter((v: string) => v !== option.value)
                       handleDynamicValueChange(field.name, newValues.join(','))
                     }}
-                    className="border-gray-300 data-[state=checked]:bg-[#5CA131] data-[state=checked]:border-[#5CA131]"
+                    className="border-gray-300 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
                   />
                   <Label htmlFor={`${field.name}-${option.value}`} className="text-sm font-medium">
                     {option.label}
@@ -416,313 +415,291 @@ export default function ProductForm() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <Card className="max-w-4xl mx-auto shadow-lg border-0">
-        <CardHeader className="bg-gradient-to-r from-[#5CA131] to-[#47881F] text-white">
-          <CardTitle className="text-2xl font-bold flex items-center gap-2">
-            <Package className="w-6 h-6" />
-            Create New Product
-          </CardTitle>
-        </CardHeader>
+    <div className="min-h-screen bg-white">
+      <div className="max-w-md mx-auto bg-white">
+        {/* Header */}
+        <div className="flex items-center justify-between p-4 border-b">
+          <h1 className="text-lg font-semibold text-gray-900">Add Product</h1>
+          <button className="text-gray-400 hover:text-gray-600">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
 
-        <CardContent className="p-8">
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-            {/* Category Selection Section */}
-            <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">Category & Classification</h3>
+        <div className="p-4">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            {/* Category Selection */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label className="text-sm text-gray-600 mb-1 block">Select category*</Label>
+                <Select onValueChange={(val) => setValue('category', val)} disabled={loading}>
+                  <SelectTrigger className="h-10 border-gray-300 text-sm text-gray-500">
+                    <SelectValue placeholder="Select" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Array.isArray(categories) && categories.length > 0 ? (
+                      categories.map((cat) => (
+                        <SelectItem key={cat.id} value={String(cat.id)}>
+                          {cat.name}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      !loading && (
+                        <div className="px-2 py-1 text-sm text-gray-500">
+                          No categories available
+                        </div>
+                      )
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <Label className="text-sm font-medium text-gray-700 mb-2 block">Category</Label>
-                  <Select onValueChange={(val) => setValue('category', val)} disabled={loading}>
-                    <SelectTrigger className="border-gray-300 focus:border-[#5CA131] focus:ring-[#5CA131]">
-                      <SelectValue placeholder={loading ? "Loading categories..." : "Select a category"} />
+              <div>
+                <Label className="text-sm text-gray-600 mb-1 block">Select Product Category</Label>
+                {Array.isArray(subcategories) && subcategories.length > 0 ? (
+                  <Select onValueChange={(val) => setValue('subcategory', val)}>
+                    <SelectTrigger className="h-10 border-gray-300 text-sm text-gray-500">
+                      <SelectValue placeholder="Select sub category" />
                     </SelectTrigger>
                     <SelectContent>
-                      {Array.isArray(categories) && categories.length > 0 ? (
-                        categories.map((cat) => (
-                          <SelectItem key={cat.id} value={String(cat.id)}>
-                            {cat.name}
-                          </SelectItem>
-                        ))
-                      ) : (
-                        !loading && (
-                          <div className="px-2 py-1 text-sm text-gray-500">
-                            No categories available
-                          </div>
-                        )
-                      )}
+                      {subcategories.map((sub) => (
+                        <SelectItem key={sub.id} value={String(sub.id)}>
+                          {sub.name}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
-                </div>
-
-                {Array.isArray(subcategories) && subcategories.length > 0 && (
-                  <div>
-                    <Label className="text-sm font-medium text-gray-700 mb-2 block">Subcategory</Label>
-                    <Select onValueChange={(val) => setValue('subcategory', val)}>
-                      <SelectTrigger className="border-gray-300 focus:border-[#5CA131] focus:ring-[#5CA131]">
-                        <SelectValue placeholder="Select a subcategory" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {subcategories.map((sub) => (
-                          <SelectItem key={sub.id} value={String(sub.id)}>
-                            {sub.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                ) : (
+                  <Select disabled>
+                    <SelectTrigger className="h-10 border-gray-300 text-sm text-gray-500">
+                      <SelectValue placeholder="Select sub category" />
+                    </SelectTrigger>
+                  </Select>
                 )}
               </div>
             </div>
 
-            {/* Basic Information Section */}
-            <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">Basic Information</h3>
+            {/* Product Name */}
+            <div>
+              <Label className="text-sm text-gray-600 mb-1 block">
+                Product Name <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                {...register('name', { required: true })}
+                placeholder="Enter product name"
+                className="h-10 border-gray-300 text-sm"
+              />
+              {errors.name && <p className="text-red-500 text-xs mt-1">Product name is required</p>}
+            </div>
 
-              <div className="space-y-4">
-                <div>
-                  <Label className="text-sm font-medium text-gray-700 mb-2 block">
-                    Product Name <span className="text-red-500">*</span>
-                  </Label>
-                  <Input
-                    {...register('name', { required: true })}
-                    placeholder="Enter product name"
-                    className="border-gray-300 focus:border-[#5CA131] focus:ring-[#5CA131]"
-                  />
-                  {errors.name && <p className="text-red-500 text-sm mt-1">Product name is required</p>}
-                </div>
+            {/* Description */}
+            <div>
+              <Label className="text-sm text-gray-600 mb-1 block">Description</Label>
+              <Textarea
+                {...register('description')}
+                placeholder="Enter product description"
+                className="border-gray-300 min-h-[80px] text-sm resize-none"
+              />
+            </div>
 
-                <div>
-                  <Label className="text-sm font-medium text-gray-700 mb-2 block">Description</Label>
-                  <Textarea
-                    {...register('description')}
-                    placeholder="Enter product description"
-                    className="border-gray-300 focus:border-[#5CA131] focus:ring-[#5CA131] min-h-[100px]"
-                  />
-                </div>
+            {/* Manufacturer */}
+            <div>
+              <Label className="text-sm text-gray-600 mb-1 block">Manufacturer</Label>
+              <Input
+                {...register('manufacturer')}
+                placeholder="Manufacturer name"
+                className="h-10 border-gray-300 text-sm"
+              />
+            </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-sm font-medium text-gray-700 mb-2 block">Manufacturer</Label>
-                    <Input
-                      {...register('manufacturer')}
-                      placeholder="Manufacturer name"
-                      className="border-gray-300 focus:border-[#5CA131] focus:ring-[#5CA131]"
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-sm font-medium text-gray-700 mb-2 block">Model</Label>
-                    <Input
-                      {...register('model')}
-                      placeholder="Model number"
-                      className="border-gray-300 focus:border-[#5CA131] focus:ring-[#5CA131]"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-sm font-medium text-gray-700 mb-2 block">
-                      Price <span className="text-red-500">*</span>
-                    </Label>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      {...register('price', { required: true })}
-                      placeholder="0.00"
-                      className="border-gray-300 focus:border-[#5CA131] focus:ring-[#5CA131]"
-                    />
-                    {errors.price && <p className="text-red-500 text-sm mt-1">Price is required</p>}
-                  </div>
-                  <div>
-                    <Label className="text-sm font-medium text-gray-700 mb-2 block">Type</Label>
-                    <Select onValueChange={(val) => setValue('type', val)}>
-                      <SelectTrigger className="border-gray-300 focus:border-[#5CA131] focus:ring-[#5CA131]">
-                        <SelectValue placeholder="Select type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {TYPE_OPTIONS.map((opt) => (
-                          <SelectItem key={opt.value} value={opt.value}>
-                            {opt.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
+            {/* Model and Price */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label className="text-sm text-gray-600 mb-1 block">Model</Label>
+                <Input
+                  {...register('model')}
+                  placeholder="Model number"
+                  className="h-10 border-gray-300 text-sm"
+                />
+              </div>
+              <div>
+                <Label className="text-sm text-gray-600 mb-1 block">
+                  Price <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  {...register('price', { required: true })}
+                  placeholder="0.00"
+                  className="h-10 border-gray-300 text-sm"
+                />
+                {errors.price && <p className="text-red-500 text-xs mt-1">Price is required</p>}
               </div>
             </div>
 
-            {/* SEO Information Section */}
-            <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">SEO Information</h3>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label className="text-sm font-medium text-gray-700 mb-2 block">Meta Title</Label>
-                  <Input
-                    {...register('meta_title')}
-                    placeholder="SEO title"
-                    className="border-gray-300 focus:border-[#5CA131] focus:ring-[#5CA131]"
-                  />
-                </div>
-                <div>
-                  <Label className="text-sm font-medium text-gray-700 mb-2 block">Meta Description</Label>
-                  <Input
-                    {...register('meta_description')}
-                    placeholder="SEO description"
-                    className="border-gray-300 focus:border-[#5CA131] focus:ring-[#5CA131]"
-                  />
-                </div>
+            {/* SEO Information */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label className="text-sm text-gray-600 mb-1 block">Meta Title</Label>
+                <Input
+                  {...register('meta_title')}
+                  placeholder="SEO title"
+                  className="h-10 border-gray-300 text-sm"
+                />
+              </div>
+              <div>
+                <Label className="text-sm text-gray-600 mb-1 block">Meta Description</Label>
+                <Input
+                  {...register('meta_description')}
+                  placeholder="SEO description"
+                  className="h-10 border-gray-300 text-sm"
+                />
               </div>
             </div>
 
-            {/* Dynamic Fields Section */}
-            {(Array.isArray(dynamicFields) && dynamicFields.length > 0) || warning ? (
-              <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
-                <h3 className="text-lg font-semibold text-gray-800 mb-4">Product Details</h3>
-
-                {warning && (
-                  <div className="flex items-center gap-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg mb-4">
-                    <AlertCircle className="w-5 h-5 text-yellow-600" />
-                    <p className="text-yellow-800 text-sm">{warning}</p>
-                  </div>
-                )}
-
-                <div className="space-y-4">
-                  {Array.isArray(dynamicFields) && dynamicFields.map((field) => (
-                    <div key={field.name} className="space-y-2">
-                      <Label className="text-sm font-medium text-gray-700 mb-2 block">
-                        {field.label}
-                        {field.required && <span className="text-red-500 ml-1">*</span>}
-                      </Label>
-                      {renderDynamicField(field)}
-                    </div>
+            {/* Type Selection */}
+            <div>
+              <Label className="text-sm text-gray-600 mb-1 block">Type</Label>
+              <Select onValueChange={(val) => setValue('type', val)}>
+                <SelectTrigger className="h-10 border-gray-300 text-sm text-gray-500">
+                  <SelectValue placeholder="Select type" />
+                </SelectTrigger>
+                <SelectContent>
+                  {TYPE_OPTIONS.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </SelectItem>
                   ))}
-                </div>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Dynamic Fields */}
+            {warning && (
+              <div className="flex items-center gap-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <AlertCircle className="w-4 h-4 text-yellow-600" />
+                <p className="text-yellow-800 text-xs">{warning}</p>
               </div>
-            ) : null}
+            )}
+
+            {Array.isArray(dynamicFields) && dynamicFields.map((field) => (
+              <div key={field.name}>
+                <Label className="text-sm text-gray-600 mb-1 block">
+                  {field.label}
+                  {field.required && <span className="text-red-500 ml-1">*</span>}
+                </Label>
+                {renderDynamicField(field)}
+              </div>
+            ))}
 
             {/* File Upload Section */}
-            <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">Files & Media</h3>
+            <div className="space-y-4">
+              {/* Brochure Upload */}
+              <div>
+                <input
+                  id="brochure-input"
+                  type="file"
+                  accept=".pdf"
+                  style={{ display: 'none' }}
+                  onChange={handleBrochureChange}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="w-full h-10 border-gray-300 text-gray-600 text-sm"
+                  onClick={() => document.getElementById('brochure-input')?.click()}
+                >
+                  <FileText className="w-4 h-4 mr-2" />
+                  Select Brochure (PDF)
+                </Button>
+                {brochureFile && (
+                  <div className="flex items-center gap-2 mt-2 p-2 bg-gray-50 rounded text-xs">
+                    <FileText className="w-3 h-3 text-gray-500" />
+                    <span className="text-gray-700 flex-1 truncate">{brochureFile.name}</span>
+                    <button
+                      type="button"
+                      className="text-red-500 hover:text-red-700"
+                      onClick={removeBrochure}
+                    >
+                      <X size={12} />
+                    </button>
+                  </div>
+                )}
+              </div>
 
-              <div className="space-y-6">
-                {/* Brochure Upload */}
-                <div>
-                  <Label className="text-sm font-medium text-gray-700 mb-2 block">Brochure (PDF)</Label>
-                  <input
-                    id="brochure-input"
-                    type="file"
-                    accept=".pdf"
-                    style={{ display: 'none' }}
-                    onChange={handleBrochureChange}
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="border-[#5CA131] text-[#5CA131] hover:bg-[#5CA131] hover:text-white"
-                    onClick={() => document.getElementById('brochure-input')?.click()}
-                  >
-                    <FileText className="w-4 h-4 mr-2" />
-                    Select Brochure
-                  </Button>
-                  {brochureFile && (
-                    <div className="flex items-center gap-2 mt-2 p-3 bg-gray-50 rounded-lg">
-                      <FileText className="w-4 h-4 text-gray-500" />
-                      <span className="text-sm text-gray-700 flex-1">{brochureFile.name}</span>
-                      <button
-                        type="button"
-                        className="text-red-500 hover:text-red-700 p-1"
-                        onClick={removeBrochure}
-                        aria-label="Remove brochure"
-                      >
-                        <X size={16} />
-                      </button>
-                    </div>
-                  )}
-                </div>
-
-                {/* Images Upload */}
-                <div>
-                  <Label className="text-sm font-medium text-gray-700 mb-2 block">Product Images</Label>
-                  <input
-                    id="images-input"
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    style={{ display: 'none' }}
-                    onChange={handleImagesChange}
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="border-[#5CA131] text-[#5CA131] hover:bg-[#5CA131] hover:text-white"
-                    onClick={() => document.getElementById('images-input')?.click()}
-                  >
-                    <ImageIcon className="w-4 h-4 mr-2" />
-                    Select Images
-                  </Button>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+              {/* Images Upload */}
+              <div>
+                <input
+                  id="images-input"
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  style={{ display: 'none' }}
+                  onChange={handleImagesChange}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="w-full h-10 border-gray-300 text-gray-600 text-sm"
+                  onClick={() => document.getElementById('images-input')?.click()}
+                >
+                  <ImageIcon className="w-4 h-4 mr-2" />
+                  Select Product Images
+                </Button>
+                {imageFiles.length > 0 && (
+                  <div className="grid grid-cols-4 gap-2 mt-2">
                     {imageFiles.map((file, idx) => (
                       <div key={idx} className="relative group">
-                        <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
-                          <Image
-                            src={URL.createObjectURL(file)}
-                            alt="Preview"
-                            fill
-                            className="object-cover"
-                            unoptimized
-                          />
+                        <div className="aspect-square bg-gray-100 rounded overflow-hidden">
+                          <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                            <ImageIcon className="w-6 h-6 text-gray-400" />
+                          </div>
                         </div>
                         <button
                           type="button"
-                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                          className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
                           onClick={() => removeImage(idx)}
-                          aria-label="Remove image"
                         >
-                          <X size={14} />
+                          <X size={10} />
                         </button>
                       </div>
                     ))}
                   </div>
-                </div>
+                )}
               </div>
             </div>
 
             {/* Submit Button */}
-            <div className="flex justify-end">
-              <Button
-                type="submit"
-                disabled={isSubmitting}
-                className="bg-[#5CA131] hover:bg-[#47881F] text-white px-8 py-3 font-medium"
-              >
-                {isSubmitting ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    Creating Product...
-                  </>
-                ) : (
-                  <>
-                    <Package className="w-4 h-4 mr-2" />
-                    Create Product
-                  </>
-                )}
-              </Button>
-            </div>
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-medium"
+            >
+              {isSubmitting ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Creating Product...
+                </>
+              ) : (
+                <>
+                  <Package className="w-4 h-4 mr-2" />
+                  Create Product
+                </>
+              )}
+            </Button>
 
             {message && (
-              <div className={`p-4 rounded-lg text-center ${message.includes('successfully')
-                  ? 'bg-green-50 text-green-800 border border-green-200'
-                  : 'bg-red-50 text-red-800 border border-red-200'
+              <div className={`p-3 rounded text-center text-xs ${message.includes('successfully')
+                ? 'bg-green-50 text-green-800 border border-green-200'
+                : 'bg-red-50 text-red-800 border border-red-200'
                 }`}>
                 {message}
               </div>
             )}
           </form>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   )
 }
