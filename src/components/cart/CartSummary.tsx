@@ -1,99 +1,168 @@
+// src/components/cart/CartSummary.tsx
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Trash2, Minus, Plus } from "lucide-react";
 import api from "@/lib/api";
+import { toast } from "sonner"; // Import sonner for toasts
+import axios from "axios"; // Import axios for error handling
+import Image from 'next/image';
 
-// Type definitions
-interface Product {
+
+// Type definitions based on your API response
+interface ProductDetails {
   id: number;
   name: string;
-  price: number;
-  images: string[];
+  price: string; // Price is string from API
+  images: { id: number; image: string }[]; // Images are objects with 'image' property
 }
 
-interface CartItem {
-  id: number;
-  product: Product;
+interface CartItemApi {
+  id: number; // Cart item ID
+  product: number; // Product ID
+  product_details: ProductDetails; // Full product details are nested
   quantity: number;
+  total_price: number; // Total price for this item, already calculated by backend
+}
+
+interface ApiResponse<T> {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: T[];
 }
 
 interface CartSummaryProps {
   onNext?: () => void;
+  onUpdateTotal?: (total: number) => void; // Prop to pass total amount to the parent page
 }
 
-// cartAPI using Axios instance
 const cartAPI = {
-  getCart: () => api.get<CartItem[]>("/cart/"),
+  getCart: () => api.get<ApiResponse<CartItemApi>>("/cart/"), // Updated to expect ApiResponse
   updateCartItem: (itemId: number, quantity: number) =>
     api.patch(`/cart/${itemId}/`, { quantity }),
   deleteCartItem: (itemId: number) => api.delete(`/cart/${itemId}/`),
+  // Assuming a clear cart endpoint exists
   clearCart: () => api.post("/cart/clear/"),
 };
 
-// ✅ Functional component with props
-const CartSummary: React.FC<CartSummaryProps> = ({ onNext }) => {
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+const CartSummary: React.FC<CartSummaryProps> = ({ onNext, onUpdateTotal }) => {
+  const [cartItems, setCartItems] = useState<CartItemApi[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchCart();
-  }, []);
-
-  const fetchCart = async () => {
+  const fetchCart = useCallback(async () => {
     try {
       setLoading(true);
+      setError(null);
       const response = await cartAPI.getCart();
-      setCartItems(response.data);
-    } catch (err) {
-      setError("Failed to load cart items");
+      setCartItems(response.data.results); // API returns results in an array
+    } catch (err: unknown) {
       console.error("Error fetching cart:", err);
+      setError("Failed to load cart items. Please try again.");
+      toast.error("Failed to load cart items.");
     } finally {
       setLoading(false);
     }
-  };
+  }, []); // No dependencies, runs once on mount
+
+  useEffect(() => {
+    fetchCart();
+  }, [fetchCart]);
+
+  // Update parent's total when cart items change
+  useEffect(() => {
+    if (onUpdateTotal) {
+      onUpdateTotal(calculateTotal());
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cartItems, onUpdateTotal]);
 
   const updateQuantity = async (itemId: number, newQuantity: number) => {
+    if (newQuantity < 1) {
+      toast.error("Quantity cannot be less than 1.");
+      return;
+    }
     try {
       await cartAPI.updateCartItem(itemId, newQuantity);
-      await fetchCart();
-    } catch (err) {
+      // Instead of re-fetching all, we can update locally for a smoother UX
+      setCartItems((prevItems) =>
+        prevItems.map((item) =>
+          item.id === itemId
+            ? {
+                ...item,
+                quantity: newQuantity,
+                total_price:
+                  parseFloat(item.product_details.price) * newQuantity,
+              }
+            : item
+        )
+      );
+      toast.success("Cart item quantity updated.");
+    } catch (err: unknown) {
       console.error("Error updating quantity:", err);
+      if (
+        axios.isAxiosError(err) &&
+        err.response &&
+        err.response.data?.quantity
+      ) {
+        toast.error(
+          `Failed to update quantity: ${err.response.data.quantity[0]}`
+        );
+      } else {
+        toast.error("Failed to update quantity. Please try again.");
+      }
     }
   };
 
   const removeItem = async (itemId: number) => {
     try {
       await cartAPI.deleteCartItem(itemId);
-      await fetchCart();
-    } catch (err) {
+      setCartItems((prevItems) =>
+        prevItems.filter((item) => item.id !== itemId)
+      ); // Optimistically remove from UI
+      toast.success("Product removed from cart.");
+    } catch (err: unknown) {
       console.error("Error removing item:", err);
+      toast.error("Failed to remove item. Please try again.");
     }
   };
 
   const clearCart = async () => {
     try {
-      await cartAPI.clearCart();
+      await cartAPI.clearCart(); // Assuming this endpoint clears all
       setCartItems([]);
-    } catch (err) {
+      toast.success("Cart cleared successfully!");
+    } catch (err: unknown) {
       console.error("Error clearing cart:", err);
+      toast.error("Failed to clear cart. Please try again.");
     }
   };
 
-  const calculateTotal = () => {
+  const calculateSubtotal = () => {
     return cartItems.reduce(
-      (total, item) => total + item.product.price * item.quantity,
+      (total, item) => total + item.total_price, // Use total_price from API
       0
     );
   };
 
+  const calculateTotal = () => {
+    // For now, assuming no discounts or shipping charges applied here.
+    return calculateSubtotal();
+  };
+
+  const formatPrice = (price: number) =>
+    `₹ ${price.toLocaleString("en-IN", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })}`;
+
   if (loading) {
     return (
       <div className="space-y-4">
-        {[...Array(3)].map((_, i) => (
+        {[...Array(3)].map((_, i: number) => (
           <Card key={i} className="animate-pulse">
             <CardContent className="p-4">
               <div className="h-4 bg-gray-200 rounded mb-2"></div>
@@ -109,6 +178,9 @@ const CartSummary: React.FC<CartSummaryProps> = ({ onNext }) => {
     return (
       <div className="text-center py-8">
         <p className="text-red-500">{error}</p>
+        <Button onClick={fetchCart} className="mt-4">
+          Retry Loading Cart
+        </Button>
       </div>
     );
   }
@@ -130,33 +202,44 @@ const CartSummary: React.FC<CartSummaryProps> = ({ onNext }) => {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-semibold">Cart Summary</h2>
-        <Button variant="outline" onClick={clearCart}>
+        <Button
+          variant="outline"
+          onClick={clearCart}
+          disabled={cartItems.length === 0}
+        >
           Clear Cart
         </Button>
       </div>
 
-      {cartItems.map(item => (
+      {cartItems.map((item) => (
         <Card key={item.id}>
           <CardContent className="p-4">
             <div className="flex items-center gap-4">
-              <img
-                src={item.product.images?.[0] || "/no-product.png"}
-                alt={item.product.name}
+              <Image
+                src={
+                  item.product_details.images?.[0]?.image || "/no-product.png"
+                }
+                alt={item.product_details.name || "Product Image"}
+                width={64}
+                height={64}
                 className="w-16 h-16 object-cover rounded"
+                unoptimized={item.product_details.images?.[0]?.image?.startsWith(
+                  "http"
+                )}
               />
+
               <div className="flex-1">
-                <h3 className="font-semibold">{item.product.name}</h3>
+                <h3 className="font-semibold">{item.product_details.name}</h3>
                 <p className="text-gray-600 text-sm">
-                  ${item.product.price} each
+                  {formatPrice(parseFloat(item.product_details.price))} each
                 </p>
               </div>
               <div className="flex items-center gap-2">
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() =>
-                    updateQuantity(item.id, Math.max(1, item.quantity - 1))
-                  }
+                  onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                  disabled={item.quantity <= 1}
                 >
                   <Minus className="h-4 w-4" />
                 </Button>
@@ -170,7 +253,7 @@ const CartSummary: React.FC<CartSummaryProps> = ({ onNext }) => {
                 </Button>
                 <Button
                   size="sm"
-                  variant="outline"
+                  variant="destructive" // Use destructive variant for delete
                   onClick={() => removeItem(item.id)}
                 >
                   <Trash2 className="h-4 w-4" />
@@ -189,7 +272,7 @@ const CartSummary: React.FC<CartSummaryProps> = ({ onNext }) => {
           <div className="space-y-2">
             <div className="flex justify-between">
               <span>Subtotal:</span>
-              <span>${calculateTotal().toFixed(2)}</span>
+              <span>{formatPrice(calculateSubtotal())}</span>
             </div>
             <div className="flex justify-between">
               <span>Shipping:</span>
@@ -198,16 +281,20 @@ const CartSummary: React.FC<CartSummaryProps> = ({ onNext }) => {
             <div className="border-t pt-2">
               <div className="flex justify-between font-semibold">
                 <span>Total:</span>
-                <span>${calculateTotal().toFixed(2)}</span>
+                <span>{formatPrice(calculateTotal())}</span>
               </div>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* ⏭ Proceed Button */}
+      {/* Proceed Button */}
       {onNext && (
-        <Button className="w-full mt-4" onClick={onNext}>
+        <Button
+          className="w-full mt-4"
+          onClick={onNext}
+          disabled={cartItems.length === 0}
+        >
           Proceed to Address
         </Button>
       )}
@@ -215,5 +302,4 @@ const CartSummary: React.FC<CartSummaryProps> = ({ onNext }) => {
   );
 };
 
-// ✅ Correct export
 export default CartSummary;
