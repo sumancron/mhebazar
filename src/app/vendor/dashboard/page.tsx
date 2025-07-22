@@ -149,13 +149,14 @@ export default function DashboardStats() {
         let allNotifications: Notification[] = [...(dashboardData.notifications || [])];
 
         if (dashboardData.vendor_details?.is_approved) {
-          const productsData = await vendorApi.getVendorProducts();
-          setProducts(productsData);
+          const productsData = await vendorApi.getDashboardData();
+          console.log(productsData)
+          setProducts(productsData?.products);
 
           // ** Generate notifications for pending products **
-          const productNotifications: Notification[] = productsData
-            .filter(product => !product.is_active) // Find pending products
-            .map(product => ({
+          const productNotifications: Notification[] = productsData.products
+            .filter((product: { is_active: any; }) => !product.is_active) // Find pending products
+            .map((product: { id: any; name: any; }) => ({
               id: `prod-${product.id}`,
               type: 'warning',
               message: `Your product "${product.name}" is pending review by the admin.`,
