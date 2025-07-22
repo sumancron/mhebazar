@@ -93,25 +93,16 @@ const vendorApi = {
       throw error;
     }
   },
-  async getVendorProducts(): Promise<Product[]> {
-    try {
-      const response = await api.get('/products/');
-      return response.data.results || response.data;
-    } catch (error) {
-      console.error('Error fetching vendor products:', error);
-      return [];
-    }
-  },
+  // async getVendorProducts(): Promise<Product[]> {
+  //   try {
+  //     const response = await api.get('/products/');
+  //     return response.data.results || response.data;
+  //   } catch (error) {
+  //     console.error('Error fetching vendor products:', error);
+  //     return [];
+  //   }
+  // },
 };
-
-// --- HELPER FUNCTIONS ---
-// const topSearchedProducts = [
-//   { id: 1, name: "Forklift Attachments", image: "" },
-//   { id: 2, name: "Hand Pallet Truck", image: "" },
-//   { id: 3, name: "Electric Pallet Truck (BOPT)", image: "" },
-//   { id: 4, name: "Platform Truck", image: "" },
-//   { id: 5, name: "Scissors Lift", image: "" },
-// ];
 
 function getImageSrc(images?: { image: string }[] | string) {
   if (typeof images === 'string' && images) return images;

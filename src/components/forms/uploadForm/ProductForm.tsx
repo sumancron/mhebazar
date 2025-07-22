@@ -13,7 +13,6 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { X, FileText, Image as ImageIcon, Package, AlertCircle } from 'lucide-react'
 import Image from 'next/image'
-import Cookies from 'js-cookie'
 import api from '@/lib/api'
 import { useUser } from '@/context/UserContext'
 
@@ -170,25 +169,25 @@ export default function ProductForm() {
     }))
   }
 
-  const handleBrochureChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setBrochureFile(e.target.files[0])
-    }
-  }
+  // const handleBrochureChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   if (e.target.files && e.target.files[0]) {
+  //     setBrochureFile(e.target.files[0])
+  //   }
+  // }
 
-  const removeBrochure = () => {
-    setBrochureFile(null)
-  }
+  // const removeBrochure = () => {
+  //   setBrochureFile(null)
+  // }
 
-  const handleImagesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      setImageFiles(Array.from(e.target.files))
-    }
-  }
+  // const handleImagesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   if (e.target.files) {
+  //     setImageFiles(Array.from(e.target.files))
+  //   }
+  // }
 
-  const removeImage = (idx: number) => {
-    setImageFiles(files => files.filter((_, i) => i !== idx))
-  }
+  // const removeImage = (idx: number) => {
+  //   setImageFiles(files => files.filter((_, i) => i !== idx))
+  // }
 
   // user
   const { user } = useUser();
@@ -209,38 +208,64 @@ export default function ProductForm() {
     formData.append('price', data.price.toString())
     formData.append('type', data.type)
     formData.append('product_details', JSON.stringify(dynamicValues))
-    if (brochureFile) formData.append('brochure', brochureFile)
-    imageFiles.forEach((img) => formData.append('images', img))
-  
-    let token = Cookies.get("access_token");
-    const refresh = Cookies.get("refresh_token");
 
-    if (!token) {
-      const refreshResponse = await axios.post(
-        `${API_BASE_URL}/token/refresh/`,
-        {refresh},
-        { withCredentials: true } // refresh_token read from HttpOnly cookie
-      );
-
-      token = refreshResponse.data?.access;
-
-      if (token) {
-        Cookies.set("access_token", token, {
-          expires: 1 / 24, // 1 hour
-          secure: true,
-          sameSite: "Lax",
-        });
-      } else {
-        throw new Error("No new access token returned");
-      }
-    }
+    // Note: Don't include brochure and images in initial product creation
+    // They will be uploaded separately using dedicated endpoints
 
     try {
       setIsSubmitting(true)
-      await api.post(`${API_BASE_URL}/products/`, formData, {
-        headers: { "Authorization": `Bearer ${token}`, 'Content-Type': 'multipart/form-data' },
-      })
+
+      // Step 1: Create the product first
+      const productResponse = await api.post(`/products/`, formData)
+      const productId = productResponse.data.id // Assuming the API returns the created product's ID
+
       setMessage('Product created successfully!')
+
+      // Step 2: Upload brochure if provided
+      if (brochureFile) {
+        const brochureFormData = new FormData()
+        brochureFormData.append('brochure', brochureFile)
+
+        try {
+          await api.post(`/products/${productId}/upload_brochure/`, brochureFormData, {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+            },
+          })
+          console.log("Brochure uploaded successfully")
+        } catch (brochureError) {
+          console.error("Failed to upload brochure:", brochureError)
+          // Optionally show a warning but don't fail the entire process
+          setMessage(prev => prev + ' (Warning: Brochure upload failed)')
+        }
+      }
+
+      // Step 3: Upload images if provided
+      if (imageFiles.length > 0) {
+        const imagesFormData = new FormData()
+        imageFiles.forEach((img) => imagesFormData.append('images', img))
+
+        try {
+          await api.post(`/products/${productId}/upload_images/`, imagesFormData, {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+            },
+          })
+          console.log("Images uploaded successfully")
+        } catch (imagesError) {
+          console.error("Failed to upload images:", imagesError)
+          // Optionally show a warning but don't fail the entire process
+          setMessage(prev => prev + ' (Warning: Images upload failed)')
+        }
+      }
+
+      // Step 4: Update success message
+      setMessage('Product created successfully with all files uploaded!')
+
+      // Optional: Reset form or redirect
+      // resetForm()
+      // router.push('/products')
+
     } catch (error) {
       console.error(error)
       setMessage('Failed to create product.')
@@ -248,6 +273,41 @@ export default function ProductForm() {
       setIsSubmitting(false)
     }
   }
+
+  // Helper functions for file handling
+  const handleBrochureChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (file && file.type === 'application/pdf') {
+      setBrochureFile(file)
+    } else {
+      alert('Please select a valid PDF file')
+    }
+  }
+
+  const handleImagesChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files
+    if (files) {
+      const validImages = Array.from(files).filter(file =>
+        file.type.startsWith('image/')
+      )
+      if (validImages.length !== files.length) {
+        alert('Some files were skipped. Please select only image files.')
+      }
+      setImageFiles(prev => [...prev, ...validImages])
+    }
+  }
+
+  const removeBrochure = () => {
+    setBrochureFile(null)
+    // Clear the file input
+    const input = document.getElementById('brochure-input') as HTMLInputElement
+    if (input) input.value = ''
+  }
+
+  const removeImage = (index: number) => {
+    setImageFiles(prev => prev.filter((_, idx) => idx !== index))
+  }
+
 
   const renderDynamicField = (field: ProductDetailField) => {
     switch (field.type) {
