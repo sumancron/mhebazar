@@ -1,3 +1,4 @@
+//src/app/account/page.tsx
 "use client";
 import { useEffect, useState, ChangeEvent } from "react";
 import Image from "next/image";
