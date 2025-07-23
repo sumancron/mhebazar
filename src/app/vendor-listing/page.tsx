@@ -1,58 +1,139 @@
-import Breadcrumb from "@/components/elements/Breadcrumb";
+/* eslint-disable @typescript-eslint/no-unused-vars */
+"use client";
 import VendorCard from "@/components/vendor-listing/VendorCard";
-import Link from "next/link";
-
 import { Metadata } from "next";
-import { UserPlusIcon } from "lucide-react";
 import api from "@/lib/api";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { useState, useEffect } from "react";
 
-export const metadata: Metadata = {
-  title: "Vendors at MHEBazar",
-};
+// export const metadata: Metadata = {
+//   title: "Vendors at MHEBazar",
+// };
+
+export default function VendorsPageWrapper() {
+  return <ClientSideVendorsPage />;
+}
+
+function sortPreferred(vendors: Vendor[]) {
+  return vendors.sort((a, b) => {
+    const aPreferred = /mhebazar|greentech/i.test(a.brand || a.company_name || a.full_name);
+    const bPreferred = /mhebazar|greentech/i.test(b.brand || b.company_name || b.full_name);
+    return bPreferred ? 1 : aPreferred ? -1 : 0;
+  });
+}
 
 type Vendor = {
   id: number;
-  name: string;
-  logo: string;
-  items: number;
+  username: string;
+  email: string;
+  full_name: string;
+  company_name: string;
+  company_email: string;
+  brand: string;
+  is_approved: boolean;
+  application_date: string;
 };
 
-export default async function VendorsPage() {
-  let vendors: Vendor[] = [];
-  try {
-    const response = await api.get("/vendor/approved/");
-    vendors = response.data.results || [];
-  } catch {
-    // Optionally log error or show a message
-    vendors = [];
-  }
+type VendorResponse = {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: Vendor[];
+};
+
+function ClientSideVendorsPage() {
+  const [vendors, setVendors] = useState<Vendor[]>([]);
+  const [filtered, setFiltered] = useState<Vendor[]>([]);
+  const [search, setSearch] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const perPage = 12;
+
+  useEffect(() => {
+    const fetchVendors = async () => {
+      try {
+        const response = await api.get<VendorResponse>("/vendor/approved/");
+        const sorted = sortPreferred(response.data.results || []);
+        setVendors(sorted);
+        setFiltered(sorted);
+        setTotalCount(response.data.count || 0);
+      } catch (error) {
+        console.error("Error fetching vendors:", error);
+      }
+    };
+
+    fetchVendors();
+  }, []);
+
+  useEffect(() => {
+    const lowerSearch = search.toLowerCase();
+    const filteredList = vendors.filter((v) =>
+      (v.brand || v.company_name || v.full_name)
+        .toLowerCase()
+        .includes(lowerSearch)
+    );
+    setFiltered(filteredList);
+    setCurrentPage(1);
+  }, [search, vendors]);
+
+  const paginated = filtered.slice((currentPage - 1) * perPage, currentPage * perPage);
+  const totalPages = Math.ceil(filtered.length / perPage);
 
   return (
-    <>
-      <Breadcrumb
-        items={[
-          { label: "Home", href: "/" },
-          { label: "vendors", href: "/vendors" },
-        ]}
-      />
-
-      <div className="max-w-7xl mx-auto px-4 flex justify-end items-center mt-6">
-        <Link href="/become-vendor" passHref>
-          <div className="inline-flex items-center gap-2 bg-[#5CA131] hover:scale-105 text-white font-medium px-5 py-2 rounded-lg shadow transition">
-            <UserPlusIcon className="w-5 h-5" />
-            Become a Vendor
-          </div>
-        </Link>
+    <main className="max-w-7xl mx-auto px-4 py-10">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+        <h1 className="text-2xl font-bold text-gray-800">Registered Vendors</h1>
+        <div className="flex gap-2 w-full md:w-1/2">
+          <Input
+            placeholder="Search by name, brand, or company..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full"
+          />
+        </div>
       </div>
 
-      <main className="max-w-7xl mx-auto px-4 py-10">
-        <h1 className="text-2xl font-semibold mb-6">Vendors at MHEBazar</h1>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 justify-items-center">
-          {vendors.map((vendor) => (
+      {paginated.length === 0 ? (
+        <div className="text-center py-20">
+          <p className="text-gray-500 text-lg">No approved vendors found.</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          {paginated.map((vendor) => (
             <VendorCard key={vendor.id} vendor={vendor} />
           ))}
         </div>
-      </main>
-    </>
+      )}
+
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <div className="flex justify-center items-center mt-10 gap-2 flex-wrap">
+          <Button
+            variant="outline"
+            disabled={currentPage === 1}
+            onClick={() => setCurrentPage((p) => p - 1)}
+          >
+            Previous
+          </Button>
+          {[...Array(totalPages)].map((_, i) => (
+            <Button
+              key={i}
+              variant={currentPage === i + 1 ? "default" : "outline"}
+              onClick={() => setCurrentPage(i + 1)}
+            >
+              {i + 1}
+            </Button>
+          ))}
+          <Button
+            variant="outline"
+            disabled={currentPage === totalPages}
+            onClick={() => setCurrentPage((p) => p + 1)}
+          >
+            Next
+          </Button>
+        </div>
+      )}
+    </main>
   );
 }
