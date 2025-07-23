@@ -1,9 +1,9 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Dialog, DialogClose, DialogContent } from "@/components/ui/dialog";
+// import { Dialog, DialogClose, DialogContent } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { X } from "lucide-react";
+// import { X } from "lucide-react";
 import React, { JSX } from "react";
 import Image from 'next/image';
 
@@ -27,8 +27,8 @@ const formFields = [
 
 const QuoteForm = (): JSX.Element => {
   return (
-    <Dialog defaultOpen={true}>
-      <DialogContent className="sm:max-w-[736px] p-0 border-none">
+    <div className="h-[90vh] overflow-auto">
+      <div className="sm:max-w-[736px] p-0 border-none">
         <Card className="border-none">
           <CardContent className="flex flex-col w-full items-start gap-6 p-6 relative bg-white">
             <div className="flex-col items-start gap-6 self-stretch w-full flex">
@@ -111,10 +111,6 @@ const QuoteForm = (): JSX.Element => {
               </div>
             </div>
 
-            <DialogClose className="absolute w-6 h-6 top-3.5 right-3.5 flex items-center justify-center">
-              <X className="w-[18px] h-[18px]" />
-            </DialogClose>
-
             <Button className="w-full h-auto items-center justify-center gap-3 p-4 bg-[#5ca131] rounded-md hover:bg-hover">
               <span className="[font-family:'Inter-Bold',Helvetica] font-bold text-white text-[13px] tracking-[0] leading-[normal]">
                 Submit
@@ -122,8 +118,8 @@ const QuoteForm = (): JSX.Element => {
             </Button>
           </CardContent>
         </Card>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </div>
   );
 };
 

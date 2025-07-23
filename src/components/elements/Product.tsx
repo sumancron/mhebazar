@@ -14,9 +14,6 @@ import QuoteForm from "../forms/enquiryForm/quotesForm";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
 
@@ -228,7 +225,7 @@ const ProductCard = ({
                     Get a Quote
                   </button>
                 </DialogTrigger>
-                <DialogContent>
+                <DialogContent className="w-fit">
                   <QuoteForm />
                 </DialogContent>
               </Dialog>
