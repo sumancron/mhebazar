@@ -1,7 +1,7 @@
 // components/cart/AddressStep.tsx
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MapPin, Plus, Edit, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -12,7 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { toast } from 'sonner';
 import api from '@/lib/api';
-import { useUser } from '@/context/UserContext';
+import { useUser } from '@/context/UserContext'; // Import useUser hook for user object
 
 interface Address {
   id: string; // Client-side generated ID for managing addresses in array
@@ -31,7 +31,7 @@ interface AddressStepProps {
 }
 
 export default function AddressStep({ onNext, onBack }: AddressStepProps) {
-  const { user, fetchUser } = useUser(); // Get user and fetchUser from context
+  const { user } = useUser(); // Only get user, not fetchUser
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
   const [showAddNew, setShowAddNew] = useState(false);
@@ -48,15 +48,14 @@ export default function AddressStep({ onNext, onBack }: AddressStepProps) {
   });
   const [isLoadingAddresses, setIsLoadingAddresses] = useState(true);
 
-  // Fetch user addresses from backend on component mount
+  // Load user addresses from backend on component mount or when user changes
   useEffect(() => {
     const loadUserAddresses = async () => {
       if (user?.id) {
         setIsLoadingAddresses(true);
         try {
           // Fetch the latest user data including the address JSONField
-          // Using `/users/me/` is generally better for the authenticated user's own profile
-          const response = await api.get(`/users/me/`); //
+          const response = await api.get(`/users/me/`); // Using /users/me/ endpoint
           const userAddresses = response.data.address; // This is the JSONField 'address'
           if (Array.isArray(userAddresses)) {
             setAddresses(userAddresses as Address[]);
@@ -66,8 +65,7 @@ export default function AddressStep({ onNext, onBack }: AddressStepProps) {
               if (lastSelectedId && userAddresses.some((addr: Address) => addr.id === lastSelectedId)) {
                 setSelectedAddressId(lastSelectedId);
               } else {
-                // Select the first address if no previous selection or if saved ID is invalid
-                setSelectedAddressId(userAddresses[0].id);
+                setSelectedAddressId(userAddresses[0].id); // Select the first address if no previous selection or if saved ID is invalid
               }
             } else {
               setSelectedAddressId(null);
@@ -92,7 +90,7 @@ export default function AddressStep({ onNext, onBack }: AddressStepProps) {
     };
 
     loadUserAddresses();
-  }, [user]);
+  }, [user]); // Re-fetch if user object changes
 
   // Function to update user's address JSONField in the backend
   const updateUserAddressesInDb = useCallback(async (updatedAddresses: Address[]) => {
@@ -100,26 +98,29 @@ export default function AddressStep({ onNext, onBack }: AddressStepProps) {
       toast.error("User not logged in. Cannot save addresses.");
       return;
     }
-    // Convert the addresses array to a FormData object
-    // This is crucial for backends configured to parse multipart/form-data
-    // for PATCH/PUT requests, especially if other fields are file uploads.
+
+    // Convert the addresses array to a JSON string
+    const addressJsonString = JSON.stringify(updatedAddresses);
+
+    // Create a FormData object for PATCH request (even if only sending JSON, some DRF setups expect FormData)
     const formData = new FormData();
-    formData.append('address', JSON.stringify(updatedAddresses)); //
+    formData.append('address', addressJsonString);
 
     try {
-      // Use FormData for patch request
-      await api.patch(`/users/${user.id}/`, formData, { //
+      // Use PATCH to update the specific user's profile, including the address JSONField
+      await api.patch(`/users/${user.id}/`, formData, {
         headers: {
-          'Content-Type': 'multipart/form-data', // Explicitly set content type
+          'Content-Type': 'multipart/form-data', // Important for file uploads and FormData
         },
       });
       toast.success("Addresses synced with your account.");
-      fetchUser(); // Refresh user context to ensure address field is up to date
+      // No fetchUser() call needed here. The UI updates optimistically,
+      // and on next load, addresses will be fetched from DB via useEffect.
     } catch (error) {
       console.error("Failed to update user addresses in DB:", error);
       toast.error("Failed to save addresses to your account.");
     }
-  }, [user, fetchUser]);
+  }, [user]);
 
 
   const resetForm = useCallback(() => {
@@ -174,8 +175,10 @@ export default function AddressStep({ onNext, onBack }: AddressStepProps) {
 
     setAddresses(updatedAddresses);
     updateUserAddressesInDb(updatedAddresses); // Sync with backend
-    if (!selectedAddressId || addresses.length === 0 || (isEditing && selectedAddressId !== editingAddressId)) {
-      setSelectedAddressId(isEditing && editingAddressId ? editingAddressId : updatedAddresses[updatedAddresses.length - 1].id);
+    // After adding/updating, ensure selection is valid
+    if (!selectedAddressId || updatedAddresses.length === 1 || (isEditing && selectedAddressId === editingAddressId)) {
+        // If no address was selected, or it's the first address, or the currently selected address was just edited, select it
+        setSelectedAddressId(isEditing && editingAddressId ? editingAddressId : updatedAddresses[updatedAddresses.length - 1].id);
     }
     resetForm();
   }, [addresses, isEditing, editingAddressId, currentAddressForm, resetForm, selectedAddressId, updateUserAddressesInDb]);
@@ -215,7 +218,7 @@ export default function AddressStep({ onNext, onBack }: AddressStepProps) {
       if (typeof window !== 'undefined') {
         localStorage.setItem('selectedShippingAddress', fullAddressString);
         localStorage.setItem('selectedShippingPhoneNumber', selected.phone);
-        localStorage.setItem('selectedShippingAddressId', selected.id);
+        localStorage.setItem('selectedShippingAddressId', selected.id); // Save ID for persistence
       }
       onNext(fullAddressString, selected.phone);
     } else {

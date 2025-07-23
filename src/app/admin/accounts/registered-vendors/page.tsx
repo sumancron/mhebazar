@@ -51,7 +51,7 @@ export default async function VendorsPage() {
         </Link>
       </div> */}
 
-      <main className="max-w-7xl mx-auto px-4 py-10">
+      <main className="max-w-7xl mx-auto px-4 py-10 overflow-auto">
         <h1 className="text-2xl font-semibold mb-6">Registered Vendors</h1>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 justify-items-center">
           {vendors?.map(vendor => (
