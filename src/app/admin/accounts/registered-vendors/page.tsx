@@ -6,19 +6,10 @@ import { Metadata } from "next";
 // import { useEffect } from "react";
 // import { UserPlusIcon } from "lucide-react";
 import api from "@/lib/api";
+import { Vendor } from "@/types";
 
 export const metadata: Metadata = {
   title: "Vendors at MHEBazar",
-};
-
-type Vendor = {
-  id: number;
-  brand: string;
-  logo: string;
-  items: number;
-  user_info: {
-    id:number
-  };
 };
 
 

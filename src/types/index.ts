@@ -33,6 +33,22 @@ export type Product = {
   user_name: string;
 };
 
+export type Vendor = {
+  id: number;
+  brand: string;
+  username: string;
+  email: string;
+  full_name: string;
+  company_name: string;
+  company_email: string;
+  user_info: {
+    id: number;
+    profile_photo: string;
+  };
+  is_approved: boolean;
+  application_date: string;
+};
+
 export interface Category {
   id: string;
   name: string;
@@ -51,22 +67,6 @@ export interface Subcategory {
   description?: string;
   categoryId: string;
   productCount?: number;
-}
-
-export interface Vendor {
-  id: string;
-  name: string;
-  description?: string;
-  logo?: string;
-  banner?: string;
-  contactInfo: {
-    email: string;
-    phone: string;
-    address: string;
-  };
-  rating?: number;
-  totalProducts?: number;
-  isVerified: boolean;
 }
 
 export interface User {

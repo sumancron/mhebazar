@@ -5,20 +5,8 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { Vendor } from "@/types";
 
-type Vendor = {
-  brand: string;
-  username: string;
-  email: string;
-  full_name: string;
-  company_name: string;
-  company_email: string;
-  user_info: {
-    id: number
-  };
-  is_approved: boolean;
-  application_date: string;
-};
 
 type Props = {
   vendor: Vendor;
@@ -42,8 +30,8 @@ export default function VendorCard({ vendor }: Props) {
   const vendorSlug = toSlug(vendorDisplayName);
 
   const href = isAdminPath
-    ? `/admin/accounts/registered-vendors/${vendor.name}/?user=${vendor.id}`
-    : `/vendor-listing/${vendor.name}`;
+    ? `/admin/accounts/registered-vendors/${vendor.brand}/?user=${vendor.user_info.id}`
+    : `/vendor-listing/${vendor.brand}`;
 
   return (
     <div className="relative border border-gray-200 rounded-2xl p-5 flex flex-col items-center shadow-sm hover:shadow-md hover:scale-[1.02] transition-all duration-200 bg-white w-full max-w-xs min-w-[240px]">
@@ -53,8 +41,8 @@ export default function VendorCard({ vendor }: Props) {
       {/* Logo / Placeholder */}
       <div className="relative w-24 h-20 mb-4 rounded-xl border border-gray-100 bg-gray-50 flex items-center justify-center overflow-hidden">
         <Image
-          src={vendor.logo}
-          alt={vendor.name}
+          src={vendor.user_info.profile_photo}
+          alt={vendor.brand}
           fill
           className="object-contain"
           sizes="96px"
@@ -63,7 +51,7 @@ export default function VendorCard({ vendor }: Props) {
 
       {/* Name */}
       <h3 className="text-base font-semibold text-center text-gray-900 mb-6">
-        {vendor.name}
+        {vendor.brand}
       </h3>
 
       {/* Company Name (if different) */}

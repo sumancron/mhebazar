@@ -24,7 +24,9 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Sheet,
   SheetContent,
-  SheetTrigger,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
 } from "@/components/ui/sheet";
 import Image from "next/image";
 
@@ -49,7 +51,7 @@ const VendorProducts = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  // const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
 
   const [currentPage, setCurrentPage] = useState(1);
   const [sortBy, setSortBy] = useState('Latest');
@@ -254,11 +256,13 @@ const VendorProducts = () => {
   // Handle product edit
   const handleEditClick = async (productId: number) => {
     try {
+      setEditedProduct(undefined);
       const response = await api.get(`/products/${productId}/`);
       setEditedProduct(response.data);
-      // setIsSheetOpen(true);
+      setIsSheetOpen(true);
     } catch (error) {
       console.error('Error fetching product details:', error);
+      toast.error("Failed to load product data for editing.");
     }
   };
 
@@ -276,10 +280,6 @@ const VendorProducts = () => {
     }
   };
 
-  // Handle view product
-  // const handleViewProduct = (productId: number) => {
-  //   window.open(`/products/${productId}`, '_blank');
-  // };
 
   // Star Rating Component
   const StarRating = ({ average_rating }: { average_rating: number }) => (
@@ -540,17 +540,16 @@ const VendorProducts = () => {
                           </button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-[160px]">
-                          <Sheet>
-                            <SheetTrigger asChild>
-                              <DropdownMenuItem onClick={() => handleEditClick(product.id)}>
-                                <Pencil className="mr-2 h-4 w-4" />
-                                Edit
-                              </DropdownMenuItem>
-                            </SheetTrigger>
-                            <SheetContent>
-                              <ProductForm product={editedProduct} />
-                            </SheetContent>
-                          </Sheet>
+                          <DropdownMenuItem
+                            onSelect={(e) => {
+                              e.preventDefault();
+                              handleEditClick(product.id);
+                            }}
+                            className="cursor-pointer"
+                          >
+                            <Pencil className="mr-2 h-4 w-4" />
+                            <span>Edit</span>
+                          </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => window.open(`/products-details/${product.id}`, '_blank')}>
                             <ExternalLink className="mr-2 h-4 w-4" />
                             View Details
@@ -622,6 +621,22 @@ const VendorProducts = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
+        <SheetContent className="w-full sm:max-w-md p-0 flex flex-col">
+          <SheetHeader className="p-4 border-b">
+            <SheetTitle>{editedProduct ? 'Edit Product' : 'Add Product'}</SheetTitle>
+            <SheetDescription>
+              Make changes to the product details below.
+            </SheetDescription>
+          </SheetHeader>
+
+          {/* The form goes AFTER the header and has its own scrolling */}
+          <div className="flex-1 overflow-y-auto">
+            {editedProduct && <ProductForm product={editedProduct} />}
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 };
