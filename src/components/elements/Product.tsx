@@ -91,73 +91,67 @@ const ProductCard = ({
 
   return (
     <div
-      className={`bg-white rounded-2xl shadow-sm border border-[#ecf0f7] overflow-hidden ${!isAvailable ? 'opacity-50 pointer-events-none' : ''
+      className={`bg-white rounded-2xl shadow-sm border border-[#ecf0f7] overflow-hidden flex flex-col w-80 h-96 ${!isAvailable ? "opacity-50 pointer-events-none" : ""
         }`}
     >
       {/* Image Container */}
-      <div className="w-full sm:w-48 h-48 sm:h-32 flex-shrink-0 relative">
-
-        {/* Product Image */}
-        <Link href={productDetailUrl} className="flex justify-center items-center h-full w-full">
+      <div className="relative w-full h-48 flex-shrink-0">
+        <Link href={productDetailUrl} className="block w-full h-full">
           <Image
             src={image}
             alt={title}
-            width={300}
-            height={300}
-            className="object-cover w-full h-full rounded-t-2xl sm:rounded-l-2xl sm:rounded-t-none"
+            width={320}
+            height={192}
+            className="object-cover w-full h-full rounded-t-2xl"
             quality={85}
           />
         </Link>
-
-
         {/* Action Icons Top-Left */}
-        <div className="absolute top-4 left-4 flex flex-col gap-2.5">
+        <div className="absolute top-3 left-3 flex flex-col gap-2">
           <button
             onClick={() => onWishlistClick(id)}
-            className="bg-[#f3faff] hover:bg-[#f3faff] p-2.5 rounded-full border-0 cursor-pointer"
+            className="bg-[#f3faff] hover:bg-[#e6f7ee] p-2 rounded-full border border-[#e0e7ef] shadow transition"
             aria-label="Add to wishlist"
             disabled={!isPurchasable}
           >
-            <Heart className={`w-3.5 h-3.5 ${isWishlisted ? "fill-red-500 text-red-500" : "text-gray-600"}`} />
+            <Heart className={`w-4 h-4 ${isWishlisted ? "fill-red-500 text-red-500" : "text-gray-600"}`} />
           </button>
           <button
             onClick={() => onCompareClick(productData)}
-            className="bg-[#f3faff] hover:bg-[#f3faff] p-2.5 rounded-full border-0 cursor-pointer"
+            className="bg-[#f3faff] hover:bg-[#e6f7ee] p-2 rounded-full border border-[#e0e7ef] shadow transition"
             aria-label="Compare"
             disabled={!isPurchasable}
           >
-            <Repeat className="w-3.5 h-3.5 text-gray-600" />
+            <Repeat className="w-4 h-4 text-gray-600" />
           </button>
           <button
             onClick={() => onShareClick(window.location.origin + productDetailUrl, title)}
-            className="bg-[#f3faff] hover:bg-[#f3faff] p-2.5 rounded-full border-0 cursor-pointer"
+            className="bg-[#f3faff] hover:bg-[#e6f7ee] p-2 rounded-full border border-[#e0e7ef] shadow transition"
             aria-label="Share"
           >
-            <Share2 className="w-3.5 h-3.5 text-gray-600" />
+            <Share2 className="w-4 h-4 text-gray-600" />
           </button>
         </div>
-
       </div>
 
       {/* Content */}
-      <div className="p-3 flex-1 flex flex-col justify-between w-full h-[45%]">
+      <div className="flex-1 flex flex-col justify-between px-4 py-3">
         <div>
           <Link href={productDetailUrl}>
-            <h3 className="text-sm font-medium text-gray-900 mb-1 line-clamp-2 hover:text-green-700 transition-colors">
+            <h3 className="text-base font-semibold text-gray-900 mb-1 line-clamp-2 hover:text-green-700 transition-colors">
               {title}
             </h3>
           </Link>
           <p className="text-xs text-gray-500 mb-2 line-clamp-1">{subtitle}</p>
-
           {/* Price */}
           <div className="mb-3">
             {hide_price ? (
-              <span className="text-lg font-semibold text-gray-500">
+              <span className="text-lg font-semibold text-gray-400 tracking-wider">
                 {currency} *******
               </span>
             ) : (
-              <span className="text-lg font-semibold text-green-600">
-                {currency} {typeof price === 'number' ? price.toLocaleString('en-IN') : price}
+              <span className="text-lg font-semibold text-green-600 tracking-wide">
+                {currency} {typeof price === "number" ? price.toLocaleString("en-IN") : price}
               </span>
             )}
           </div>
@@ -165,30 +159,31 @@ const ProductCard = ({
 
         {/* Action Buttons */}
         {directSale ? (
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-row gap-2 w-full">
             {isInCart ? (
-              <div className="grid grid-cols-[1fr_2fr_1fr_1fr] items-center w-full bg-green-100 text-green-700 font-medium py-1 px-1 rounded-md text-sm">
+              <div className="flex items-center bg-green-50 text-green-700 font-medium py-1 px-1 rounded-md text-sm w-[30%]">
                 <button
                   onClick={() => cartItemId && onDecreaseQuantity(cartItemId)}
                   disabled={currentCartQuantity <= 1 || !isPurchasable}
-                  className="w-full h-8 flex items-center justify-center rounded-sm hover:bg-green-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="h-8 flex items-center justify-center rounded hover:bg-green-100 disabled:opacity-50 disabled:cursor-not-allowed"
                   aria-label="Decrease quantity"
                 >
                   <Minus className="w-4 h-4" />
                 </button>
-                <span className="text-green-800 font-semibold text-center h-8 flex items-center justify-center">{currentCartQuantity}</span>
+                <span className="text-green-800 font-semibold text-center h-8 flex items-center justify-center px-2">
+                  {currentCartQuantity}
+                </span>
                 <button
                   onClick={() => cartItemId && onIncreaseQuantity(cartItemId)}
                   disabled={!isPurchasable}
-                  className="w-full h-8 flex items-center justify-center rounded-sm hover:bg-green-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="h-8 flex items-center justify-center rounded hover:bg-green-100 disabled:opacity-50 disabled:cursor-not-allowed"
                   aria-label="Increase quantity"
                 >
                   <Plus className="w-4 h-4" />
                 </button>
-                {/* Remove from Cart button */}
                 <button
                   onClick={() => cartItemId && onRemoveFromCart(cartItemId)}
-                  className="w-full h-8 flex items-center justify-center rounded-sm text-red-500 hover:bg-red-100 transition-colors"
+                  className="h-8 flex items-center justify-center rounded text-red-500 hover:bg-red-50 transition-colors ml-1"
                   aria-label="Remove from cart"
                   title="Remove from Cart"
                 >
@@ -198,17 +193,17 @@ const ProductCard = ({
             ) : (
               <button
                 onClick={() => onAddToCartClick(id)}
-                className="h-auto rounded-lg bg-[#5ca131] hover:bg-[#4a8a29] p-[13px] text-white transition-colors duration-200"
+                className="flex items-center justify-center gap-2 rounded-lg bg-[#5ca131] hover:bg-[#4a8a29] py-2 px-4 text-white font-medium transition-colors duration-200 w-[30%]"
                 aria-label="Add to cart"
                 disabled={!isPurchasable}
               >
-                <ShoppingCart className="w-4 h-4" /> Add to Cart
+                <ShoppingCart className="w-4 h-4" />
               </button>
             )}
 
             <button
               onClick={() => onBuyNowClick(id)}
-              className="h-auto flex-1 rounded-lg border border-[#5ca131] text-[#5ca131] hover:text-[#5ca131] hover:bg-transparent py-[11px] px-4 font-medium text-[16px] leading-[24px] transition-colors duration-200"
+              className="rounded-lg border border-[#5ca131] text-[#5ca131] hover:bg-[#f3faff] py-2 px-4 font-medium text-base leading-6 transition-colors duration-200 w-[70%]"
               aria-label="Buy now"
               disabled={!isPurchasable}
             >
@@ -218,8 +213,7 @@ const ProductCard = ({
               <Dialog>
                 <DialogTrigger>
                   <button
-                    // onClick={() => toast.info('Request a quote logic here!')}
-                    className="h-auto rounded-lg bg-[#5ca131] hover:bg-[#4a8a29] p-[13px] text-white transition-colors duration-200"
+                    className="flex items-center justify-center rounded-lg bg-[#5ca131] hover:bg-[#4a8a29] py-2 px-4 text-white font-medium transition-colors duration-200"
                     aria-label="Get a quote"
                   >
                     Get a Quote
@@ -235,7 +229,7 @@ const ProductCard = ({
           <Dialog>
             <DialogTrigger>
               <button
-                className="h-auto rounded-lg bg-[#5ca131] hover:bg-[#4a8a29] p-[13px] text-white transition-colors duration-200"
+                className="flex items-center justify-center rounded-lg bg-[#5ca131] hover:bg-[#4a8a29] py-2 px-4 text-white font-medium transition-colors duration-200 w-full"
                 aria-label="Get a quote"
                 disabled={!is_active}
               >
