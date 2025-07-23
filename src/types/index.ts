@@ -1,22 +1,37 @@
 // MHE Bazar Type Definitions
 
-export interface Product {
-  id: string;
+export type Product = {
+  id: number;
+  category: number;
+  category_name: string;
+  subcategory: number;
+  subcategory_name: string;
   name: string;
-  description?: string;
-  price: number;
-  category: string;
-  subcategory?: string;
-  brand?: string;
-  model?: string;
-  specifications?: Record<string, string>;
-  images: string[];
-  isAvailable: boolean;
-  isForRental: boolean;
-  vendor?: Vendor;
-  createdAt: Date;
-  updatedAt: Date;
-}
+  description: string;
+  meta_title: string;
+  meta_description: string;
+  manufacturer: string;
+  model: string;
+  price: string;
+  type: string;
+  brochure: string | null;
+  images: Array<{
+    id: number;
+    image: string;
+    product: number;
+  }>;
+  is_active: boolean;
+  direct_sale: boolean;
+  hide_price: boolean;
+  online_payment: boolean;
+  stock_quantity: number;
+  average_rating: number | null;
+  product_details: string;
+  created_at: string;
+  updated_at: string;
+  user: number;
+  user_name: string;
+};
 
 export interface Category {
   id: string;

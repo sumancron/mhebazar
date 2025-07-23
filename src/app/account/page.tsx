@@ -101,8 +101,8 @@ export default function AccountPage() {
       try {
         // Replace with your API endpoints
         const [userRes, addrRes] = await Promise.all([
-          fetch("/api/user"),
-          fetch("/api/addresses"),
+          fetch("/user"),
+          fetch("/addresses"),
         ]);
         if (userRes.ok) setUser(await userRes.json());
         if (addrRes.ok) setAddresses(await addrRes.json());

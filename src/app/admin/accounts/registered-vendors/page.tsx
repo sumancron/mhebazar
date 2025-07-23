@@ -13,9 +13,12 @@ export const metadata: Metadata = {
 
 type Vendor = {
   id: number;
-  name: string;
+  brand: string;
   logo: string;
   items: number;
+  user_info: {
+    id:number
+  };
 };
 
 
@@ -24,6 +27,7 @@ export default async function VendorsPage() {
   try {
     const response = await api.get("/vendor/approved/");
     vendors = response.data.results || [];
+    // console.log("Vendors:", vendors);
   } catch{
     // Optionally log error or show a message
     vendors = [];

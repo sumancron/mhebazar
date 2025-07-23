@@ -82,6 +82,11 @@ const CompleteDashboard = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [rejectionReason, setRejectionReason] = useState("");
 
+  // New state declarations for product rejection
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [isProductRejectModalOpen, setIsProductRejectModalOpen] = useState(false);
+  const [productRejectionReason, setProductRejectionReason] = useState("");
+
   // --- Auth Check and Data Fetching ---
   const fetchData = useCallback(async () => {
     setIsLoading(true);
@@ -177,11 +182,19 @@ const CompleteDashboard = () => {
     }
   };
 
+  // Modify the handleProductAction function
   const handleProductAction = async (productId: number, action: 'approve' | 'reject') => {
-    // This assumes your product approval endpoint is structured like `/api/products/{id}/approve/`.
-    // Please adjust if your backend has a different URL pattern.
+    if (action === 'reject') {
+      const product = Object.values(pendingProducts)
+        .flat()
+        .find(p => p.id === productId);
+      setSelectedProduct(product || null);
+      setIsProductRejectModalOpen(true);
+      return;
+    }
+
     try {
-      await api.post(`/api/products/${productId}/${action}/`);
+      await api.post(`/products/${productId}/${action}/`);
       toast.success(`Product ${action === 'approve' ? 'Approved' : 'Rejected'}`, {
         description: `The product has been successfully ${action === 'approve' ? 'approved' : 'rejected'}.`
       });
@@ -189,6 +202,26 @@ const CompleteDashboard = () => {
     } catch (error) {
       console.error(`Failed to ${action} product:`, error);
       toast.error("Action Failed", { description: `Could not ${action} the product.` });
+    }
+  };
+
+  // Add this new function to handle product rejection submission
+  const handleProductRejectSubmit = async () => {
+    if (!selectedProduct || !productRejectionReason.trim()) {
+      return toast.error("Validation Error", { description: "Rejection reason is required." });
+    }
+    try {
+      await api.post(`/products/${selectedProduct.id}/reject/`, {
+        reason: productRejectionReason,
+      });
+      toast.success("Product Rejected", { description: "The product has been rejected." });
+      setIsProductRejectModalOpen(false);
+      setProductRejectionReason("");
+      setSelectedProduct(null);
+      fetchData();
+    } catch (error: any) {
+      console.error("Failed to reject product:", error);
+      toast.error("Rejection Failed", { description: error.response?.data?.error || "An error occurred." });
     }
   };
 
@@ -316,6 +349,30 @@ const CompleteDashboard = () => {
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsModalOpen(false)}>Cancel</Button>
             <Button variant="destructive" onClick={handleVendorRejectSubmit}>Submit Rejection</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Product Rejection Modal */}
+      <Dialog open={isProductRejectModalOpen} onOpenChange={setIsProductRejectModalOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Reject Product</DialogTitle>
+            <DialogDescription>
+              Provide a reason for rejecting the product <span className="font-semibold">{selectedProduct?.name}</span>. This reason will be sent to the vendor.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <Textarea
+              placeholder="Type your reason here..."
+              value={productRejectionReason}
+              onChange={(e) => setProductRejectionReason(e.target.value)}
+              className="min-h-[100px]"
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsProductRejectModalOpen(false)}>Cancel</Button>
+            <Button variant="destructive" onClick={handleProductRejectSubmit}>Submit Rejection</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

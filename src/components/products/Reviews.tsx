@@ -84,7 +84,7 @@ export default function ReviewSection({ slug }: { slug: string }) {
   useEffect(() => {
     async function fetchData() {
       try {
-        // const res = await fetch(`/api/reviews/${slug}`);
+        // const res = await fetch(`/reviews/${slug}`);
         // if (!res.ok) throw new Error("No data");
         // const reviewData = await res.json();
         // setData(reviewData);

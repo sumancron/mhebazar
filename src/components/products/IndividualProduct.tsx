@@ -83,7 +83,7 @@ export default function ProductSection({ slug }: { slug: string }) {
     // Simulate API call
     async function fetchData() {
       try {
-        // const res = await fetch(`/api/products/${slug}`);
+        // const res = await fetch(`/products/${slug}`);
         // if (!res.ok) throw new Error("No data");
         // const prod = await res.json();
         // setData(prod);

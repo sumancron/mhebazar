@@ -85,7 +85,7 @@ const SideFilter = ({
 
   // Fetch unique manufacturers (assuming an endpoint or derive from products if fetching all)
   // For simplicity, let's assume a dedicated endpoint or we'll fetch products to derive unique manufacturers.
-  // In a real scenario, you'd have an API endpoint like /api/manufacturers/
+  // In a real scenario, you'd have an API endpoint like /manufacturers/
   const fetchManufacturers = useCallback(async () => {
     try {
       const response = await api.get<{ results: { manufacturer: string }[] }>("/products/unique-manufacturers/"); // Example endpoint

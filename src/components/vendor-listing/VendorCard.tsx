@@ -7,9 +7,12 @@ import { useEffect, useState } from "react";
 
 type Vendor = {
   id: number;
-  name: string;
+  brand: string;
   logo: string;
   items: number;
+  user_info: {
+    id:number
+  };
 };
 
 type Props = {
@@ -18,14 +21,15 @@ type Props = {
 
 export default function VendorCard({ vendor }: Props) {
   const [isAdminPath, setIsAdminPath] = useState(false);
+  // console.log(vendor);
 
   useEffect(() => {
     setIsAdminPath(window.location.pathname.startsWith("/admin/"));
   }, []);
 
   const href = isAdminPath
-    ? `/admin/accounts/registered-vendors/${vendor.name}/?user=${vendor.id}`
-    : `/vendor-listing/${vendor.name}`;
+    ? `/admin/accounts/registered-vendors/${vendor.brand}/?user=${vendor.user_info.id}`
+    : `/vendor-listing/${vendor.brand}/?user=${vendor.user_info.id}`;
 
   return (
     <div className="relative border border-[#E5F4E8] rounded-2xl p-6 flex flex-col items-center shadow-sm hover:shadow-lg hover:scale-[1.03] transition-all duration-200 bg-white min-w-[220px] max-w-[260px] w-full">
@@ -37,7 +41,7 @@ export default function VendorCard({ vendor }: Props) {
       <div className="relative w-24 h-20 mb-4 rounded-xl border border-gray-100 bg-gray-50 flex items-center justify-center overflow-hidden">
         <Image
           src={vendor.logo}
-          alt={vendor.name}
+          alt={vendor.brand}
           fill
           className="object-contain"
           sizes="96px"
@@ -45,7 +49,7 @@ export default function VendorCard({ vendor }: Props) {
       </div>
       {/* Name */}
       <h3 className="text-base font-semibold text-center text-gray-900 mb-6">
-        {vendor.name}
+        {vendor.brand}
       </h3>
       {/* Buttons */}
 
