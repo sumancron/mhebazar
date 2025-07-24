@@ -21,12 +21,12 @@ const Sidebar = () => {
     {
       icon: LayoutDashboard,
       label: 'Dashboard',
-      href: '/admin/dashboard',
+      href: '/admin/',
     },
     {
       icon: FileText,
       label: 'All Forms',
-      href: '/admin/forms',
+      // href: '/admin/forms',
       subItems: [
         { label: 'Quotes Forms', href: '/admin/forms/quotes' },
         { label: 'Rent and Buy Forms', href: '/admin/forms/rent-buy' },
@@ -38,7 +38,7 @@ const Sidebar = () => {
     {
       icon: Users,
       label: 'Registered User',
-      href: '/admin/accounts',
+      // href: '/admin/accounts',
       subItems: [
         { label: 'Registered Vendors', href: '/admin/accounts/registered-vendors' },
         { label: 'Registered Users', href: '/admin/accounts/users' },
@@ -47,7 +47,7 @@ const Sidebar = () => {
     {
       icon: UserPlus,
       label: 'Add Sub Admin',
-      href: '/admin/add-admin',
+      // href: '/admin/add-admin',
       subItems: [
         { label: 'Create Admin', href: '/admin/add-admin/create' },
         { label: 'Admin Permissions', href: '/admin/add-admin/permissions' },
@@ -56,19 +56,17 @@ const Sidebar = () => {
     },
     {
       icon: Plus,
-      label: 'Add Product',
-      href: '/admin/add-product',
+      label: 'Add Products',
+      // href: '/admin/add-product',
       subItems: [
-        { label: 'New Product', href: '/admin/add-product/new' },
-        { label: 'Product Categories', href: '/admin/add-product/categories' },
-        { label: 'Bulk Import', href: '/admin/add-product/bulk' },
-        { label: 'Product Templates', href: '/admin/add-product/templates' }
+        { label: 'Categories', href: '/admin/add-products/categories' },
+        { label: 'Subcategories', href: '/admin/add-products/subcategories' },
       ]
     },
     {
       icon: MessageSquare,
       label: 'Enquiry History',
-      href: '/admin/enquiry',
+      // href: '/admin/enquiry',
       subItems: [
         { label: 'Recent Enquiries', href: '/admin/enquiry/recent' },
         { label: 'Pending Enquiries', href: '/admin/enquiry/pending' },
@@ -138,9 +136,12 @@ const Sidebar = () => {
 
                       {isExpanded && (
                         <>
-                          <span className="ml-2 text-gray-700 group-hover:text-[#5da031] font-medium flex-1 group-hover:font-semibold">
+                          {item.href ? (<Link href={item.href} className="ml-2 text-gray-700 group-hover:text-[#5da031] font-medium flex-1 group-hover:font-semibold">
                             {item.label}
-                          </span>
+                          </Link>) : (<span className="ml-2 text-gray-700 group-hover:text-[#5da031] font-medium flex-1 group-hover:font-semibold">
+                            {item.label}
+                          </span>)}
+
 
                           {item.subItems && (
                             <div className="p-1 rounded group-hover:bg-[#5da031]/10">

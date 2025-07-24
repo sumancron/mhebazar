@@ -12,7 +12,7 @@ export default function RentalForm({ productId }: { productId: number }) {
   const [notes, setNotes] = useState("")
 
   const handleSubmit = async () => {
-    await axios.post("/api/rentals/", {
+    await axios.post("/rentals/", {
       product: productId,
       start_date: startDate,
       end_date: endDate,

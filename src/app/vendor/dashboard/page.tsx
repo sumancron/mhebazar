@@ -7,12 +7,21 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import AddProductForm from "@/components/forms/product/AddProduct";
+// import AddProductForm from "@/components/forms/product/AddProduct";
 import React from "react";
 import api from "@/lib/api";
 
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+} from "@/components/ui/sheet"
+import ProductForm from "@/components/forms/uploadForm/ProductForm";
+import Link from "next/link";
+
 // --- TYPE DEFINITIONS (Corrected based on API responses) ---
 interface VendorDashboardData {
+  products: any;
   vendor_details: VendorApplication;
   stats: VendorStats;
   notifications: any[]; // API returns empty, so we keep it flexible
@@ -93,15 +102,6 @@ const vendorApi = {
       throw error;
     }
   },
-  // async getVendorProducts(): Promise<Product[]> {
-  //   try {
-  //     const response = await api.get('/products/');
-  //     return response.data.results || response.data;
-  //   } catch (error) {
-  //     console.error('Error fetching vendor products:', error);
-  //     return [];
-  //   }
-  // },
 };
 
 function getImageSrc(images?: { image: string }[] | string) {
@@ -127,7 +127,7 @@ function getStatusIcon(isActive: boolean) {
 
 // --- MAIN COMPONENT ---
 export default function DashboardStats() {
-  const [open, setOpen] = useState(false);
+  // const [open, setOpen] = useState(false);
   const [stats, setStats] = useState<VendorStats | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [application, setApplication] = useState<VendorApplication | null>(null);
@@ -204,7 +204,7 @@ export default function DashboardStats() {
 
   return (
     <>
-      <AddProductForm open={open} onClose={() => setOpen(false)} />
+      {/* <AddProductForm open={open} onClose={() => setOpen(false)} /> */}
 
       <div className="space-y-8 px-2 sm:px-6 py-6 max-w-7xl mx-auto">
         {/* Vendor Status Alert */}
@@ -322,13 +322,20 @@ export default function DashboardStats() {
                 Your Products ({products.length})
               </h2>
               {application?.is_approved && (
-                <Button
-                  onClick={() => setOpen(true)}
-                  variant="default"
-                  className="bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded flex items-center gap-2"
-                >
-                  + Add Product
-                </Button>
+                <Sheet>
+                  <SheetTrigger>
+                    <Button
+                      // onClick={() => setOpen(true)}
+                      variant="default"
+                      className="bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded flex items-center gap-2"
+                    >
+                      + Add Product
+                    </Button>
+                  </SheetTrigger>
+                  <SheetContent>
+                    <ProductForm />
+                  </SheetContent>
+                </Sheet>
               )}
             </div>
 
@@ -346,9 +353,16 @@ export default function DashboardStats() {
                 <ShoppingCart className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                 <h3 className="font-semibold text-gray-900 mb-2">No Products Yet</h3>
                 <p className="text-gray-600 mb-4">Start by adding your first product to begin selling.</p>
-                <Button onClick={() => setOpen(true)} className="bg-green-600 hover:bg-green-700">
-                  Add Your First Product
-                </Button>
+                <Sheet>
+                  <SheetTrigger>
+                    <Button className="bg-green-600 hover:bg-green-700">
+                      Add Your First Product
+                    </Button>
+                  </SheetTrigger>
+                  <SheetContent>
+                    <ProductForm />
+                  </SheetContent>
+                </Sheet>
               </Card>
             ) : (
               <div className="space-y-4">
@@ -399,9 +413,10 @@ export default function DashboardStats() {
                     </div>
                   </div>
                 ))}
-                <Button variant="outline" className="w-full font-semibold text-base text-green-600 border-green-600 hover:bg-green-50 hover:text-green-600 py-6">
-                  View All Products
-                </Button>
+                <Link href="/vendor/product-list">
+                  <Button variant="outline" className="w-full font-semibold text-base text-green-600 border-green-600 hover:bg-green-50 hover:text-green-600 py-6">
+                    View All Products
+                  </Button></Link>
               </div>
             )}
           </div>

@@ -2,16 +2,56 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 // Correctly import useSearchParams
-import { useSearchParams, useRouter } from 'next/navigation';
-import { Eye, FileSpreadsheet, Trash2, CheckCircle } from 'lucide-react';
+import { useSearchParams } from 'next/navigation';
+import { FileSpreadsheet, Trash2, CheckCircle, PackageX, PackageCheck } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { MoreVertical, Pencil, ExternalLink } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import Image from "next/image";
+
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from 'sonner';
 import api from '@/lib/api';
+// Import ProductForm - adjust the import path as needed
+import ProductForm from "@/components/forms/uploadForm/ProductForm";
+import { Product } from '@/types';
+
+
+// Define proper error type
+interface ApiError {
+  response?: {
+    data?: {
+      error?: string;
+    };
+  };
+}
 
 const VendorProducts = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
 
   const [currentPage, setCurrentPage] = useState(1);
   const [sortBy, setSortBy] = useState('Latest');
@@ -20,9 +60,16 @@ const VendorProducts = () => {
   const [selectedProducts, setSelectedProducts] = useState<Set<number>>(new Set());
   const [selectAll, setSelectAll] = useState(false);
 
+  // Add new state variables for modals and actions
+  const [isProductRejectModalOpen, setIsProductRejectModalOpen] = useState(false);
+  const [productRejectionReason, setProductRejectionReason] = useState("");
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [editedProduct, setEditedProduct] = useState<Product | undefined>(undefined);
+
+
   // Use useSearchParams to get the vendor ID from the query string
   const searchParams = useSearchParams();
-  const router = useRouter();
+  // const router = useRouter();
   const vendorId = searchParams.get('user');
 
   // Fetch products for the specific vendor
@@ -73,8 +120,8 @@ const VendorProducts = () => {
 
     return [...filtered].sort((a, b) => {
       switch (sortBy) {
-        case 'Latest': return new Date(b.dateAdded).getTime() - new Date(a.dateAdded).getTime();
-        case 'Oldest': return new Date(a.dateAdded).getTime() - new Date(b.dateAdded).getTime();
+        case 'Latest': return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
+        case 'Oldest': return new Date(a.updated_at).getTime() - new Date(b.updated_at).getTime();
         case 'Name A-Z': return a.name.localeCompare(b.name);
         case 'Name Z-A': return b.name.localeCompare(a.name);
         default: return 0;
@@ -131,8 +178,7 @@ const VendorProducts = () => {
       await api.patch('products/bulk-update-status/', {
         ids: Array.from(selectedProducts),
         is_active: true,
-      }
-      );
+      });
 
       toast.success(`Approved ${selectedProducts.size} products.`);
       setProducts(prev =>
@@ -148,7 +194,79 @@ const VendorProducts = () => {
     }
   };
 
+  // Individual product approve/reject functionality
+  const handleProductAction = async (productId: number, action: 'approve' | 'reject') => {
+    if (action === 'reject') {
+      const product = products.find(p => p.id === productId);
+      setSelectedProduct(product || null);
+      setIsProductRejectModalOpen(true);
+      return;
+    }
 
+    try {
+      await api.post(`products/${productId}/${action}/`);
+      toast.success(`Product ${action === 'approve' ? 'Approved' : 'Rejected'}`, {
+        description: `The product has been successfully ${action === 'approve' ? 'approved' : 'rejected'}.`
+      });
+
+      // Update local state to reflect the change
+      setProducts(prev =>
+        prev.map(p =>
+          p.id === productId ? { ...p, is_active: action === 'approve' } : p
+        )
+      );
+    } catch (error) {
+      console.error(`Failed to ${action} product:`, error);
+      toast.error("Action Failed", { description: `Could not ${action} the product.` });
+    }
+  };
+
+  // Handle product rejection submission
+  const handleProductRejectSubmit = async () => {
+    if (!selectedProduct || !productRejectionReason.trim()) {
+      return toast.error("Validation Error", { description: "Rejection reason is required." });
+    }
+
+    try {
+      await api.post(`products/${selectedProduct.id}/reject/`, {
+        reason: productRejectionReason,
+      });
+
+      toast.success("Product Rejected", { description: "The product has been rejected." });
+
+      // Update local state
+      setProducts(prev =>
+        prev.map(p =>
+          p.id === selectedProduct.id ? { ...p, is_active: false } : p
+        )
+      );
+
+      setIsProductRejectModalOpen(false);
+      setProductRejectionReason("");
+      setSelectedProduct(null);
+    } catch (error) {
+      const apiError = error as ApiError;
+      console.error("Failed to reject product:", error);
+      toast.error("Rejection Failed", {
+        description: apiError.response?.data?.error || "An error occurred."
+      });
+    }
+  };
+
+  // Handle product edit
+  const handleEditClick = async (productId: number) => {
+    try {
+      setEditedProduct(undefined);
+      const response = await api.get(`/products/${productId}/`);
+      setEditedProduct(response.data);
+      setIsSheetOpen(true);
+    } catch (error) {
+      console.error('Error fetching product details:', error);
+      toast.error("Failed to load product data for editing.");
+    }
+  };
+
+  // Handle product delete
   const handleDeleteProduct = async (productId: number, productTitle: string) => {
     if (window.confirm(`Are you sure you want to delete "${productTitle}"?`)) {
       try {
@@ -162,10 +280,8 @@ const VendorProducts = () => {
     }
   };
 
-  const handleViewProduct = (productId: number) => {
-    router.push(`/admin/products/edit/${productId}`);
-  };
 
+  // Star Rating Component
   const StarRating = ({ average_rating }: { average_rating: number }) => (
     <div className="flex space-x-1">
       {[1, 2, 3, 4, 5].map((star) => (
@@ -191,6 +307,21 @@ const VendorProducts = () => {
       {children}
     </button>
   );
+
+  // Add this helper function for image URLs
+  const getImageUrl = (imageUrl: string | undefined): string => {
+    if (!imageUrl) return '/no-product.png';
+
+    try {
+      if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+        return imageUrl;
+      }
+      return `${process.env.NEXT_PUBLIC_API_URL}${imageUrl}`;
+    } catch (error) {
+      console.error('Error constructing image URL:', error);
+      return '/no-product.png';
+    }
+  };
 
   if (loading) {
     return <div className="flex justify-center items-center h-screen">Loading products...</div>;
@@ -274,20 +405,24 @@ const VendorProducts = () => {
         </div>
         {/* --- END: Implemented Filter Bar --- */}
 
-
         <div className="bg-white rounded-lg shadow-sm overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow className="bg-gray-50">
                 <TableHead className="w-12 px-4">
-                  <input type="checkbox" className="rounded" checked={selectAll} onChange={handleSelectAll} />
+                  <input
+                    type="checkbox"
+                    className="rounded"
+                    checked={selectAll}
+                    onChange={handleSelectAll}
+                  />
                 </TableHead>
-                <TableHead className="w-1/3">Title</TableHead>
+                <TableHead>Product</TableHead>
                 <TableHead>Category</TableHead>
-                <TableHead>Sub-category</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Approved</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead>Updated</TableHead>
+                <TableHead className="text-center">Quick Actions</TableHead>
+                <TableHead className="text-right">More Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -303,32 +438,131 @@ const VendorProducts = () => {
                       />
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center space-x-3">
-                        <img src={product.image || ""} alt={product.name} className="w-16 h-16 object-cover rounded-lg bg-gray-200" />
-                        <div>
-                          <h3 className="font-medium text-gray-900 text-sm leading-tight">
+                      <div className="flex items-center gap-4">
+                        <div className="relative h-24 w-24 flex-shrink-0">
+                          <Image
+                            src={product.images?.[0]?.image
+                              ? getImageUrl(product.images[0].image)
+                              : "/no-product.png"
+                            }
+                            alt={product.name}
+                            fill
+                            className="object-contain rounded border border-gray-100 bg-white"
+                            sizes="96px"
+                            priority
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.src = "/no-product.png";
+                            }}
+                          />
+                          <span className={`absolute top-2 left-2 ${(() => {
+                            switch (product.type) {
+                              case 'new': return 'bg-blue-500';
+                              case 'used': return 'bg-orange-500';
+                              case 'rental': return 'bg-purple-500';
+                              case 'attachments': return 'bg-pink-500';
+                              default: return 'bg-gray-500';
+                            }
+                          })()
+                            } text-white px-2 py-0.5 rounded-md text-xs font-semibold shadow`}>
+                            {product.type}
+                          </span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-semibold text-gray-900 truncate">
                             {product.name}
                           </h3>
-                          <StarRating average_rating={product.average_rating} />
+                          <div className="flex items-center gap-2 mt-1">
+                            <StarRating average_rating={product.average_rating ?? 0} />
+                          </div>
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell><span className="text-sm text-gray-600">{product.category_name}</span></TableCell>
-                    <TableCell><span className="text-sm text-gray-600">{product.subcategory_name}</span></TableCell>
-                    <TableCell><span className="text-sm text-gray-600">{product.type}</span></TableCell>
                     <TableCell>
-                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${product.is_active
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-yellow-100 text-yellow-800'
-                        }`}>
-                        {product.is_active ? 'Approved' : 'Pending'}
+                      <span className="text-xs px-2 py-0.5 rounded font-medium bg-gray-50 text-gray-600">
+                        {product.category_name}
                       </span>
                     </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex items-center justify-end space-x-2">
-                        <button onClick={() => handleViewProduct(product.id)} className="p-2 text-gray-500 hover:text-blue-600" title="View/Update Product"><Eye className="w-4 h-4" /></button>
-                        <button onClick={() => handleDeleteProduct(product.id, product.name)} className="p-2 text-gray-500 hover:text-red-600" title="Delete Product"><Trash2 className="w-4 h-4" /></button>
+                    <TableCell>
+                      <span className={`text-xs px-2 py-0.5 rounded font-medium ${product.is_active
+                        ? "text-green-600 bg-green-50"
+                        : "text-yellow-600 bg-yellow-50"
+                        }`}>
+                        {product.is_active ? "Approved" : "Pending"}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <span className="text-xs text-gray-400">
+                        {new Date(product.updated_at).toLocaleDateString()}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <div className="flex items-center justify-center space-x-2">
+                        {!product.is_active && (
+                          <>
+                            <Button
+                              size="sm"
+                              className="bg-green-600 hover:bg-green-700 text-white h-8 px-2"
+                              onClick={() => handleProductAction(product.id, 'approve')}
+                            >
+                              <PackageCheck className="w-3 h-3 mr-1" />
+                              Approve
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="text-red-600 border-red-500 hover:bg-red-50 h-8 px-2"
+                              onClick={() => handleProductAction(product.id, 'reject')}
+                            >
+                              <PackageX className="w-3 h-3 mr-1" />
+                              Reject
+                            </Button>
+                          </>
+                        )}
+                        {product.is_active && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="text-red-600 border-red-500 hover:bg-red-50 h-8 px-2"
+                            onClick={() => handleProductAction(product.id, 'reject')}
+                          >
+                            <PackageX className="w-3 h-3 mr-1" />
+                            Reject
+                          </Button>
+                        )}
                       </div>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button className="h-8 w-8 p-0 hover:bg-gray-100 rounded-full">
+                            <MoreVertical className="h-4 w-4 mx-auto" />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-[160px]">
+                          <DropdownMenuItem
+                            onSelect={(e) => {
+                              e.preventDefault();
+                              handleEditClick(product.id);
+                            }}
+                            className="cursor-pointer"
+                          >
+                            <Pencil className="mr-2 h-4 w-4" />
+                            <span>Edit</span>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => window.open(`/products-details/${product.id}`, '_blank')}>
+                            <ExternalLink className="mr-2 h-4 w-4" />
+                            View Details
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => handleDeleteProduct(product.id, product.name)}
+                            className="text-red-600 focus:text-red-600"
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </TableCell>
                   </TableRow>
                 ))
@@ -363,6 +597,46 @@ const VendorProducts = () => {
         {/* --- END: Implemented Pagination --- */}
 
       </div>
+
+      {/* Product Rejection Modal */}
+      <Dialog open={isProductRejectModalOpen} onOpenChange={setIsProductRejectModalOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Reject Product</DialogTitle>
+            <DialogDescription>
+              Provide a reason for rejecting the product <span className="font-semibold">{selectedProduct?.name}</span>. This reason will be sent to the vendor.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <Textarea
+              placeholder="Type your reason here..."
+              value={productRejectionReason}
+              onChange={(e) => setProductRejectionReason(e.target.value)}
+              className="min-h-[100px]"
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsProductRejectModalOpen(false)}>Cancel</Button>
+            <Button variant="destructive" onClick={handleProductRejectSubmit}>Submit Rejection</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
+        <SheetContent className="w-full sm:max-w-md p-0 flex flex-col">
+          <SheetHeader className="p-4 border-b">
+            <SheetTitle>{editedProduct ? 'Edit Product' : 'Add Product'}</SheetTitle>
+            <SheetDescription>
+              Make changes to the product details below.
+            </SheetDescription>
+          </SheetHeader>
+
+          {/* The form goes AFTER the header and has its own scrolling */}
+          <div className="flex-1 overflow-y-auto">
+            {editedProduct && <ProductForm product={editedProduct} />}
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 };

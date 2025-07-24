@@ -6,16 +6,10 @@ import { Metadata } from "next";
 // import { useEffect } from "react";
 // import { UserPlusIcon } from "lucide-react";
 import api from "@/lib/api";
+import { Vendor } from "@/types";
 
 export const metadata: Metadata = {
   title: "Vendors at MHEBazar",
-};
-
-type Vendor = {
-  id: number;
-  name: string;
-  logo: string;
-  items: number;
 };
 
 
@@ -24,6 +18,7 @@ export default async function VendorsPage() {
   try {
     const response = await api.get("/vendor/approved/");
     vendors = response.data.results || [];
+    // console.log("Vendors:", vendors);
   } catch{
     // Optionally log error or show a message
     vendors = [];
