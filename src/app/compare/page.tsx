@@ -7,7 +7,7 @@ import { Plus, X } from "lucide-react";
 import Image from "next/image";
 import api from "@/lib/api";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
+// import { useRouter } from "next/navigation";
 
 // Define the Product type based on the API response structure
 type Product = {
@@ -76,7 +76,7 @@ const ComparePage = () => {
   const [searchResults, setSearchResults] = useState<Product[]>([]);
   const [loadingSearch, setLoadingSearch] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const router = useRouter();
+  // const router = useRouter();
 
   // Load products from local storage on component mount
   useEffect(() => {
@@ -140,7 +140,7 @@ const ComparePage = () => {
   // Handle removing a product from the comparison list
   const handleRemoveProduct = (id: number) => {
     const updatedProducts = products.filter((product) => product.id !== id);
-    setProducts(updatedUpdatedProducts);
+    setProducts(updatedProducts);
     localStorage.setItem(COMPARE_KEY, JSON.stringify(updatedProducts));
     if (updatedProducts.length === 0) {
       setSelectedCategory(null); // Reset category if no products are left
@@ -233,7 +233,7 @@ const ComparePage = () => {
               <Plus className="w-12 h-12 text-green-500 mb-3" />
               <span className="text-green-600 font-semibold text-lg text-center">Add Product</span>
               {selectedCategory && (
-                <span className="text-gray-500 text-sm mt-1 text-center">(Only "{selectedCategory}" products)</span>
+                <span className="text-gray-500 text-sm mt-1 text-center">(Only &quot;{selectedCategory}&quot; products)</span>
               )}
             </div>
           )}
@@ -271,7 +271,7 @@ const ComparePage = () => {
               <tbody className="divide-y divide-gray-200">
                 {tableFields.map((field) => (
                   <tr key={field.key} className="border-t last:border-b">
-                    <td className="py-4 px-4 font-medium text-gray-700 bg-gray-50 sticky left-0 bg-gray-50 z-10">
+                    <td className="py-4 px-4 font-medium text-gray-700 sticky left-0 bg-gray-50 z-10">
                       {field.label}
                     </td>
                     {Array.from({ length: maxColumns }).map((_, idx) => {
@@ -386,7 +386,7 @@ const ComparePage = () => {
             </h3>
             {selectedCategory && (
               <p className="text-sm text-gray-600 mb-4 text-center">
-                Only products from the "<span className="font-semibold">{selectedCategory}</span>" category can be added.
+                Only products from the &quot;<span className="font-semibold">{selectedCategory}</span>&quot; category can be added.
               </p>
             )}
             <input
