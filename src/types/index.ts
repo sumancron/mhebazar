@@ -50,23 +50,18 @@ export type Vendor = {
 };
 
 export interface Category {
-  id: string;
+  id: number;
   name: string;
   description?: string;
-  image?: string;
-  banner?: string;
+  cat_image?: string;
+  cat_banner?: string;
   subcategories?: Subcategory[];
-  productCount?: number;
-  metaTitle?: string;
-  metaDescription?: string;
-}
-
-export interface Subcategory {
-  id: string;
-  name: string;
-  description?: string;
-  categoryId: string;
-  productCount?: number;
+  product_count?: number;
+  product_details: ProductDetailField[];
+  meta_title?: string;
+  meta_description?: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface User {
@@ -201,4 +196,90 @@ export interface RegisterForm {
   email: string;
   password: string;
   confirmPassword: string;
+}
+
+export interface ProductDetailField {
+  name: string;
+  label: string;
+  type: "text" | "textarea" | "select" | "radio" | "checkbox";
+  required: boolean;
+  options?: FieldOption[];
+  placeholder?: string;
+}
+
+export interface FieldOption {
+  label: string;
+  value: string;
+}
+
+export interface CategoryFormData {
+  name: string;
+  description?: string;
+  meta_title?: string;
+  meta_description?: string;
+  cat_image?: FileList;
+  cat_banner?: FileList;
+  product_details: ProductDetailField[];
+}
+
+export interface ApiError {
+  response?: {
+    data?: {
+      error?: string;
+    };
+  };
+}
+
+export interface FieldOption {
+  label: string;
+  value: string;
+}
+
+export interface ProductDetailField {
+  name: string;
+  label: string;
+  type: "text" | "textarea" | "select" | "radio" | "checkbox";
+  required: boolean;
+  options?: FieldOption[];
+  placeholder?: string;
+}
+
+export interface Category {
+  id: number;
+  name: string;
+  description?: string;
+  meta_title?: string;
+  meta_description?: string;
+  cat_image?: string;
+  cat_banner?: string;
+  created_at: string;
+  updated_at: string;
+  is_active: boolean;
+}
+
+export interface Subcategory {
+  id: number;
+  category: number;
+  category_name: string;
+  name: string;
+  description?: string ;
+  meta_title?: string;
+  meta_description?: string;
+  sub_image?: string ;
+  sub_banner?: string ;
+  product_details: ProductDetailField[] | null;
+  created_at: string;
+  updated_at: string;
+  product_count?: number;
+}
+
+export interface SubcategoryFormData {
+  category: string;
+  name: string;
+  description?: string;
+  meta_title?: string;
+  meta_description?: string;
+  sub_image?: FileList;
+  sub_banner?: FileList;
+  product_details: ProductDetailField[];
 }

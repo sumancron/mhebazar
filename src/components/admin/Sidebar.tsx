@@ -56,13 +56,11 @@ const Sidebar = () => {
     },
     {
       icon: Plus,
-      label: 'Add Product',
+      label: 'Add Products',
       // href: '/admin/add-product',
       subItems: [
-        { label: 'New Product', href: '/admin/add-product/new' },
-        { label: 'Product Categories', href: '/admin/add-product/categories' },
-        { label: 'Bulk Import', href: '/admin/add-product/bulk' },
-        { label: 'Product Templates', href: '/admin/add-product/templates' }
+        { label: 'Categories', href: '/admin/add-products/categories' },
+        { label: 'Subcategories', href: '/admin/add-products/subcategories' },
       ]
     },
     {

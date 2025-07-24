@@ -1,13 +1,13 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useForm, useFieldArray } from "react-hook-form";
 import axios from "axios";
-import { JSX, useState } from "react";
+import { JSX, useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-// import { Card, CardContent } from "@/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -16,42 +16,28 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { X, Plus, Image as ImageIcon } from "lucide-react";
-// import Image from "next/image";
 import Cookies from "js-cookie";
+import { Category, CategoryFormData, ProductDetailField, FieldOption } from "@/types";
 
-type FieldOption = {
-  label: string;
-  value: string;
-};
+interface CategoryFormProps {
+  category?: Category;
+  onSuccess?: () => void;
+}
 
-type ProductDetailField = {
-  name: string;
-  label: string;
-  type: "text" | "textarea" | "select" | "radio" | "checkbox";
-  required: boolean;
-  options?: FieldOption[];
-  placeholder?: string;
-};
-
-type CategoryFormData = {
-  name: string;
-  description?: string;
-  meta_title?: string;
-  meta_description?: string;
-  cat_image?: FileList;
-  cat_banner?: FileList;
-  product_details: ProductDetailField[];
-};
-
-export default function CategoryForm(): JSX.Element {
+export default function CategoryForm({ category, onSuccess }: CategoryFormProps): JSX.Element {
   const {
     register,
     control,
     handleSubmit,
     watch,
+    reset,
     formState: { errors },
   } = useForm<CategoryFormData>({
     defaultValues: {
+      name: "",
+      description: "",
+      meta_title: "",
+      meta_description: "",
       product_details: [],
     },
   });
@@ -67,6 +53,31 @@ export default function CategoryForm(): JSX.Element {
   const [message, setMessage] = useState("");
   const [catImageFiles, setCatImageFiles] = useState<File[]>([]);
   const [catBannerFiles, setCatBannerFiles] = useState<File[]>([]);
+
+  // Populate form when editing
+  useEffect(() => {
+    if (category) {
+      reset({
+        name: category.name,
+        description: category.description || "",
+        meta_title: category.meta_title || "",
+        meta_description: category.meta_description || "",
+        product_details: category.product_details || [],
+      });
+      setCatImageFiles([]);
+      setCatBannerFiles([]);
+    } else {
+      reset({
+        name: "",
+        description: "",
+        meta_title: "",
+        meta_description: "",
+        product_details: [],
+      });
+      setCatImageFiles([]);
+      setCatBannerFiles([]);
+    }
+  }, [category, reset]);
 
   const handleCatImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -102,41 +113,91 @@ export default function CategoryForm(): JSX.Element {
     let token = Cookies.get("access_token");
 
     if (!token) {
-      const refreshResponse = await axios.post(
-        `${API_BASE_URL}/token/refresh/`,
-        {},
-        { withCredentials: true } // refresh_token read from HttpOnly cookie
-      );
+      try {
+        const refreshResponse = await axios.post(
+          `${API_BASE_URL}/token/refresh/`,
+          {},
+          { withCredentials: true }
+        );
 
-      token = refreshResponse.data?.access;
+        token = refreshResponse.data?.access;
 
-      if (token) {
-        Cookies.set("access_token", token, {
-          expires: 1 / 24, // 1 hour
-          secure: true,
-          sameSite: "Lax",
-        });
-      } else {
-        throw new Error("No new access token returned");
+        if (token) {
+          Cookies.set("access_token", token, {
+            expires: 1 / 24, // 1 hour
+            secure: true,
+            sameSite: "Lax",
+          });
+        } else {
+          throw new Error("No new access token returned");
+        }
+      } catch (error) {
+        console.error("Token refresh failed:", error);
+        setMessage("Authentication failed. Please login again.");
+        setIsSubmitting(false);
+        return;
       }
     }
 
     try {
       setIsSubmitting(true);
-      await axios.post(`${API_BASE_URL}/categories/`, formData, {
+      setMessage("");
+
+      const url = category
+        ? `${API_BASE_URL}/categories/${category.id}/`
+        : `${API_BASE_URL}/categories/`;
+
+      const method = category ? 'PUT' : 'POST';
+
+      await axios({
+        method,
+        url,
+        data: formData,
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "multipart/form-data",
         },
       });
-      setMessage("Category created successfully!");
+
+      const successMessage = category
+        ? "Category updated successfully!"
+        : "Category created successfully!";
+
+      setMessage(successMessage);
+
+      // Reset form if creating new category
+      if (!category) {
+        reset({
+          name: "",
+          description: "",
+          meta_title: "",
+          meta_description: "",
+          product_details: [],
+        });
+        setCatImageFiles([]);
+        setCatBannerFiles([]);
+      }
+
+      // Call success callback to refresh parent component
+      if (onSuccess) {
+        setTimeout(() => {
+          onSuccess();
+        }, 1500);
+      }
+
     } catch (error: unknown) {
-      if (error instanceof Error) {
-        console.error("Error creating category:", error.message);
-        setMessage(`Failed to create category: ${error.message}`);
+      if (axios.isAxiosError(error)) {
+        console.error("Error saving category:", error.response?.data || error.message);
+        const errorMessage = error.response?.data?.detail ||
+          error.response?.data?.error ||
+          error.message;
+        setMessage(`Failed to save category: ${errorMessage}`);
+      } else if (error instanceof Error) {
+        console.error("Error saving category:", error.message);
+        setMessage(`Failed to save category: ${error.message}`);
       } else {
         console.error("Unknown error occurred");
-        setMessage("Failed to create category due to an unknown error.");
+        setMessage("Failed to save category due to an unknown error.");
       }
     } finally {
       setIsSubmitting(false);
@@ -144,26 +205,23 @@ export default function CategoryForm(): JSX.Element {
   };
 
   const addOption = (fieldIndex: number) => {
-    const newOption = { label: "", value: "" };
+    const newOption: FieldOption = { label: "", value: "" };
     const currentOptions = watch(`product_details.${fieldIndex}.options`) || [];
     const updatedOptions = [...currentOptions, newOption];
-    const updatedField = {
+    const updatedField: ProductDetailField = {
       ...watch(`product_details.${fieldIndex}`),
       options: updatedOptions,
     };
     remove(fieldIndex);
     append(updatedField, {
-      focusName: `product_details.${fieldIndex}.options.${updatedOptions.length - 1
-        }.label`,
+      focusName: `product_details.${fieldIndex}.options.${updatedOptions.length - 1}.label`,
     });
   };
 
   const removeOption = (fieldIndex: number, optionIndex: number) => {
     const currentOptions = watch(`product_details.${fieldIndex}.options`) || [];
-    const updatedOptions = currentOptions.filter(
-      (_, idx) => idx !== optionIndex
-    );
-    const updatedField = {
+    const updatedOptions = currentOptions.filter((_:any, idx:number) => idx !== optionIndex);
+    const updatedField: ProductDetailField = {
       ...watch(`product_details.${fieldIndex}`),
       options: updatedOptions,
     };
@@ -174,30 +232,22 @@ export default function CategoryForm(): JSX.Element {
   return (
     <div className="min-h-screen bg-white">
       <div className="max-w-md mx-auto bg-white">
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b">
-          <h1 className="text-lg font-semibold text-gray-900">Create New Category</h1>
-          <button className="text-gray-400 hover:text-gray-600">
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
         <div className="p-4">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             {/* Basic Info Section */}
             <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 gap-3">
                 <div>
                   <Label className="text-sm text-gray-600 mb-1 block">
                     Category Name <span className="text-red-500">*</span>
                   </Label>
                   <Input
-                    {...register("name", { required: true })}
+                    {...register("name", { required: "Category name is required" })}
                     placeholder="Enter category name"
                     className="h-10 border-gray-300 text-sm"
                   />
                   {errors.name && (
-                    <p className="text-red-500 text-xs mt-1">Name is required</p>
+                    <p className="text-red-500 text-xs mt-1">{errors.name.message}</p>
                   )}
                 </div>
 
@@ -256,14 +306,18 @@ export default function CategoryForm(): JSX.Element {
                   onClick={() => document.getElementById("cat-image-input")?.click()}
                 >
                   <ImageIcon className="w-4 h-4 mr-2" />
-                  Select Image
+                  {catImageFiles.length > 0 ? `${catImageFiles.length} file(s) selected` : "Select Image"}
                 </Button>
                 {catImageFiles.length > 0 && (
                   <div className="grid grid-cols-4 gap-2 mt-2">
                     {catImageFiles.map((file, idx) => (
                       <div key={idx} className="relative group">
-                        <div className="aspect-square bg-gray-100 rounded overflow-hidden flex items-center justify-center">
-                          <ImageIcon className="w-6 h-6 text-gray-400" />
+                        <div className="aspect-square bg-gray-100 rounded overflow-hidden flex items-center justify-center border">
+                          <img
+                            src={URL.createObjectURL(file)}
+                            alt={`Preview ${idx + 1}`}
+                            className="w-full h-full object-cover"
+                          />
                         </div>
                         <button
                           type="button"
@@ -286,7 +340,6 @@ export default function CategoryForm(): JSX.Element {
                   id="cat-banner-input"
                   type="file"
                   accept="image/*"
-                  multiple
                   onChange={handleCatBannerChange}
                   style={{ display: "none" }}
                 />
@@ -298,14 +351,18 @@ export default function CategoryForm(): JSX.Element {
                   onClick={() => document.getElementById("cat-banner-input")?.click()}
                 >
                   <ImageIcon className="w-4 h-4 mr-2" />
-                  Select Banner(s)
+                  {catBannerFiles.length > 0 ? `${catBannerFiles.length} file(s) selected` : "Select Banner"}
                 </Button>
                 {catBannerFiles.length > 0 && (
                   <div className="grid grid-cols-4 gap-2 mt-2">
                     {catBannerFiles.map((file, idx) => (
                       <div key={idx} className="relative group">
-                        <div className="aspect-square bg-gray-100 rounded overflow-hidden flex items-center justify-center">
-                          <ImageIcon className="w-6 h-6 text-gray-400" />
+                        <div className="aspect-square bg-gray-100 rounded overflow-hidden flex items-center justify-center border">
+                          <img
+                            src={URL.createObjectURL(file)}
+                            alt={`Preview ${idx + 1}`}
+                            className="w-full h-full object-cover"
+                          />
                         </div>
                         <button
                           type="button"
@@ -345,7 +402,6 @@ export default function CategoryForm(): JSX.Element {
                 </Button>
               </div>
 
-
               <div className="space-y-4">
                 {fields.map((field, fieldIndex) => {
                   const fieldType = watch(`product_details.${fieldIndex}.type`);
@@ -353,16 +409,23 @@ export default function CategoryForm(): JSX.Element {
 
                   return (
                     <div key={field.id} className="p-4 border rounded-lg space-y-4">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div className="grid grid-cols-1 gap-3">
                         <div>
                           <Label className="text-sm text-gray-600 mb-1 block">
                             Field Name <span className="text-red-500">*</span>
                           </Label>
                           <Input
                             placeholder="e.g. 'material'"
-                            {...register(`product_details.${fieldIndex}.name`, { required: true })}
+                            {...register(`product_details.${fieldIndex}.name`, {
+                              required: "Field name is required"
+                            })}
                             className="h-10 border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500"
                           />
+                          {errors.product_details?.[fieldIndex]?.name && (
+                            <p className="text-red-500 text-xs mt-1">
+                              {errors.product_details[fieldIndex]?.name?.message}
+                            </p>
+                          )}
                         </div>
 
                         <div>
@@ -371,9 +434,16 @@ export default function CategoryForm(): JSX.Element {
                           </Label>
                           <Input
                             placeholder="e.g. 'Material Type'"
-                            {...register(`product_details.${fieldIndex}.label`, { required: true })}
+                            {...register(`product_details.${fieldIndex}.label`, {
+                              required: "Display label is required"
+                            })}
                             className="h-10 border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500"
                           />
+                          {errors.product_details?.[fieldIndex]?.label && (
+                            <p className="text-red-500 text-xs mt-1">
+                              {errors.product_details[fieldIndex]?.label?.message}
+                            </p>
+                          )}
                         </div>
                       </div>
 
@@ -382,15 +452,17 @@ export default function CategoryForm(): JSX.Element {
                           <Label className="text-sm text-gray-600 mb-1 block">Field Type</Label>
                           <Select
                             onValueChange={(value: ProductDetailField["type"]) => {
-                              const updatedField = {
+                              const updatedField: ProductDetailField = {
                                 ...watch(`product_details.${fieldIndex}`),
                                 type: value,
+                                options: value === "text" || value === "textarea" ? [] : watch(`product_details.${fieldIndex}.options`) || [],
                               };
                               remove(fieldIndex);
                               append(updatedField);
                             }}
-                            value={fieldType}>
-                            <SelectTrigger className="h-11 border-gray-300 focus:border-[#5CA131] focus:ring-[#5CA131]">
+                            value={fieldType}
+                          >
+                            <SelectTrigger className="h-10 border-gray-300 focus:border-blue-500 focus:ring-blue-500">
                               <SelectValue placeholder="Select field type" />
                             </SelectTrigger>
                             <SelectContent>
@@ -409,7 +481,7 @@ export default function CategoryForm(): JSX.Element {
                               type="checkbox"
                               id={`required-${fieldIndex}`}
                               {...register(`product_details.${fieldIndex}.required`)}
-                              className="border-gray-300 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+                              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                             />
                             <Label htmlFor={`required-${fieldIndex}`} className="text-sm font-medium">
                               Required
@@ -437,7 +509,7 @@ export default function CategoryForm(): JSX.Element {
                                 type="button"
                                 variant="ghost"
                                 size="icon"
-                                className="text-red-500 hover:bg-red-50"
+                                className="text-red-500 hover:bg-red-50 flex-shrink-0"
                                 onClick={() => removeOption(fieldIndex, optionIndex)}
                               >
                                 <X className="w-4 h-4" />
@@ -449,7 +521,9 @@ export default function CategoryForm(): JSX.Element {
                             variant="outline"
                             size="sm"
                             onClick={() => addOption(fieldIndex)}
+                            className="w-full"
                           >
+                            <Plus className="w-4 h-4 mr-2" />
                             Add Option
                           </Button>
                         </div>
@@ -471,23 +545,35 @@ export default function CategoryForm(): JSX.Element {
                   );
                 })}
               </div>
+
+              {fields.length === 0 && (
+                <div className="text-center py-8 text-gray-500">
+                  <p className="text-sm">No product detail fields added yet.</p>
+                  <p className="text-xs mt-1">Click &quot;Add Field&quot; to create custom fields for products in this category.</p>
+                </div>
+              )}
             </div>
 
             {/* Submit Section */}
-            <div className="pt-4">
+            <div className="pt-4 space-y-3">
               <Button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full"
+                className="w-full h-10"
               >
-                {isSubmitting ? "Creating..." : "Create Category"}
+                {isSubmitting
+                  ? (category ? "Updating..." : "Creating...")
+                  : (category ? "Update Category" : "Create Category")
+                }
               </Button>
 
               {message && (
-                <div className={`p-3 mt-4 rounded text-center text-xs ${message.includes("successfully")
-                  ? 'bg-green-50 text-green-800 border border-green-200'
-                  : 'bg-red-50 text-red-800 border border-red-200'
-                  }`}>{message}</div>
+                <div className={`p-3 rounded text-center text-xs ${message.includes("successfully")
+                    ? 'bg-green-50 text-green-800 border border-green-200'
+                    : 'bg-red-50 text-red-800 border border-red-200'
+                  }`}>
+                  {message}
+                </div>
               )}
             </div>
           </form>
