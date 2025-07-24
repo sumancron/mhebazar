@@ -20,6 +20,13 @@ interface ApiCategory {
   subcategories: ApiSubcategory[];
 }
 
+interface ApiResponse<T> {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: T[];
+}
+
 // Product types as provided by your backend
 const PRODUCT_TYPE_CHOICES = ["new", "used", "rental", "attachments"];
 
@@ -27,7 +34,7 @@ interface SideFilterProps {
   selectedFilters: Set<string>;
   onFilterChange: (
     filterValue: string | number,
-    filterType: "category" | "subcategory" | "type" | "price_range" | "manufacturer" | "rating",
+    filterType: "category" | "subcategory" | "type" | "price_range" | "manufacturer" | "rating" | "sort_by",
     newValue?: number | string | { min: number | '', max: number | '' } | null
   ) => void;
   selectedCategoryName: string | null;
@@ -68,7 +75,7 @@ const SideFilter = ({
     setIsLoadingCategories(true);
     setErrorCategories(null);
     try {
-      const response = await api.get<{ results: ApiCategory[] }>("/categories/");
+      const response = await api.get<ApiResponse<ApiCategory>>("/categories/");
       setCategories(response.data.results);
       console.log("[SideFilter] Categories fetched successfully.");
     } catch (err: unknown) {
@@ -83,17 +90,14 @@ const SideFilter = ({
     }
   }, []);
 
-  // Fetch unique manufacturers (assuming an endpoint or derive from products if fetching all)
-  // For simplicity, let's assume a dedicated endpoint or we'll fetch products to derive unique manufacturers.
-  // In a real scenario, you'd have an API endpoint like /api/manufacturers/
+  // Fetch unique manufacturers
   const fetchManufacturers = useCallback(async () => {
     try {
-      const response = await api.get<{ results: { manufacturer: string }[] }>("/products/unique-manufacturers/"); // Example endpoint
+      const response = await api.get<{ results: { manufacturer: string }[] }>("/products/unique-manufacturers/");
       const uniqueManufacturers = Array.from(new Set(response.data.results.map(item => item.manufacturer)));
-      setManufacturers(uniqueManufacturers.filter(Boolean) as string[]); // Filter out null/empty strings
+      setManufacturers(uniqueManufacturers.filter(Boolean) as string[]);
     } catch (err) {
       console.error("[SideFilter] Failed to fetch manufacturers:", err);
-      // Handle error gracefully, perhaps setManufacturers([])
     }
   }, []);
 
@@ -104,13 +108,15 @@ const SideFilter = ({
 
   // Expand the category if a subcategory within it is currently selected, or if the category itself is selected
   useEffect(() => {
-    if ((selectedCategoryName || selectedSubcategoryName) && categories.length > 0) {
+    if (categories.length > 0) {
       const currentCategory = categories.find(cat =>
-        cat.name === selectedCategoryName ||
-        cat.subcategories.some(sub => sub.name === selectedSubcategoryName)
+        (selectedCategoryName && cat.name.toLowerCase() === selectedCategoryName.toLowerCase()) ||
+        (selectedSubcategoryName && cat.subcategories.some(sub => sub.name.toLowerCase() === selectedSubcategoryName.toLowerCase()))
       );
       if (currentCategory && expandedCategory !== currentCategory.id) {
         setExpandedCategory(currentCategory.id);
+      } else if (!selectedCategoryName && !selectedSubcategoryName) {
+        setExpandedCategory(null);
       }
     }
   }, [selectedCategoryName, selectedSubcategoryName, categories, expandedCategory]);
@@ -144,9 +150,9 @@ const SideFilter = ({
 
   // Helper to determine if a filter is active for highlighting
   const isFilterActive = (value: string): boolean => {
-    if (selectedCategoryName && value === selectedCategoryName) return true;
-    if (selectedSubcategoryName && value === selectedSubcategoryName) return true;
-    if (selectedTypeName && value === selectedTypeName) return true;
+    if (selectedCategoryName && value.toLowerCase() === selectedCategoryName.toLowerCase()) return true;
+    if (selectedSubcategoryName && value.toLowerCase() === selectedSubcategoryName.toLowerCase()) return true;
+    if (selectedTypeName && value.toLowerCase() === selectedTypeName.toLowerCase()) return true;
     return false;
   };
 

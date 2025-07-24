@@ -131,7 +131,7 @@ interface ProductListingProps {
   totalCount: number;
   onFilterChange: (
     filterValue: string | number,
-    filterType: "category" | "subcategory" | "type" | "price_range" | "manufacturer" | "rating",
+    filterType: "category" | "subcategory" | "type" | "price_range" | "manufacturer" | "rating" | "sort_by",
     newValue?: number | string | { min: number | '', max: number | '' } | null
   ) => void;
   selectedFilters: Set<string>;
