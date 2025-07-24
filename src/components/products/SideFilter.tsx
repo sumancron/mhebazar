@@ -20,13 +20,6 @@ interface ApiCategory {
   subcategories: ApiSubcategory[];
 }
 
-interface ApiResponse<T> {
-  count: number;
-  next: string | null;
-  previous: string | null;
-  results: T[];
-}
-
 // Product types as provided by your backend
 const PRODUCT_TYPE_CHOICES = ["new", "used", "rental", "attachments"];
 
@@ -35,7 +28,7 @@ interface SideFilterProps {
   onFilterChange: (
     filterValue: string | number,
     filterType: "category" | "subcategory" | "type" | "price_range" | "manufacturer" | "rating" | "sort_by",
-    newValue?: number | string | { min: number | '', max: number | '' } | null
+    newValue?: number | string | { min: number | ''; max: number | '' } | null
   ) => void;
   selectedCategoryName: string | null;
   selectedSubcategoryName: string | null;
@@ -75,8 +68,9 @@ const SideFilter = ({
     setIsLoadingCategories(true);
     setErrorCategories(null);
     try {
-      const response = await api.get<ApiResponse<ApiCategory>>("/categories/");
-      setCategories(response.data.results);
+      // Adjusted to expect an array directly, not an object with 'results'
+      const response = await api.get<ApiCategory[]>("/categories/"); //
+      setCategories(response.data); //
       console.log("[SideFilter] Categories fetched successfully.");
     } catch (err: unknown) {
       console.error("[SideFilter] Failed to fetch categories:", err);
@@ -93,8 +87,9 @@ const SideFilter = ({
   // Fetch unique manufacturers
   const fetchManufacturers = useCallback(async () => {
     try {
-      const response = await api.get<{ results: { manufacturer: string }[] }>("/products/unique-manufacturers/");
-      const uniqueManufacturers = Array.from(new Set(response.data.results.map(item => item.manufacturer)));
+      // This API endpoint still returns a 'results' array based on the provided example.
+      const response = await api.get<{ results: { manufacturer: string }[] }>("/products/unique-manufacturers/"); //
+      const uniqueManufacturers = Array.from(new Set(response.data.results.map(item => item.manufacturer))); //
       setManufacturers(uniqueManufacturers.filter(Boolean) as string[]);
     } catch (err) {
       console.error("[SideFilter] Failed to fetch manufacturers:", err);
@@ -227,9 +222,14 @@ const SideFilter = ({
             <div key={category.id} className="border-b border-gray-100 last:border-b-0">
               <button
                 onClick={() => {
-                  setExpandedCategory(
-                    expandedCategory === category.id ? null : category.id
-                  );
+                  // Only toggle expansion if there are subcategories
+                  if (category.subcategories.length > 0) {
+                    setExpandedCategory(
+                      expandedCategory === category.id ? null : category.id
+                    );
+                  }
+                  // Always apply category filter when category button is clicked,
+                  // regardless of whether it has subcategories or not.
                   onFilterChange(category.name, "category");
                 }}
                 className={`w-full flex items-center justify-between px-2 py-2 rounded-md transition-colors duration-200 ${
@@ -284,6 +284,7 @@ const SideFilter = ({
             </div>
           ))}
         </div>
+
 
         {/* Product Types Section */}
         <h2 className="text-base font-semibold mb-2 text-gray-800">Product Types</h2>
