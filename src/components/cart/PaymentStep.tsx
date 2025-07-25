@@ -13,6 +13,7 @@ import api from '@/lib/api';
 import axios from 'axios';
 import { useUser } from '@/context/UserContext';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation'; // Import useRouter
 
 // Type definitions
 interface PaymentMethod {
@@ -66,33 +67,38 @@ declare global {
   }
 }
 
-// Razorpay Key ID - IMPORTANT: This should be retrieved from environment variables
-// Ensure you have NEXT_PUBLIC_RAZORPAY_KEY_ID set in your .env.local / .env.production files
-const RAZORPAY_KEY_ID = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID; //
+const RAZORPAY_KEY_ID = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
 
 export default function PaymentStep({ onComplete, onBack, cartTotal, shippingAddress, phoneNumber }: PaymentStepProps) {
   const { user } = useUser();
+  const router = useRouter();
   const [selectedPayment, setSelectedPayment] = useState<string>('cod');
   const [isProcessingOrder, setIsProcessingOrder] = useState(false);
-  const [cartItems, setCartItems] = useState<CartItemApi[]>([]); // To display products in summary
+  const [cartItems, setCartItems] = useState<CartItemApi[]>([]);
 
-  // Load Razorpay script dynamically
   useEffect(() => {
+    console.log("Loading Razorpay SDK script...");
     const script = document.createElement('script');
     script.src = 'https://checkout.razorpay.com/v1/checkout.js';
     script.async = true;
+    script.onload = () => console.log("Razorpay SDK loaded successfully.");
+    script.onerror = (e) => console.error("Failed to load Razorpay SDK script:", e);
     document.body.appendChild(script);
 
     return () => {
-      document.body.removeChild(script);
+      console.log("Cleaning up Razorpay SDK script.");
+      if (document.body.contains(script)) {
+        document.body.removeChild(script);
+      }
     };
   }, []);
 
-  // Fetch cart items to display in order summary (ensure this is current)
   const fetchCartItems = useCallback(async () => {
     try {
+      console.log("Fetching cart items for summary...");
       const response = await api.get<ApiResponse<CartItemApi>>("/cart/");
       setCartItems(response.data.results);
+      console.log("Cart items fetched:", response.data.results);
     } catch (error) {
       console.error("Failed to fetch cart items for payment summary:", error);
       toast.error("Failed to load cart details for order summary.");
@@ -103,7 +109,6 @@ export default function PaymentStep({ onComplete, onBack, cartTotal, shippingAdd
     fetchCartItems();
   }, [fetchCartItems]);
 
-  // Only show COD and Online Payment (Razorpay) options
   const paymentMethods: PaymentMethod[] = [
     {
       id: 'razorpay',
@@ -139,70 +144,75 @@ export default function PaymentStep({ onComplete, onBack, cartTotal, shippingAdd
 
     setIsProcessingOrder(true);
     try {
-      // 1. Create Order on Backend
-      // The /orders/create_from_cart/ custom action should create the order and order items
+      console.log("Attempting to create order from cart on backend...");
+      // Reverted: Do not send payment_method to create_from_cart
       const orderResponse = await api.post('/orders/create_from_cart/', {
         shipping_address: shippingAddress,
         phone_number: phoneNumber,
+        // payment_method: selectedPayment, // Removed this line as backend's create_from_cart doesn't use it.
       });
       const createdOrder = orderResponse.data;
-      const orderId = createdOrder.id; // The Order ID from your MHE backend
+      const orderId = createdOrder.id;
       const orderNumber = createdOrder.order_number;
+      console.log("Order successfully created on MHE backend:", createdOrder);
 
       if (selectedPayment === 'cod') {
+        // For COD, the order is considered placed and confirmed immediately by backend's create_from_cart
         toast.success(`Order ${orderNumber} placed successfully with Cash on Delivery!`);
-        // Backend's `create_from_cart` is assumed to clear cart and set initial status
+        router.push('/account/orders'); // Redirect immediately for COD
         onComplete();
       } else if (selectedPayment === 'razorpay') {
         if (!RAZORPAY_KEY_ID) {
-            toast.error("Razorpay Key ID is not configured. Please check environment variables.");
+            toast.error("Razorpay Key ID is not configured. Please check environment variables and restart server.");
             setIsProcessingOrder(false);
             return;
         }
-        // 2. Create Razorpay Order on Backend
-        const razorpayOrderCreationResponse = await api.post('/payments/create_razorpay_order/', { //
-          order_id: orderId, // Pass the newly created MHE order ID
-          amount: Math.round(cartTotal * 100), // Pass amount in paisa to backend for double check
-          currency: 'INR',
+
+        console.log("Attempting to create Razorpay order on backend...");
+        const razorpayOrderCreationResponse = await api.post('/payments/create_razorpay_order/', {
+          order_id: orderId,
         });
-        const razorpayOrderDetails = razorpayOrderCreationResponse.data; // This has Razorpay's order_id
+        const razorpayOrderDetails = razorpayOrderCreationResponse.data;
+        console.log("Razorpay order successfully created on backend:", razorpayOrderDetails);
 
         if (typeof window.Razorpay === 'undefined') {
-          toast.error("Razorpay SDK not loaded. Please try again.");
+          toast.error("Razorpay SDK not loaded. Please try again after a moment.");
           setIsProcessingOrder(false);
           return;
         }
 
         const options = {
           key: RAZORPAY_KEY_ID,
-          amount: razorpayOrderDetails.amount, // Use amount from backend response
-          currency: razorpayOrderDetails.currency, // Use currency from backend response
+          amount: razorpayOrderDetails.amount,
+          currency: razorpayOrderDetails.currency,
           name: "MHE Bazar",
           description: `Payment for Order #${orderNumber}`,
-          order_id: razorpayOrderDetails.razorpay_order_id, // This is Razorpay's order ID
+          order_id: razorpayOrderDetails.razorpay_order_id,
           handler: async (response: {
             razorpay_payment_id: string;
             razorpay_order_id: string;
             razorpay_signature: string;
           }) => {
-            console.log("Razorpay handler response:", response); // Debugging
+            console.log("Razorpay handler response received:", response);
             try {
-              // 3. Verify payment on Backend
-              const verificationResponse = await api.post(`/payments/verify_payment/`, { //
+              console.log("Attempting to verify payment on backend...");
+              const verificationResponse = await api.post(`/payments/verify_payment/`, {
                 razorpay_payment_id: response.razorpay_payment_id,
                 razorpay_order_id: response.razorpay_order_id,
                 razorpay_signature: response.razorpay_signature,
               });
-              console.log("Payment verification backend response:", verificationResponse.data); // Debugging
+              console.log("Payment verification backend response:", verificationResponse.data);
 
-              // Backend's verify_payment should also update your MHE Order status to 'confirmed' and clear cart
               toast.success(`Payment successful! Order ${orderNumber} confirmed.`);
+              router.push('/account/orders'); // Redirect to orders page
               onComplete();
             } catch (error) {
-              console.error("Payment verification failed:", error); // Debugging
-              toast.error("Payment verification failed. Please contact support.");
-              // Optionally update MHE order status to failed if verification fails here
-              await api.patch(`/orders/${orderId}/`, { status: 'failed' });
+              console.error("Payment verification failed:", error);
+              if (axios.isAxiosError(error) && error.response) {
+                toast.error(error.response.data?.error || `Payment verification failed: ${error.response.statusText}`);
+              } else {
+                toast.error("Payment verification failed. Please contact support.");
+              }
             } finally {
                 setIsProcessingOrder(false);
             }
@@ -217,7 +227,7 @@ export default function PaymentStep({ onComplete, onBack, cartTotal, shippingAdd
           },
           modal: {
             ondismiss: () => {
-              toast.info('Payment window closed. Order might be pending. Check My Orders.');
+              toast.info('Payment window closed. If payment was made, check My Orders for status.');
               setIsProcessingOrder(false);
             },
           },
@@ -227,7 +237,7 @@ export default function PaymentStep({ onComplete, onBack, cartTotal, shippingAdd
         rzp.open();
       }
     } catch (error: unknown) {
-      console.error("Error placing order or initiating payment:", error); // Debugging
+      console.error("Error during order placement or payment initiation:", error);
       if (axios.isAxiosError(error) && error.response) {
         toast.error(error.response.data?.error || error.response.data?.message || `Failed to place order: ${error.response.statusText}`);
       } else {
