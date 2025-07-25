@@ -4,21 +4,23 @@ import Breadcrumb from "@/components/elements/Breadcrumb";
 import AccountTabsUI from "@/components/account/OrderWishTabs";
 import { useEffect, useState, useCallback } from "react";
 import api from "@/lib/api";
-import { toast } from "sonner"; // For error notifications
-import { Button } from "@/components/ui/button"; // Assuming you have this button component
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 
+// Frontend-specific status types
 type OrderStatus = "pending" | "confirmed" | "shipped" | "delivered" | "cancelled";
+type PaymentStatus = "pending" | "success" | "failed" | "refunded";
+// DeliveryStatus is defined but will only be used if delivery object is explicitly added by backend
+type DeliveryStatus = "not_shipped" | "in_transit" | "out_for_delivery" | "delivered" | "failed"; 
 
-// Define the structure of product details nested within an order item
 interface ProductDetailsInOrder {
   id: number;
   name: string;
   images: { id: number; image: string }[];
   price: string;
-  // Add other relevant product fields if needed
+  hide_price: boolean;
 }
 
-// Define the structure of an order item
 interface OrderItemApi {
   id: number;
   product: number;
@@ -28,16 +30,49 @@ interface OrderItemApi {
   total_price: string;
 }
 
-// Define the structure of an order from the API
-interface OrderApi {
-  id: number; // Backend Order ID
+// DeliveryApi will be null or undefined if not nested in OrderSerializer
+interface DeliveryApi {
+  id: number;
+  tracking_id: string | null;
+  status: DeliveryStatus; 
+  estimated_delivery_date: string | null;
+  actual_delivery_date: string | null;
+  courier_name: string | null;
+  delivery_notes: string | null;
+}
+
+interface PaymentApi { // Matches the data from /api/payments/
+  id: number;
+  user: number;
+  user_name: string;
+  order: number; // This is the foreign key ID for the Order
   order_number: string;
-  status: OrderStatus;
+  razorpay_order_id: string;
+  razorpay_payment_id: string | null;
+  razorpay_signature: string | null;
+  amount: string;
+  currency: string;
+  status: PaymentStatus;
+  payment_method: string | null; // Can be null as per your provided data
+  created_at: string;
+  updated_at: string;
+}
+
+// Consolidated OrderApi including potentially matched payments and delivery (if available)
+interface OrderApi {
+  id: number;
+  order_number: string;
+  status: OrderStatus; // This is the status coming from OrderSerializer
   total_amount: string;
   shipping_address: string;
   phone_number: string;
+  notes: string | null;
   created_at: string;
-  items: OrderItemApi[]; // Nested order items
+  updated_at: string;
+  items: OrderItemApi[];
+  // These will be manually attached in frontend from separate API calls
+  delivery?: DeliveryApi; 
+  payments?: PaymentApi[]; 
 }
 
 interface ApiResponse<T> {
@@ -52,16 +87,30 @@ export default function OrdersPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchOrders = useCallback(async () => {
+  const fetchOrdersAndPayments = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      // Assuming /orders/ endpoint returns a list of orders for the logged-in user
-      const response = await api.get<ApiResponse<OrderApi>>("/orders/");
-      setOrders(response.data.results);
-      console.log("Orders fetched:", response.data.results);
+      const ordersResponse = await api.get<ApiResponse<OrderApi>>("/orders/");
+      const paymentsResponse = await api.get<ApiResponse<PaymentApi>>("/payments/"); // Fetch payments separately
+
+      const fetchedOrders = ordersResponse.data.results;
+      const allPayments = paymentsResponse.data.results;
+
+      // Map payments to their respective orders
+      const ordersWithPayments = fetchedOrders.map(order => {
+        const orderPayments = allPayments.filter(payment => payment.order === order.id);
+        return {
+          ...order,
+          payments: orderPayments,
+          // Delivery will still be undefined as it's not in OrderSerializer
+        };
+      });
+
+      setOrders(ordersWithPayments);
+      console.log("Orders with merged payments fetched:", ordersWithPayments);
     } catch (err: unknown) {
-      console.error("Failed to fetch orders:", err);
+      console.error("Failed to fetch orders or payments:", err);
       setError("Failed to load your orders. Please try again later.");
       toast.error("Failed to load orders.");
     } finally {
@@ -70,11 +119,11 @@ export default function OrdersPage() {
   }, []);
 
   useEffect(() => {
-    fetchOrders();
-  }, [fetchOrders]);
+    fetchOrdersAndPayments();
+  }, [fetchOrdersAndPayments]);
 
-  // Helper to map backend status to display status and color
-  const mapStatusToDisplay = (status: OrderStatus) => {
+  const mapOrderStatusToDisplay = (status: OrderStatus | null | undefined) => { 
+    if (!status) return { display: "Unknown", color: "bg-gray-100 text-gray-700" };
     switch (status) {
       case "pending":
         return { display: "Pending", color: "bg-yellow-100 text-yellow-700" };
@@ -91,6 +140,43 @@ export default function OrdersPage() {
     }
   };
 
+  const mapPaymentStatusToDisplay = (status: PaymentStatus | null | undefined) => { 
+    if (!status) return { display: "N/A", color: "bg-gray-100 text-gray-700" };
+    switch (status) {
+      case "pending":
+        return { display: "Payment Pending", color: "bg-yellow-100 text-yellow-700" };
+      case "success":
+        return { display: "Payment Successful", color: "bg-green-100 text-green-700" };
+      case "failed":
+        return { display: "Payment Failed", color: "bg-red-100 text-red-700" };
+      case "refunded":
+        return { display: "Refunded", color: "bg-blue-100 text-blue-700" };
+      default:
+        return { display: "Unknown", color: "bg-gray-100 text-gray-700" };
+    }
+  };
+
+  // This function will still be passed, but its ability to reflect detailed delivery
+  // status depends solely on order.status and not a separate delivery object.
+  const mapDeliveryStatusToDisplay = (status: DeliveryStatus | null | undefined) => { 
+    if (!status) return { display: "Unknown", color: "bg-gray-100 text-gray-700" };
+    switch (status) {
+      case "not_shipped":
+        return { display: "Not Shipped", color: "bg-gray-100 text-gray-700" };
+      case "in_transit":
+        return { display: "In Transit", color: "bg-blue-100 text-blue-700" };
+      case "out_for_delivery":
+        return { display: "Out for Delivery", color: "bg-orange-100 text-orange-700" };
+      case "delivered":
+        return { display: "Delivered", color: "bg-green-100 text-green-700" };
+      case "failed":
+        return { display: "Delivery Failed", color: "bg-red-100 text-red-700" };
+      default:
+        return { display: "Unknown", color: "bg-gray-100 text-gray-700" };
+    }
+  };
+
+
   if (loading) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-8 py-8 text-center">
@@ -106,26 +192,10 @@ export default function OrdersPage() {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-8 py-8 text-center">
         <p className="text-red-500">{error}</p>
-        <Button onClick={fetchOrders} className="mt-4">Retry Loading Orders</Button>
+        <Button onClick={fetchOrdersAndPayments} className="mt-4">Retry Loading Orders</Button>
       </div>
     );
   }
-
-  // Transform fetched orders into the format expected by AccountTabsUI
-  const transformedOrders = orders.map(order => {
-    const statusMap = mapStatusToDisplay(order.status);
-    return {
-      id: order.order_number, // Use order_number for display ID
-      status: statusMap.display as "In Transit" | "Cancelled" | "Delivered", // Cast to match AccountTabsUI's type
-      statusColor: statusMap.color,
-      // Display first product's image and name, total order price
-      product: {
-        title: order.items[0]?.product_details?.name || "N/A",
-        image: order.items[0]?.product_details?.images?.[0]?.image || "/no-product.png",
-        price: `₹ ${parseFloat(order.total_amount).toLocaleString('en-IN')}`, // Display total order amount
-      },
-    };
-  });
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-8 py-8">
@@ -135,7 +205,13 @@ export default function OrdersPage() {
           { label: "My Account", href: "/account/orders" },
         ]}
       />
-      <AccountTabsUI activeTab="orders" orders={transformedOrders} />
+      <AccountTabsUI
+        activeTab="orders"
+        orders={orders}
+        mapOrderStatusToDisplay={mapOrderStatusToDisplay}
+        mapPaymentStatusToDisplay={mapPaymentStatusToDisplay}
+        mapDeliveryStatusToDisplay={mapDeliveryStatusToDisplay}
+      />
     </div>
   );
 }

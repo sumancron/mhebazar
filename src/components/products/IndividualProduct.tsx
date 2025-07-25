@@ -1,103 +1,433 @@
+// src/components/products/IndividualProduct.tsx
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
   Heart,
   Share2,
   Star,
-  ChevronLeft,
-  ChevronRight,
   Truck,
   Headphones,
   CreditCard,
   RotateCcw,
   ChevronDown,
+  Minus,
+  Plus,
+  ShoppingCart,
+  Trash2,
 } from "lucide-react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
+import api from "@/lib/api";
+import axios from "axios";
+import { toast } from "sonner";
+import { useUser } from "@/context/UserContext";
+import QuoteForm from "@/components/forms/enquiryForm/quotesForm";
+import {
+  Dialog,
+  DialogContent,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import MheWriteAReview from "@/components/forms/product/ProductReviewForm";
+import ReviewSection from "./Reviews"; // Import ReviewSection
+
+// Helper function for SEO-friendly slug
+const slugify = (text: string): string => {
+  return text
+    .toString()
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, '-')       // Replace spaces with -
+    .replace(/[^\w-]+/g, '')     // Remove all non-word chars
+    .replace(/--+/g, '-')        // Replace multiple - with single -
+    .replace(/^-+/, '')          // Trim - from start of text
+    .replace(/-+$/, '');         // Trim - from end of text
+};
+
+
+type ProductImage = {
+  id: number;
+  image: string;
+};
 
 type ProductData = {
-  title: string;
-  subtitle: string;
-  price: number;
-  priceWithTax: number;
-  currency: string;
-  images: string[];
-  offers: { label: string; desc: string; extra: string }[];
-  vendorOffers: { label: string; desc: string; extra: string }[];
-  rating: number;
-  reviews: number;
-  brand: string;
-  stock: number;
-  delivery: string;
+  id: number;
+  name: string;
   description: string;
-  specification: string;
-  vendor: string;
+  meta_title: string | null;
+  meta_description: string | null;
+  manufacturer: string | null;
+  model: string | null;
+  product_details: Record<string, unknown> | null;
+  price: string;
+  type: string;
+  is_active: boolean;
+  direct_sale: boolean;
+  online_payment: boolean;
+  hide_price: boolean;
+  stock_quantity: number;
+  created_at: string;
+  updated_at: string;
+  user: number;
+  category: number;
+  subcategory: number | null;
+  category_name: string;
+  subcategory_name: string | null;
+  user_name: string;
+  images: ProductImage[];
+  brochure: string | null;
+  average_rating: number | null;
 };
 
-const placeholderData: ProductData = {
-  title: "MHE Bazar Engine Oil Filter D141099 – Fits Doosan Forklifts",
-  subtitle: "Best for Doosan, Toyota, Komatsu, Hyundai, and more",
-  price: 398.52,
-  priceWithTax: 470.25,
-  currency: "₹",
-  images: [
-    "https://images.unsplash.com/photo-1586864387967-d02ef85d93e8?w=700&h=700&fit=crop",
-    "https://images.unsplash.com/photo-1586864387967-d02ef85d93e8?w=700&h=700&fit=crop&sat=50",
-    "https://images.unsplash.com/photo-1586864387967-d02ef85d93e8?w=700&h=700&fit=crop&sat=80",
-    "https://images.unsplash.com/photo-1586864387967-d02ef85d93e8?w=700&h=700&fit=crop&sat=120",
-  ],
-  offers: [
-    {
-      label: "Cashback",
-      desc: "Upto ₹260.00 cashback when you pay with selected Credit Cards",
-      extra: "+ 3 offers",
-    },
-  ],
-  vendorOffers: [
-    {
-      label: "Vendor Offer",
-      desc: "Get GST Invoice and save up to 28% on business purchases.",
-      extra: "+ 1 offers",
-    },
-  ],
-  rating: 4.8,
-  reviews: 35,
-  brand: "MHE Bazar",
-  stock: 1,
-  delivery: "FREE delivery Thursday, 12 June to Ernakulam 682505. Order within 6 hrs 11 mins.",
-  description: `MHE Bazar MHLB08500 80V 500Ah Lithium-Ion Battery is a high-capacity energy solution designed for efficient and eco-friendly performance in material handling systems. Built by Greentech India Material Handling LLP, this battery delivers consistent power output, faster charging, and long service life. Ideal for forklifts, cranes, and other industrial machines, it reduces downtime and enhances productivity. The lithium-ion technology ensures zero maintenance, emission-free operation, and greater energy efficiency, making it a reliable upgrade from traditional lead-acid systems.`,
-  specification: "Voltage: 80V\nCapacity: 500Ah\nType: Lithium-Ion\nWarranty: 5 Years",
-  vendor: "Greentech India Material Handling LLP",
-};
+// API response for product list
+interface ProductsApiResponse {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: ProductData[];
+}
 
-export default function ProductSection({ slug }: { slug: string }) {
+// Cart Item type from API
+interface CartItemApi {
+  id: number;
+  product: number;
+  product_details: ProductData;
+  quantity: number;
+  total_price: number;
+}
+
+// Wishlist Item type from API
+interface WishlistItemApi {
+  id: number;
+  product: number;
+  product_details: ProductData;
+}
+
+interface ProductSectionProps {
+  productSlug: string;
+}
+
+
+export default function ProductSection({ productSlug }: ProductSectionProps) {
+  const router = useRouter();
+  const { user } = useUser();
+
   const [data, setData] = useState<ProductData | null>(null);
   const [selectedImage, setSelectedImage] = useState(0);
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [isZoomed, setIsZoomed] = useState(false);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [openAccordion, setOpenAccordion] = useState<"desc" | "spec" | "vendor" | null>("desc");
+  const [isInCart, setIsInCart] = useState(false);
+  const [currentCartQuantity, setCurrentCartQuantity] = useState(0);
+  const [cartItemId, setCartItemId] = useState<number | null>(null);
+  const [isReviewFormOpen, setIsReviewFormOpen] = useState(false);
 
-  // Fetch product data (simulate API)
+  // Function to trigger review section refresh
+  const reviewsRefresher = useRef<(() => void) | null>(null);
+
+  // Use a ref to ensure correct values in callbacks
+  const latestCartState = useRef({ currentCartQuantity, cartItemId, isInCart });
   useEffect(() => {
-    // Simulate API call
+    latestCartState.current = { currentCartQuantity, cartItemId, isInCart };
+  }, [currentCartQuantity, cartItemId, isInCart]);
+
+
+  // Fetch product data by slug
+  useEffect(() => {
     async function fetchData() {
+      if (!productSlug) {
+        router.push('/404');
+        return;
+      }
       try {
-        // const res = await fetch(`/products/${slug}`);
-        // if (!res.ok) throw new Error("No data");
-        // const prod = await res.json();
-        // setData(prod);
-        // Simulate API fail
-        throw new Error("API not available");
-      } catch {
-        setData(placeholderData);
+        // Fetch all products to find the one matching the slug
+        const res = await api.get<ProductsApiResponse>(`/products/`);
+        const allProducts = res.data.results;
+        
+        // Find the product by slug
+        const foundProduct = allProducts.find(p => slugify(p.name) === productSlug);
+
+        if (foundProduct) {
+          setData(foundProduct);
+          if (foundProduct.images.length > 0) {
+            setSelectedImage(0);
+          }
+        } else {
+          router.push('/404'); // Product not found
+        }
+      } catch (error) {
+        console.error("Failed to fetch product data:", error);
+        router.push('/404'); // Redirect to 404 on API error
       }
     }
     fetchData();
-  }, [slug]);
+  }, [productSlug, router]);
+
+
+  // Function to fetch initial status of wishlist and cart for this product
+  const fetchInitialStatus = useCallback(async () => {
+    if (user && data?.id) {
+      try {
+        // Check wishlist status
+        const wishlistResponse = await api.get<{ results: WishlistItemApi[] }>(`/wishlist/?product=${data.id}&user=${user.id}`);
+        setIsWishlisted(wishlistResponse.data.results.length > 0);
+
+        // Check cart status and quantity
+        const cartResponse = await api.get<{ results: CartItemApi[] }>(`/cart/?product=${data.id}&user=${user.id}`);
+        if (cartResponse.data.results.length > 0) {
+          const itemInCart = cartResponse.data.results[0];
+          setIsInCart(true);
+          setCurrentCartQuantity(itemInCart.quantity);
+          setCartItemId(itemInCart.id);
+        } else {
+          setIsInCart(false);
+          setCurrentCartQuantity(0);
+          setCartItemId(null);
+        }
+      } catch (error) {
+        console.error("Failed to fetch initial wishlist/cart status:", error);
+      }
+    } else {
+      setIsWishlisted(false);
+      setIsInCart(false);
+      setCurrentCartQuantity(0);
+      setCartItemId(null);
+    }
+  }, [user, data?.id]);
+
+  useEffect(() => {
+    fetchInitialStatus();
+  }, [fetchInitialStatus]);
+
+
+  const handleAddToCart = useCallback(async (productId: number) => {
+    if (!user) {
+      toast.error("Please log in to add products to your cart.");
+      return;
+    }
+
+    try {
+      if (latestCartState.current.isInCart) {
+        toast.info("This product is already in your cart.", {
+          action: {
+            label: 'View Cart',
+            onClick: () => router.push('/cart'),
+          },
+        });
+        return;
+      }
+      const response = await api.post(`/cart/`, { product: productId, quantity: 1 });
+      setIsInCart(true);
+      setCurrentCartQuantity(1);
+      setCartItemId(response.data.id);
+      toast.success("Product added to cart!", {
+        action: {
+          label: 'View Cart',
+          onClick: () => router.push('/cart'),
+        },
+      });
+    } catch (error: unknown) {
+      console.error("Error adding to cart:", error);
+      if (axios.isAxiosError(error) && error.response) {
+        if (error.response.status === 400 && error.response.data?.non_field_errors?.[0] === "The fields user, product must make a unique set.") {
+          toast.info("Product is already in your cart.", {
+            action: {
+              label: 'View Cart',
+              onClick: () => router.push('/cart'),
+            },
+          });
+          fetchInitialStatus();
+        } else {
+          toast.error(error.response.data?.message || `Failed to add to cart: ${error.response.statusText}`);
+        }
+      } else {
+        toast.error("An unexpected error occurred while adding to cart. Please try again.");
+      }
+    }
+  }, [user, router, fetchInitialStatus]);
+
+
+  const handleRemoveFromCart = useCallback(async (cartId: number) => {
+    if (!user || !cartId) return;
+    try {
+      await api.delete(`/cart/${cartId}/`);
+      setIsInCart(false);
+      setCurrentCartQuantity(0);
+      setCartItemId(null);
+      toast.success("Product removed from cart.");
+    } catch (error) {
+      console.error("Error removing from cart:", error);
+      toast.error("Failed to remove product from cart.");
+    }
+  }, [user]);
+
+
+  const handleIncreaseQuantity = useCallback(async (cartId: number) => {
+    if (!user || !cartId) return;
+    try {
+      const newQuantity = latestCartState.current.currentCartQuantity + 1;
+      await api.patch(`/cart/${cartId}/`, { quantity: newQuantity });
+      setCurrentCartQuantity(newQuantity);
+      toast.success("Quantity increased!");
+    } catch (error) {
+      console.error("Error increasing quantity:", error);
+      if (axios.isAxiosError(error) && error.response && error.response.data?.quantity) {
+        toast.error(`Failed to increase quantity: ${error.response.data.quantity[0]}`);
+      } else {
+        toast.error("Failed to increase quantity.");
+      }
+    }
+  }, [user]);
+
+
+  const handleDecreaseQuantity = useCallback(async (cartId: number) => {
+    if (!user || !cartId) return;
+    if (latestCartState.current.currentCartQuantity <= 1) {
+      toast.info("Quantity cannot be less than 1. Use the remove button (trash icon) to take it out of cart.", {
+        action: {
+          label: 'Remove',
+          onClick: () => handleRemoveFromCart(cartId),
+        },
+      });
+      return;
+    }
+    try {
+      const newQuantity = latestCartState.current.currentCartQuantity - 1;
+      await api.patch(`/cart/${cartId}/`, { quantity: newQuantity });
+      setCurrentCartQuantity(newQuantity);
+      toast.success("Quantity decreased!");
+    } catch (error) {
+      console.error("Error decreasing quantity:", error);
+      if (axios.isAxiosError(error) && error.response && error.response.data?.quantity) {
+        toast.error(`Failed to decrease quantity: ${error.response.data.quantity[0]}`);
+      } else {
+        toast.error("Failed to decrease quantity.");
+      }
+    }
+  }, [user, handleRemoveFromCart]);
+
+
+  const handleWishlist = useCallback(async () => {
+    if (!user || !data?.id) {
+      toast.error("Please log in to manage your wishlist.");
+      return;
+    }
+
+    try {
+      if (isWishlisted) {
+        const wishlistResponse = await api.get<{ results: WishlistItemApi[] }>(`/wishlist/?product=${data.id}&user=${user.id}`);
+        if (wishlistResponse.data.results.length > 0) {
+          const wishlistItemId = wishlistResponse.data.results[0].id;
+          await api.delete(`/wishlist/${wishlistItemId}/`);
+          setIsWishlisted(false);
+          toast.success("Product removed from wishlist!");
+        } else {
+          setIsWishlisted(false);
+          toast.info("Product was not found in your wishlist. Syncing state.");
+        }
+      } else {
+        const response = await api.post(`/wishlist/`, { product: data.id });
+        console.log("Added to wishlist:", response.data);
+        setIsWishlisted(true);
+        toast.success("Product added to wishlist!");
+      }
+    } catch (error: unknown) {
+      console.error("Error updating wishlist:", error);
+      if (axios.isAxiosError(error) && error.response) {
+        if (error.response.status === 400 && error.response.data?.non_field_errors?.[0] === "The fields user, product must make a unique set.") {
+          toast.info("Product is already in your wishlist.");
+          setIsWishlisted(true);
+        } else {
+          toast.error(error.response.data?.message || `Failed to add to wishlist: ${error.response.statusText}`);
+        }
+      } else {
+        toast.error("An unexpected error occurred while updating wishlist. Please try again.");
+      }
+    }
+  }, [user, data?.id, isWishlisted]);
+
+
+  const handleCompare = useCallback(() => {
+    toast.info("Compare functionality coming soon!");
+  }, []);
+
+  const handleBuyNow = useCallback(async () => {
+    if (!user) {
+      toast.error("Please log in to proceed with purchase.");
+      router.push('/login');
+      return;
+    }
+    if (!data || !data.direct_sale || data.stock_quantity === 0 || !data.is_active) {
+      toast.error("This product is not available for direct purchase.");
+      return;
+    }
+
+    try {
+      if (!latestCartState.current.isInCart) {
+        await api.post(`/cart/`, { product: data.id, quantity: 1 });
+      }
+      router.push('/cart');
+    } catch (error: unknown) {
+      console.error("Error during buy now process:", error);
+      if (axios.isAxiosError(error) && error.response) {
+        toast.error(error.response.data?.message || `Failed to add product to cart: ${error.response.statusText}`);
+      } else {
+        toast.error("An unexpected error occurred. Please try again.");
+      }
+    }
+  }, [user, router, data]);
+
+  const handleShare = useCallback(() => {
+    if (!data) return;
+    const productUrl = window.location.href;
+    const productTitle = data.name;
+
+    if (navigator.share) {
+      navigator.share({
+        title: productTitle,
+        url: productUrl,
+      }).then(() => {
+        toast.success('Product link shared successfully!');
+      }).catch((error) => {
+        if (error.name === 'AbortError') {
+          toast.info('Sharing cancelled.');
+        } else {
+          toast.error('Failed to share product link.');
+          console.error('Error sharing:', error);
+        }
+      });
+    } else {
+      navigator.clipboard.writeText(productUrl).then(() => {
+        toast.success('Product link copied to clipboard!');
+      }).catch((err) => {
+        toast.error('Failed to copy link to clipboard.');
+        console.error('Error copying link:', err);
+      });
+    }
+  }, [data]);
+
+  // Callback to be passed to MheWriteAReview, which it calls on successful submission/close
+  const onReviewFormClose = useCallback(() => {
+    setIsReviewFormOpen(false);
+    // Trigger refresh in ReviewSection
+    if (reviewsRefresher.current) {
+      reviewsRefresher.current();
+    }
+    // Also, refetch product data to update average_rating if a new review affects it
+    // This is optional if average_rating is only updated on backend periodically
+    // or if the impact is acceptable to be delayed. For real-time update,
+    // you might need to re-fetch individual product details:
+    // fetchProductData(productSlug); // (You'd need to make fetchData accept productSlug directly)
+  }, []); // Added productSlug to dependencies if `fetchProductData` is to be called
+
+  // Callback to allow ReviewSection to register its refresh function
+  const registerReviewsRefresher = useCallback((refresher: () => void) => {
+    reviewsRefresher.current = refresher;
+  }, []);
+
 
   if (!data) {
-    // Loading skeleton
     return (
       <div className="animate-pulse p-4 max-w-7xl mx-auto">
         <div className="flex flex-col md:flex-row gap-8">
@@ -112,6 +442,12 @@ export default function ProductSection({ slug }: { slug: string }) {
       </div>
     );
   }
+
+  const isPurchasable = data.is_active && (!data.direct_sale || data.stock_quantity > 0);
+  const displayPrice = parseFloat(data.price).toLocaleString("en-IN", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
 
   return (
     <div className="max-w-7xl mx-auto p-2 sm:p-4 bg-white">
@@ -133,8 +469,8 @@ export default function ProductSection({ slug }: { slug: string }) {
             onMouseLeave={() => setIsZoomed(false)}
           >
             <Image
-              src={data.images[selectedImage]}
-              alt={data.title}
+              src={data.images[selectedImage]?.image || "/no-product.png"}
+              alt={data.name}
               className="h-full object-contain transition-transform duration-200 ease-out"
               width={700}
               height={700}
@@ -148,28 +484,32 @@ export default function ProductSection({ slug }: { slug: string }) {
             <div className="absolute top-3 right-3 flex flex-col gap-2">
               <button
                 className="w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-sm hover:shadow-md transition-shadow"
-                onClick={() => setIsWishlisted(!isWishlisted)}
+                onClick={handleWishlist}
+                disabled={!isPurchasable}
               >
                 <Heart className={`w-4 h-4 ${isWishlisted ? "fill-red-500 text-red-500" : "text-gray-600"}`} />
               </button>
-              <button className="w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-sm hover:shadow-md transition-shadow">
+              <button
+                className="w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-sm hover:shadow-md transition-shadow"
+                onClick={handleShare}
+              >
                 <Share2 className="w-4 h-4 text-gray-600" />
               </button>
             </div>
           </div>
           {/* Thumbnail Images */}
           <div className="flex flex-col gap-2">
-            {data.images.map((thumb, index) => (
+            {data.images.map((img, index) => (
               <button
-                key={index}
+                key={img.id}
                 onClick={() => setSelectedImage(index)}
                 className={`w-16 h-16 rounded border-2 overflow-hidden ${
                   selectedImage === index ? "border-orange-500" : "border-gray-200"
                 } hover:border-orange-300 transition-colors`}
               >
                 <Image
-                  src={thumb}
-                  alt={`View ${index + 1}`}
+                  src={img.image}
+                  alt={`${data.name} thumbnail ${index + 1}`}
                   className="w-full h-full object-cover"
                   width={100}
                   height={100}
@@ -184,88 +524,145 @@ export default function ProductSection({ slug }: { slug: string }) {
           <div className="flex flex-col lg:flex-row gap-4">
             <div className="w-full lg:w-2/3">
               {/* Product Title */}
-              <h1 className="text-2xl font-semibold text-gray-900 mb-2">{data.title}</h1>
-              <div className="text-base text-gray-600 mb-2">{data.subtitle}</div>
+              <h1 className="text-2xl font-semibold text-gray-900 mb-2">{data.name}</h1>
+              <div className="text-base text-gray-600 mb-2">
+                {data.category_name} {data.subcategory_name ? `> ${data.subcategory_name}` : ''}
+              </div>
               {/* Rating and Reviews */}
               <div className="flex items-center gap-4 mb-4 flex-wrap">
-                <div className="flex items-center gap-1">
-                  {[1, 2, 3, 4, 5].map(star => (
-                    <Star key={star} className="w-4 h-4 fill-orange-400 text-orange-400" />
-                  ))}
-                  <span className="text-sm text-gray-600 ml-1">({data.rating})</span>
-                </div>
-                <span className="text-sm text-blue-600 hover:underline cursor-pointer">
-                  Reviews ({data.reviews})
+                {data.average_rating !== null && data.average_rating > 0 ? (
+                  <div className="flex items-center gap-1">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <Star
+                        key={star}
+                        className={`w-4 h-4 ${star <= (data.average_rating || 0) ? "fill-orange-400 text-orange-400" : "text-gray-300"
+                          }`}
+                      />
+                    ))}
+                    <span className="text-sm text-gray-600 ml-1">({data.average_rating.toFixed(1)})</span>
+                  </div>
+                ) : (
+                  <span className="text-sm text-gray-600">No ratings yet</span>
+                )}
+                <span
+                  className="text-sm text-blue-600 hover:underline cursor-pointer"
+                  onClick={() => setIsReviewFormOpen(true)}
+                >
+                  Write a Review
                 </span>
-                <span className="text-sm text-gray-600">by {data.brand}</span>
-              </div>
-              {/* Green dots indicator */}
-              <div className="flex items-center gap-1 mb-4">
-                {Array.from({ length: 10 }).map((_, i) => (
-                  <div key={i} className="w-2 h-2 bg-green-500 rounded-full" />
-                ))}
+                {data.manufacturer && (
+                  <span className="text-sm text-gray-600">by {data.manufacturer}</span>
+                )}
               </div>
               {/* Price */}
               <div className="mb-2">
-                <span className="text-2xl font-bold text-green-700">{data.currency}{data.price.toLocaleString()} </span>
-                <span className="text-gray-500 text-base line-through ml-2">{data.currency}{data.priceWithTax.toLocaleString()}</span>
-                <span className="ml-2 text-xs text-green-700 font-semibold">You Save: {data.currency}{(data.priceWithTax - data.price).toFixed(2)}</span>
+                {data.hide_price ? (
+                  <span className="text-2xl font-bold text-gray-400">₹ *******</span>
+                ) : (
+                  <span className="text-2xl font-bold text-green-700">₹{displayPrice}</span>
+                )}
               </div>
               <div className="text-xs text-gray-500 mb-2">Incl. of all taxes</div>
-              {/* Offers Section */}
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-semibold text-lg">Offers</h3>
-                  <div className="flex gap-1">
-                    <ChevronLeft className="w-5 h-5 text-gray-400" />
-                    <ChevronRight className="w-5 h-5 text-gray-400" />
-                  </div>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {data.offers.map((offer, i) => (
-                    <div key={i} className="border border-gray-200 rounded-lg p-4 bg-white">
-                      <div className="bg-gray-100 text-gray-700 text-xs mb-3 font-normal px-2 py-1 rounded inline-block">
-                        {offer.label}
-                      </div>
-                      <p className="font-semibold text-sm mb-1">{offer.desc}</p>
-                      <p className="text-xs text-green-600 font-medium">{offer.extra}</p>
-                    </div>
-                  ))}
-                  {data.vendorOffers.map((offer, i) => (
-                    <div key={i} className="border border-gray-200 rounded-lg p-4 bg-white">
-                      <div className="bg-gray-100 text-gray-700 text-xs mb-3 font-normal px-2 py-1 rounded inline-block">
-                        {offer.label}
-                      </div>
-                      <p className="font-semibold text-sm mb-1">{offer.desc}</p>
-                      <p className="text-xs text-green-600 font-medium">{offer.extra}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
             </div>
             {/* Delivery & Actions */}
             <div className="w-full lg:w-1/3 flex flex-col gap-4">
               {/* Delivery Info */}
               <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                 <div className="space-y-2">
+                  {data.stock_quantity > 0 && data.direct_sale ? (
+                    <p className="text-sm font-semibold text-green-800">
+                      <span className="font-bold">In Stock: {data.stock_quantity} units</span>
+                    </p>
+                  ) : data.stock_quantity === 0 && data.direct_sale ? (
+                    <p className="text-sm font-semibold text-red-600">
+                      Out of Stock
+                    </p>
+                  ) : (
+                    <p className="text-sm font-semibold text-blue-600">
+                      Available for Quote
+                    </p>
+                  )}
+                  {!data.is_active && (
+                    <p className="text-sm font-semibold text-red-600">
+                      Product is currently inactive.
+                    </p>
+                  )}
                   <p className="font-semibold text-green-800">
-                    <span className="font-bold">FREE delivery</span> Thursday, 12 June to Ernakulam 682505. Order within 6 hrs 11 mins.{" "}
+                    <span className="font-bold">FREE delivery</span> (Delivery details coming soon.){" "}
                     <span className="text-blue-600 hover:underline cursor-pointer">Details</span>
-                  </p>
-                  <p className="text-sm font-semibold text-green-800 mt-3">
-                    <span className="font-bold">Only {data.stock} left in stock.</span>
                   </p>
                 </div>
               </div>
               {/* Action Buttons */}
               <div className="flex flex-col gap-2">
-                <button className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-md text-base transition">
-                  Add to Cart
-                </button>
-                <button className="w-full bg-yellow-400 hover:bg-yellow-500 text-black font-semibold py-3 rounded-md text-base transition">
-                  Buy Now
-                </button>
-                <button className="w-full border border-gray-300 text-gray-700 font-semibold py-3 rounded-md text-base hover:bg-gray-50 transition">
+                {data.direct_sale && isPurchasable ? (
+                  <>
+                    {isInCart ? (
+                      <div className="flex items-center justify-between bg-green-50 text-green-700 font-medium py-2 px-3 rounded-md text-base">
+                        <button
+                          onClick={() => cartItemId && handleDecreaseQuantity(cartItemId)}
+                          disabled={currentCartQuantity <= 1}
+                          className="p-1 rounded hover:bg-green-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                          aria-label="Decrease quantity"
+                        >
+                          <Minus className="w-5 h-5" />
+                        </button>
+                        <span className="text-green-800 font-semibold text-center w-8">
+                          {currentCartQuantity}
+                        </span>
+                        <button
+                          onClick={() => cartItemId && handleIncreaseQuantity(cartItemId)}
+                          className="p-1 rounded hover:bg-green-100"
+                          aria-label="Increase quantity"
+                        >
+                          <Plus className="w-5 h-5" />
+                        </button>
+                        <button
+                          onClick={() => cartItemId && handleRemoveFromCart(cartItemId)}
+                          className="p-1 rounded text-red-500 hover:bg-red-50 transition-colors ml-2"
+                          aria-label="Remove from cart"
+                          title="Remove from Cart"
+                        >
+                          <Trash2 className="w-5 h-5" />
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => handleAddToCart(data.id)}
+                        className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-md text-base transition"
+                        aria-label="Add to cart"
+                      >
+                        <ShoppingCart className="inline-block mr-2 w-5 h-5" /> Add to Cart
+                      </button>
+                    )}
+                    <button
+                      onClick={handleBuyNow}
+                      className="w-full bg-yellow-400 hover:bg-yellow-500 text-black font-semibold py-3 rounded-md text-base transition"
+                      aria-label="Buy now"
+                    >
+                      Buy Now
+                    </button>
+                  </>
+                ) : (
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <button
+                        className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-md text-base transition"
+                        aria-label="Get a quote"
+                        disabled={!data.is_active}
+                      >
+                        Get a Quote
+                      </button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <QuoteForm />
+                    </DialogContent>
+                  </Dialog>
+                )}
+                <button
+                  onClick={handleCompare}
+                  className="w-full border border-gray-300 text-gray-700 font-semibold py-3 rounded-md text-base hover:bg-gray-50 transition"
+                >
                   Compare
                 </button>
               </div>
@@ -330,7 +727,15 @@ export default function ProductSection({ slug }: { slug: string }) {
             <ChevronDown className={`w-5 h-5 transition-transform ${openAccordion === "spec" ? "rotate-180" : ""}`} />
           </button>
           {openAccordion === "spec" && (
-            <div className="px-4 py-3 text-gray-700 text-sm whitespace-pre-line">{data.specification}</div>
+            <div className="px-4 py-3 text-gray-700 text-sm whitespace-pre-line">
+              {data.product_details ? (
+                Object.entries(data.product_details).map(([key, value]) => (
+                  <p key={key}><strong>{key}:</strong> {String(value)}</p>
+                ))
+              ) : (
+                <p>No specifications available.</p>
+              )}
+            </div>
           )}
         </div>
         {/* Vendor */}
@@ -343,10 +748,20 @@ export default function ProductSection({ slug }: { slug: string }) {
             <ChevronDown className={`w-5 h-5 transition-transform ${openAccordion === "vendor" ? "rotate-180" : ""}`} />
           </button>
           {openAccordion === "vendor" && (
-            <div className="px-4 py-3 text-gray-700 text-sm whitespace-pre-line">{data.vendor}</div>
+            <div className="px-4 py-3 text-gray-700 text-sm whitespace-pre-line">{data.user_name || "N/A"}</div>
           )}
         </div>
       </div>
+      {data.id && ( // Only render review form if product data and ID are available
+        <MheWriteAReview
+          isOpen={isReviewFormOpen}
+          onOpenChange={onReviewFormClose} // Use the specific handler
+          productId={data.id}
+        />
+      )}
+
+      {/* Render ReviewSection if product data is available, pass the refresher */}
+      {data.id && <ReviewSection productId={data.id} registerRefresher={registerReviewsRefresher} />}
     </div>
   );
 }

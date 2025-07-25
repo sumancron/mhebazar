@@ -1,7 +1,7 @@
 // src/components/elements/Product.tsx
 "use client";
 
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect, useRef } from "react";
 import { Heart, Repeat, Share2, ShoppingCart, Minus, Plus, Trash2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -53,7 +53,7 @@ interface ProductCardDisplayProps {
   onShareClick: (url: string, title: string) => void;
   onIncreaseQuantity: (cartItemId: number) => void;
   onDecreaseQuantity: (cartItemId: number) => void;
-  onRemoveFromCart: (cartItemId: number) => void; // Pass this down
+  onRemoveFromCart: (cartItemId: number) => void;
   productData: Record<string, unknown>;
 }
 
@@ -82,12 +82,11 @@ const ProductCard = ({
   onRemoveFromCart,
   productData,
 }: ProductCardDisplayProps) => {
-  // Remove showIcons logic, always show icons
   const isAvailable = is_active && (!directSale || stock_quantity > 0);
   const isPurchasable = is_active && (!directSale || stock_quantity > 0);
 
   const productSlug = slugify(title);
-  const productDetailUrl = `/product/${productSlug}?id=${id}`;
+  const productDetailUrl = `/product/${productSlug}`;
 
   return (
     <div
@@ -209,9 +208,11 @@ const ProductCard = ({
             >
               Buy Now
             </button>
+            {/* Moved "Get a Quote" for non-purchasable direct sale products inside the directSale block */}
             {!isPurchasable && (
               <Dialog>
-                <DialogTrigger>
+                {/* Fixed: Ensuring DialogTrigger has exactly one child */}
+                <DialogTrigger asChild>
                   <button
                     className="flex items-center justify-center rounded-lg bg-[#5ca131] hover:bg-[#4a8a29] py-2 px-4 text-white font-medium transition-colors duration-200"
                     aria-label="Get a quote"
@@ -227,7 +228,8 @@ const ProductCard = ({
           </div>
         ) : (
           <Dialog>
-            <DialogTrigger>
+            {/* Fixed: Ensuring DialogTrigger has exactly one child */}
+            <DialogTrigger asChild>
               <button
                 className="flex items-center justify-center rounded-lg bg-[#5ca131] hover:bg-[#4a8a29] py-2 px-4 text-white font-medium transition-colors duration-200 w-full"
                 aria-label="Get a quote"
@@ -325,7 +327,7 @@ export const ProductCardContainer = ({
 
   // Function to fetch initial status of wishlist and cart for this product
   // Use a ref to ensure correct values in callbacks
-  const latestCartState = React.useRef({ currentCartQuantity, cartItemId, isInCart });
+  const latestCartState = useRef({ currentCartQuantity, cartItemId, isInCart });
   useEffect(() => {
     latestCartState.current = { currentCartQuantity, cartItemId, isInCart };
   }, [currentCartQuantity, cartItemId, isInCart]);
@@ -428,7 +430,7 @@ export const ProductCardContainer = ({
       console.error("Error removing from cart:", error);
       toast.error("Failed to remove product from cart.");
     }
-  }, [user]); // Only depends on 'user'
+  }, [user]);
 
 
   const handleIncreaseQuantity = useCallback(async (cartId: number) => {
@@ -447,7 +449,7 @@ export const ProductCardContainer = ({
         toast.error("Failed to increase quantity.");
       }
     }
-  }, [user]); // Depends on user
+  }, [user]);
 
 
   const handleDecreaseQuantity = useCallback(async (cartId: number) => {
@@ -474,7 +476,7 @@ export const ProductCardContainer = ({
         toast.error("Failed to decrease quantity.");
       }
     }
-  }, [user, handleRemoveFromCart]); // Depends on user and handleRemoveFromCart
+  }, [user, handleRemoveFromCart]);
 
 
   const handleWishlist = useCallback(async (productId: number) => {
@@ -568,7 +570,7 @@ export const ProductCardContainer = ({
         toast.error("An unexpected error occurred. Please try again.");
       }
     }
-  }, [user, router, directSale, stock_quantity, is_active]); // Removed isInCart from dependencies because we're using latestCartState.current.isInCart
+  }, [user, router, directSale, stock_quantity, is_active]);
 
   const handleShare = useCallback((url: string, title: string) => {
     if (navigator.share) {
@@ -617,7 +619,7 @@ export const ProductCardContainer = ({
       onWishlistClick={handleWishlist}
       onCompareClick={handleCompare}
       onBuyNowClick={handleBuyNow}
-      onShareClick={handleShare} // Pass new share handler
+      onShareClick={handleShare}
       onIncreaseQuantity={handleIncreaseQuantity}
       onDecreaseQuantity={handleDecreaseQuantity}
       onRemoveFromCart={handleRemoveFromCart}

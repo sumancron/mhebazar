@@ -1,3 +1,4 @@
+// NavOptions.tsx
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
@@ -33,13 +34,8 @@ interface Category {
   name: string;
 }
 
-interface CategoriesResponse {
-  count: number;
-  next: string | null;
-  previous: string | null;
-  results: Category[];
-}
-
+// Updated interfaces to reflect the actual API response (direct array for categories)
+// ProductsResponse still has 'results' as per your provided product API
 interface ProductsResponse {
   count: number;
   next: string | null;
@@ -71,16 +67,17 @@ export default function CategoryMenu({
     const fetchData = async () => {
       try {
         const [categoriesResponse, productsResponse] = await Promise.all([
-          api.get<CategoriesResponse>("/categories/"),
+          api.get<Category[]>("/categories/"), // Expecting direct array for categories
           api.get<ProductsResponse>("/products/"),
         ]);
-        setCategories(categoriesResponse.data.results);
-        setProducts(productsResponse.data.results);
+        // Directly set categories as the response is an array
+        setCategories(categoriesResponse.data); //
+        setProducts(productsResponse.data.results); //
 
-        if (categoriesResponse.data.results.length > 0) {
+        if (categoriesResponse.data.length > 0) { //
           const defaultCategory =
-            categoriesResponse.data.results.find((cat) => cat.name === "Battery") ||
-            categoriesResponse.data.results[0];
+            categoriesResponse.data.find((cat) => cat.name === "Battery") || //
+            categoriesResponse.data[0]; //
           setHoveredCategory(defaultCategory);
         }
       } catch (error) {
@@ -177,7 +174,6 @@ export default function CategoryMenu({
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -10 }}
           transition={{ duration: 0.2, ease: "easeOut" }}
-          // onClick={onClose} was removed from here to prevent closing on internal clicks
           className="absolute left-0 top-full z-50 mt-2 bg-white border border-gray-200 rounded-lg shadow-xl overflow-hidden"
         >
           <div className="flex min-w-[800px]">
@@ -213,7 +209,7 @@ export default function CategoryMenu({
                     <Link
                       href={`/${createSlug(category.name)}`}
                       passHref
-                      onClick={onClose} // Simplified click handler
+                      onClick={onClose}
                       className="p-1 -mr-1 rounded hover:bg-gray-200"
                       aria-label={`Go to ${category.name} category page`}
                     >
@@ -256,7 +252,7 @@ export default function CategoryMenu({
                     <Link
                       href={`/${createSlug(category.name)}`}
                       passHref
-                      onClick={onClose} // Simplified click handler
+                      onClick={onClose}
                       className="p-1 -mr-1 rounded hover:bg-gray-200"
                       aria-label={`Go to ${category.name} category page`}
                     >
@@ -283,7 +279,7 @@ export default function CategoryMenu({
                       href={`/${createSlug(displaySourceCategory.name)}/${createSlug(subCategory.name)}`}
                       passHref
                       className="flex items-center gap-4 p-3 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors border border-gray-100"
-                      onClick={onClose} // Simplified click handler
+                      onClick={onClose}
                     >
                       <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0">
                         {getSubCategoryImage(subCategory) ? (
@@ -294,6 +290,8 @@ export default function CategoryMenu({
                             height={64}
                             className="w-full h-full object-cover"
                             unoptimized
+                            // onLoadingComplete deprecated, use onLoad
+                            onLoad={() => { }}
                           />
                         ) : (
                           <span className="text-gray-500 text-xs font-semibold">
