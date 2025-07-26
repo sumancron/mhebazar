@@ -10,6 +10,13 @@ import VendorBanner from "@/components/vendor-listing/VendorBanner";
 import api from "@/lib/api";
 import React from "react";
 
+// Define PRODUCT_TYPE_CHOICES or import from the appropriate module
+const PRODUCT_TYPE_CHOICES = [
+  "Type1",
+  "Type2",
+  "Type3",
+];
+
 interface ApiProduct {
   id: number;
   category_name: string;
@@ -329,10 +336,21 @@ export default function VendorPage({ params }: { params: Promise<{ vendor: strin
     { label: vendorData?.company_name || formattedVendorName, href: `/vendor-listing/${vendorSlug}` },
   ];
 
+  // Map ApiVendor to VendorData for VendorBanner
+  const vendorBannerData = vendorData
+    ? {
+        ...vendorData,
+        logo: "/placeholder-logo.png", // Replace with actual logo if available
+        banner: "/placeholder-banner.jpg", // Replace with actual banner if available
+        productCount: totalProducts,
+        description: vendorData.company_name, // Replace with actual description if available
+      }
+    : undefined;
+
   return (
     <>
       <Breadcrumb items={breadcrumbItems} />
-      {vendorData && <VendorBanner data={vendorData} />}
+      {vendorBannerData && <VendorBanner data={vendorBannerData} />}
       <ProductListing
         products={products}
         title={vendorData?.company_name ? `${vendorData.company_name} Products` : `${formattedVendorName} Products`}

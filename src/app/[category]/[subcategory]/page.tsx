@@ -85,137 +85,155 @@ export default function SubCategoryPage({
   const [validSubcategoryName, setValidSubcategoryName] = useState<string | null>(null);
   const [isRouteValid, setIsRouteValid] = useState<boolean>(true);
 
+  const slugify = (str: string): string =>
+  str.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+
+
   // Validate category and subcategory existence and hierarchy
-  const validateRouteAndGetNames = useCallback(async (catSlug: string, subcatSlug: string) => {
-    setIsRouteValid(true);
-    setValidCategoryName(null);
-    setValidSubcategoryName(null);
-    setErrorMessage(null);
+ const validateRouteAndGetNames = useCallback(async (
+  catSlug: string,
+  subcatSlug: string
+): Promise<{ category: string | null; subcategory: string | null; subcategoryId: number | null }> => {
 
-    const formattedCatName = formatNameFromSlug(catSlug);
-    const formattedSubcatName = formatNameFromSlug(subcatSlug);
+  setIsRouteValid(true);
+  setValidCategoryName(null);
+  setValidSubcategoryName(null);
+  setErrorMessage(null);
 
-    try {
-      const categoryResponse = await api.get<ApiResponse<ApiCategory>>(`/categories/?name=${formattedCatName}`);
-      const category = categoryResponse.data.results.find((c: ApiCategory) => c.name === formattedCatName);
+  const formattedCatName = formatNameFromSlug(catSlug);
+  const formattedSubcatName = formatNameFromSlug(subcatSlug);
 
-      if (!category) {
-        setIsRouteValid(false);
-        setErrorMessage(`Category "${formattedCatName}" not found.`);
-        return { category: null, subcategory: null };
-      }
+  try {
+    const categoryResponse = await api.get<ApiCategory[]>(`/categories/?name=${formattedCatName}`);
+    const category = categoryResponse.data[0];
+    console.log("[Subcategory Page] Category fetched:", category);
+    console.log("Subcategories:", JSON.stringify(category?.subcategories ?? [], null, 2));
 
-      const subcategory = category.subcategories.find((sub: ApiSubcategory) => sub.name === formattedSubcatName);
-
-      if (!subcategory) {
-        setIsRouteValid(false);
-        setErrorMessage(`Subcategory "${formattedSubcatName}" not found under category "${formattedCatName}".`);
-        return { category: null, subcategory: null };
-      }
-
-      setValidCategoryName(formattedCatName);
-      setValidSubcategoryName(formattedSubcatName);
-      setSelectedFilters(new Set<string>([formattedCatName, formattedSubcatName]));
-      return { category: formattedCatName, subcategory: formattedSubcatName };
-
-    } catch (err: unknown) {
-      console.error("[Subcategory Page] Error validating route:", err);
+    if (!category) {
       setIsRouteValid(false);
-      if (err instanceof Error) {
-        setErrorMessage(`An error occurred while validating the path: ${err.message}. Please try again.`);
-      } else {
-        setErrorMessage("An unexpected error occurred while validating the path. Please try again.");
-      }
-      return { category: null, subcategory: null };
+      setErrorMessage(`Category "${formattedCatName}" not found.`);
+      return {
+        category: null,
+        subcategory: null,
+        subcategoryId: null,
+      };
     }
-  }, []);
+
+    const formattedSubcatSlug = slugify(formattedSubcatName);
+    const subcategory = category.subcategories.find((sub: ApiSubcategory) =>
+      slugify(sub.name) === formattedSubcatSlug
+    );
+
+    if (!subcategory) {
+      setIsRouteValid(false);
+      setErrorMessage(`Subcategory "${formattedSubcatName}" not found under category "${formattedCatName}".`);
+      return {
+        category: null,
+        subcategory: null,
+        subcategoryId: null,
+      };
+    }
+
+    // All good — update state and return everything
+    setValidCategoryName(formattedCatName);
+    setValidSubcategoryName(formattedSubcatName);
+    setSelectedFilters(new Set<string>([formattedCatName, formattedSubcatName]));
+
+    return {
+      category: formattedCatName,
+      subcategory: formattedSubcatName,
+      subcategoryId: subcategory.id,
+    };
+
+  } catch (err: unknown) {
+    console.error("[Subcategory Page] Error validating route:", err);
+    setIsRouteValid(false);
+    if (err instanceof Error) {
+      setErrorMessage(`An error occurred while validating the path: ${err.message}. Please try again.`);
+    } else {
+      setErrorMessage("An unexpected error occurred while validating the path. Please try again.");
+    }
+    return {
+      category: null,
+      subcategory: null,
+      subcategoryId: null,
+    };
+  }
+}, []);
+
 
   // Fetch products based on validated category and subcategory and filters
   const fetchProductsData = useCallback(async (
-    categoryName: string,
-    subcategoryName: string,
-    page: number,
-    minPriceFilter: number | '',
-    maxPriceFilter: number | '',
-    manufacturerFilter: string | null,
-    ratingFilter: number | null,
-    sortByFilter: string
-  ) => {
-    setIsLoading(true);
-    setNoProductsFoundMessage(null);
-    setProducts([]);
-    setTotalProducts(0);
-    setTotalPages(1);
+  categoryName: string,
+  subcategoryName: string,
+  subcategoryId: number,
+  page: number,
+  minPriceFilter: number | '',
+  maxPriceFilter: number | '',
+  manufacturerFilter: string | null,
+  ratingFilter: number | null,
+  sortByFilter: string
+) => {
+  setIsLoading(true);
+  setNoProductsFoundMessage(null);
+  setProducts([]);
+  setTotalProducts(0);
+  setTotalPages(1);
 
-    try {
-      const queryParams = new URLSearchParams();
-      queryParams.append("category_name", categoryName);
-      queryParams.append("subcategory_name", subcategoryName);
-      queryParams.append("page", page.toString());
+  try {
+    const queryParams = new URLSearchParams();
+    queryParams.append("category_name", categoryName);
+    queryParams.append("subcategory_id", subcategoryId.toString()); // ✅ use ID here
+    queryParams.append("page", page.toString());
 
-      if (minPriceFilter !== '') {
-        queryParams.append("min_price", minPriceFilter.toString());
-      }
-      if (maxPriceFilter !== '') {
-        queryParams.append("max_price", maxPriceFilter.toString());
-      }
-      if (manufacturerFilter) {
-        queryParams.append("manufacturer", manufacturerFilter);
-      }
-      if (ratingFilter !== null) {
-        queryParams.append("min_average_rating", ratingFilter.toString());
-      }
-      if (sortByFilter && sortByFilter !== 'relevance') {
-        let sortParam = '';
-        if (sortByFilter === 'price_asc') {
-          sortParam = 'price';
-        } else if (sortByFilter === 'price_desc') {
-          sortParam = '-price';
-        } else if (sortByFilter === 'newest') {
-          sortParam = '-created_at';
-        }
-        if (sortParam) {
-          queryParams.append("ordering", sortParam);
-        }
-      }
+    if (minPriceFilter !== '') queryParams.append("min_price", minPriceFilter.toString());
+    if (maxPriceFilter !== '') queryParams.append("max_price", maxPriceFilter.toString());
+    if (manufacturerFilter) queryParams.append("manufacturer", manufacturerFilter);
+    if (ratingFilter !== null) queryParams.append("min_average_rating", ratingFilter.toString());
 
-      const response = await api.get<ApiResponse<ApiProduct>>(
-        `/products/?${queryParams.toString()}`
-      );
-
-      if (response.data.results.length === 0) {
-        setNoProductsFoundMessage(`No products found for "${subcategoryName}" under "${categoryName}" with the selected filters.`);
-      }
-
-      const transformedProducts: Product[] = response.data.results.map((p: ApiProduct) => ({
-        id: p.id.toString(),
-        image: p.images.length > 0 ? p.images[0].image : "/placeholder-product.jpg",
-        title: p.name,
-        subtitle: p.description,
-        price: parseFloat(p.price),
-        currency: "₹",
-        category_name: p.category_name,
-        subcategory_name: p.subcategory_name,
-        direct_sale: p.direct_sale,
-        is_active: p.is_active,
-        hide_price: p.hide_price,
-        stock_quantity: p.stock_quantity,
-        manufacturer: p.manufacturer,
-        average_rating: p.average_rating,
-      }));
-
-      setProducts(transformedProducts);
-      setTotalProducts(response.data.count);
-      setTotalPages(Math.ceil(response.data.count / 10));
-      console.log("[Subcategory Page] Products fetched successfully.");
-    } catch (err: unknown) {
-      console.error("[Subcategory Page] Failed to fetch products:", err);
-      setErrorMessage("Failed to load products. An API error occurred.");
-      setProducts([]);
-    } finally {
-      setIsLoading(false);
+    if (sortByFilter && sortByFilter !== 'relevance') {
+      let sortParam = '';
+      if (sortByFilter === 'price_asc') sortParam = 'price';
+      else if (sortByFilter === 'price_desc') sortParam = '-price';
+      else if (sortByFilter === 'newest') sortParam = '-created_at';
+      if (sortParam) queryParams.append("ordering", sortParam);
     }
-  }, []);
+
+    const response = await api.get<ApiResponse<ApiProduct>>(`/products/?${queryParams.toString()}`);
+
+    if (response.data.results.length === 0) {
+      setNoProductsFoundMessage(`No products found for "${subcategoryName}" under "${categoryName}" with the selected filters.`);
+    }
+
+    const transformedProducts: Product[] = response.data.results.map((p: ApiProduct) => ({
+      id: p.id.toString(),
+      image: p.images.length > 0 ? p.images[0].image : "/placeholder-product.jpg",
+      title: p.name,
+      subtitle: p.description,
+      price: parseFloat(p.price),
+      currency: "₹",
+      category_name: p.category_name,
+      subcategory_name: p.subcategory_name,
+      direct_sale: p.direct_sale,
+      is_active: p.is_active,
+      hide_price: p.hide_price,
+      stock_quantity: p.stock_quantity,
+      manufacturer: p.manufacturer,
+      average_rating: p.average_rating,
+    }));
+
+    setProducts(transformedProducts);
+    setTotalProducts(response.data.count);
+    setTotalPages(Math.ceil(response.data.count / 10));
+    console.log("[Subcategory Page] Products fetched successfully.");
+  } catch (err: unknown) {
+    console.error("[Subcategory Page] Failed to fetch products:", err);
+    setErrorMessage("Failed to load products. An API error occurred.");
+    setProducts([]);
+  } finally {
+    setIsLoading(false);
+  }
+}, []);
 
   // Effect to apply filters from URL search params on initial load
   useEffect(() => {
@@ -236,47 +254,52 @@ export default function SubCategoryPage({
 
 
   // Main effect to validate route and fetch data
-  useEffect(() => {
-    const loadData = async () => {
-      setIsLoading(true);
-      const { category, subcategory } = await validateRouteAndGetNames(urlCategorySlug, urlSubcategorySlug);
-      if (category && subcategory) {
-        await fetchProductsData(
-          category,
-          subcategory,
-          currentPage,
-          minPrice,
-          maxPrice,
-          selectedManufacturer,
-          selectedRating,
-          sortBy
-        );
-      } else {
-        setIsLoading(false);
-        setProducts([]);
-        setTotalProducts(0);
-        setTotalPages(1);
-      }
-    };
-    loadData();
-  }, [
-    urlCategorySlug,
-    urlSubcategorySlug,
-    currentPage,
-    validateRouteAndGetNames,
-    fetchProductsData,
-    minPrice,
-    maxPrice,
-    selectedManufacturer,
-    selectedRating,
-    sortBy,
-  ]);
+useEffect(() => {
+  const loadData = async () => {
+    setIsLoading(true);
+    const { category, subcategory, subcategoryId } = await validateRouteAndGetNames(
+      urlCategorySlug,
+      urlSubcategorySlug
+    );
+    if (category && subcategory && subcategoryId !== null) {
+      await fetchProductsData(
+        category,
+        subcategory,
+        subcategoryId, // ✅ pass this
+        currentPage,
+        minPrice,
+        maxPrice,
+        selectedManufacturer,
+        selectedRating,
+        sortBy
+      );
+    } else {
+      setIsLoading(false);
+      setProducts([]);
+      setTotalProducts(0);
+      setTotalPages(1);
+    }
+  };
+  loadData();
+}, [
+  urlCategorySlug,
+  urlSubcategorySlug,
+  currentPage,
+  validateRouteAndGetNames,
+  fetchProductsData,
+  minPrice,
+  maxPrice,
+  selectedManufacturer,
+  selectedRating,
+  sortBy,
+]);
+
 
   // Handle filter changes (this will trigger navigation)
   const handleFilterChange = useCallback((
     filterValue: string | number,
-    filterType: "category" | "subcategory" | "type" | "price_range" | "manufacturer" | "rating",
-    newValue?: string | number | { min: number | ""; max: number | ""; } | null // For direct value updates
+    filterType: "category" | "subcategory" | "type" | "price_range" | "manufacturer" | "rating" | "sort_by",
+    newValue?: string | number | { min: number | ""; max: number | ""; } | null | undefined // For direct value updates
   ) => {
     const currentPath = `/${urlCategorySlug}/${urlSubcategorySlug}`;
     const newSearchParams = new URLSearchParams(searchParams.toString());
