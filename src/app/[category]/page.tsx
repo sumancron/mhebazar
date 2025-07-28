@@ -104,43 +104,42 @@ export default function CategoryOrTypePage({
 
     // 2. Check if it's a valid category or subcategory (e.g., /spare-parts, /pallet-trucks/hand-pallet-truck)
     try {
-      // Fetch category by name. Your API supports /categories/?name=<category_name>
-      const categoryResponse = await api.get<ApiResponse<ApiCategory>>(`/categories/?name=${formattedParamName}`);
-      
-      // IMPORTANT: Check if response.data and response.data.results exist
-      if (categoryResponse.data && categoryResponse.data.results && categoryResponse.data.results.length > 0) {
-        const category = categoryResponse.data.results[0];
-        setActiveCategoryName(category.name);
+  const categoryResponse = await api.get<ApiCategory[]>(`/categories/?name=${formattedParamName}`);
+  console.log(`/categories/?name=${formattedParamName}`);
+  console.log("Category Response:", categoryResponse.data);
 
-        if (formattedSubParamName) {
-          // Check if the subcategory exists within this category
-          const subcategory = category.subcategories.find(sub => sub.name.toLowerCase() === formattedSubParamName.toLowerCase());
-          if (subcategory) {
-            setActiveSubcategoryName(subcategory.name);
-            setSelectedFilters(new Set<string>([category.name, subcategory.name]));
-            return { type: 'subcategory', name: category.name, subName: subcategory.name };
-          } else {
-            // Subcategory not found under this category
-            return { type: 'invalid', name: null, subName: null };
-          }
-        } else {
-          // Valid category, no subcategory specified
-          setSelectedFilters(new Set<string>([category.name]));
-          return { type: 'category', name: category.name, subName: null };
-        }
-      }
-    } catch (err: unknown) {
-      if (err instanceof AxiosError) {
-        console.error("[Category/Type Page] Failed to check category existence (AxiosError):", err.message);
-        // Optionally, check err.response for specific HTTP status codes if needed
+  const categories = categoryResponse.data;
+  if (categories && categories.length > 0) {
+    const category = categories[0];
+    setActiveCategoryName(category.name);
+
+    if (formattedSubParamName) {
+      const subcategory = category.subcategories.find(
+        sub => sub.name.toLowerCase() === formattedSubParamName.toLowerCase()
+      );
+
+      if (subcategory) {
+        setActiveSubcategoryName(subcategory.name);
+        setSelectedFilters(new Set<string>([category.name, subcategory.name]));
+        return { type: 'subcategory', name: category.name, subName: subcategory.name };
       } else {
-        console.error("[Category/Type Page] Failed to check category existence:", err);
+        return { type: 'invalid', name: null, subName: null };
       }
-      // If API error or no match, fall through to invalid
+    } else {
+      setSelectedFilters(new Set<string>([category.name]));
+      return { type: 'category', name: category.name, subName: null };
     }
+  }
+} catch (err: unknown) {
+  if (err instanceof AxiosError) {
+    console.error("[Category/Type Page] Failed to check category existence (AxiosError):", err.message);
+  } else {
+    console.error("[Category/Type Page] Failed to check category existence:", err);
+  }
+}
 
-    // If neither a product type nor a valid category/subcategory, then it's an invalid route
-    return { type: 'invalid', name: null, subName: null };
+return { type: 'invalid', name: null, subName: null };
+
   }, []);
 
   // Fetch products based on the determined context and filters
