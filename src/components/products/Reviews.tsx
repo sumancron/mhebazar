@@ -162,7 +162,7 @@ export default function ReviewSection({ productId, registerRefresher }: ReviewSe
 
   if (!data) {
     return (
-      <div className="max-w-7xl mx-auto p-4 animate-pulse">
+      <div className="px-4 mx-auto p-4 animate-pulse">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div className="space-y-4">
             <div className="h-8 bg-gray-200 rounded w-2/3" />
@@ -185,7 +185,7 @@ export default function ReviewSection({ productId, registerRefresher }: ReviewSe
   const canScrollRight = imgScroll + 5 < data.reviewImages.length;
 
   return (
-    <div className="max-w-7xl mx-auto p-2 sm:p-4">
+    <div className="px-4 mx-auto p-2 sm:p-4">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         {/* Left: Summary */}
         <div>
