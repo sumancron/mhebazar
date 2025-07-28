@@ -692,9 +692,9 @@ export default function ReviewCarousel() {
                 return (
                   <CarouselItem
                     key={index}
-                    className="basis-full md:basis-1/3 flex justify-center ">
+                    className="basis-full md:basis-1/3 flex justify-center py-12">
                     <div
-                      className="w-full max-w-sm mx-2 rounded-lg p-6 transition-all duration-500 ease-out border"
+                      className="w-full mx-2 rounded-lg p-6 transition-all duration-500 ease-out border"
                       style={cardStyles}>
 
                       {/* Quote icon */}
@@ -705,7 +705,7 @@ export default function ReviewCarousel() {
                       </div>
 
                       {/* Content */}
-                      <div className={`mb-6 text-gray-700 text-sm leading-relaxed ${isActive ? 'line-clamp-none' : 'line-clamp-4'}`}>
+                      <div className={`mb-6 text-gray-700 text-sm leading-relaxed ${isActive ? 'line-clamp-4' : 'line-clamp-4'}`}>
                         {typeof review.content === 'string' ? (
                           <p>{review.content}</p>
                         ) : (
@@ -736,7 +736,7 @@ export default function ReviewCarousel() {
                       </div>
 
                       {/* Read More Dialog */}
-                      {!isActive && (
+                      {(
                         <div className="mt-4">
                           <Dialog>
                             <DialogTrigger asChild>
