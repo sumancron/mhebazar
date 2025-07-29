@@ -10,7 +10,8 @@ import axios from "axios";
 import { useUser } from "@/context/UserContext";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import QuoteForm from "../forms/enquiryForm/quotesForm";
+import QuoteForm from "../forms/enquiryForm/quotesForm"; // Path to your QuoteForm
+import RentalForm from "../forms/enquiryForm/rentalForm"; // Path to your RentalForm
 import {
   Dialog,
   DialogContent,
@@ -55,6 +56,7 @@ interface ProductCardDisplayProps {
   onDecreaseQuantity: (cartItemId: number) => void;
   onRemoveFromCart: (cartItemId: number) => void;
   productData: Record<string, unknown>;
+  productType: string; // Added productType
 }
 
 const ProductCard = ({
@@ -81,12 +83,17 @@ const ProductCard = ({
   onDecreaseQuantity,
   onRemoveFromCart,
   productData,
+  productType, // Destructure productType
 }: ProductCardDisplayProps) => {
   const isAvailable = is_active && (!directSale || stock_quantity > 0);
   const isPurchasable = is_active && (!directSale || stock_quantity > 0);
 
   const productSlug = slugify(title);
   const productDetailUrl = `/product/${productSlug}`;
+
+  // Determine which form to show
+  const FormComponent = productType === 'rental' ? RentalForm : QuoteForm;
+  const formButtonText = productType === 'rental' ? "Rent Now" : "Get a Quote";
 
   return (
     <div
@@ -208,38 +215,36 @@ const ProductCard = ({
             >
               Buy Now
             </button>
-            {/* Moved "Get a Quote" for non-purchasable direct sale products inside the directSale block */}
+            {/* Conditional form for non-purchasable direct sale products */}
             {!isPurchasable && (
               <Dialog>
-                {/* Fixed: Ensuring DialogTrigger has exactly one child */}
                 <DialogTrigger asChild>
                   <button
                     className="flex items-center justify-center rounded-lg bg-[#5ca131] hover:bg-[#4a8a29] py-2 px-4 text-white font-medium transition-colors duration-200"
-                    aria-label="Get a quote"
+                    aria-label={formButtonText}
                   >
-                    Get a Quote
+                    {formButtonText}
                   </button>
                 </DialogTrigger>
                 <DialogContent className="w-fit">
-                  <QuoteForm />
+                  <FormComponent productId={id} productDetails={{ image, title, description: subtitle, price }} />
                 </DialogContent>
               </Dialog>
             )}
           </div>
         ) : (
           <Dialog>
-            {/* Fixed: Ensuring DialogTrigger has exactly one child */}
             <DialogTrigger asChild>
               <button
                 className="flex items-center justify-center rounded-lg bg-[#5ca131] hover:bg-[#4a8a29] py-2 px-4 text-white font-medium transition-colors duration-200 w-full"
-                aria-label="Get a quote"
+                aria-label={formButtonText}
                 disabled={!is_active}
               >
-                Get a Quote
+                {formButtonText}
               </button>
             </DialogTrigger>
             <DialogContent>
-              <QuoteForm />
+              <FormComponent productId={id} productDetails={{ image, title, description: subtitle, price }} />
             </DialogContent>
           </Dialog>
         )}
@@ -261,6 +266,7 @@ interface ProductCardContainerProps {
   is_active: boolean;
   hide_price: boolean;
   stock_quantity: number;
+  type: string; // Added type to container props
 }
 
 // Full product data interface matching API for internal use in container
@@ -273,7 +279,7 @@ interface ApiProductData {
   description: string;
   price: string;
   direct_sale: boolean;
-  type?: string;
+  type: string; // Ensure type is here
   is_active: boolean;
   hide_price: boolean;
   stock_quantity: number;
@@ -310,6 +316,7 @@ export const ProductCardContainer = ({
   is_active,
   hide_price,
   stock_quantity,
+  type, // Destructure type from props
 }: ProductCardContainerProps) => {
   const { user } = useUser();
   const router = useRouter();
@@ -322,7 +329,7 @@ export const ProductCardContainer = ({
 
   // Full product data to pass for comparison (matches ProductCardContainerProps)
   const productFullData: ProductCardContainerProps = {
-    id, image, title, subtitle, price, currency, directSale, is_active, hide_price, stock_quantity,
+    id, image, title, subtitle, price, currency, directSale, is_active, hide_price, stock_quantity, type,
   };
 
   // Function to fetch initial status of wishlist and cart for this product
@@ -435,21 +442,29 @@ export const ProductCardContainer = ({
 
   const handleIncreaseQuantity = useCallback(async (cartId: number) => {
     if (!user || !cartId) return;
+    if (latestCartState.current.currentCartQuantity <= 1) { // Use ref for latest state
+      toast.info("Quantity cannot be less than 1. Use the remove button (trash icon) to take it out of cart.", {
+        action: {
+          label: 'Remove',
+          onClick: () => handleRemoveFromCart(cartId),
+        },
+      });
+      return;
+    }
     try {
-      const newQuantity = latestCartState.current.currentCartQuantity + 1; // Use ref for latest state
-      // You might want to check against max_stock_quantity here if applicable
+      const newQuantity = latestCartState.current.currentCartQuantity - 1; // Use ref for latest state
       await api.patch(`/cart/${cartId}/`, { quantity: newQuantity });
       setCurrentCartQuantity(newQuantity); // Optimistically update
-      toast.success("Quantity increased!");
+      toast.success("Quantity decreased!");
     } catch (error) {
-      console.error("Error increasing quantity:", error);
+      console.error("Error decreasing quantity:", error);
       if (axios.isAxiosError(error) && error.response && error.response.data?.quantity) {
-        toast.error(`Failed to increase quantity: ${error.response.data.quantity[0]}`);
+        toast.error(`Failed to decrease quantity: ${error.response.data.quantity[0]}`);
       } else {
-        toast.error("Failed to increase quantity.");
+        toast.error("Failed to decrease quantity.");
       }
     }
-  }, [user]);
+  }, [user, handleRemoveFromCart]);
 
 
   const handleDecreaseQuantity = useCallback(async (cartId: number) => {
@@ -624,6 +639,7 @@ export const ProductCardContainer = ({
       onDecreaseQuantity={handleDecreaseQuantity}
       onRemoveFromCart={handleRemoveFromCart}
       productData={{ ...productFullData }}
+      productType={type} // Pass the product type
     />
   );
 };

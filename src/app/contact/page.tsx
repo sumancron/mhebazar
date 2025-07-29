@@ -1,8 +1,14 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useState } from "react";
-import { Phone, Mail, CheckCircle } from "lucide-react";
+import { useState, FormEvent, useEffect } from "react";
+import { Phone, Mail, CheckCircle, RefreshCcw } from "lucide-react";
 import Breadcrumb from "@/components/elements/Breadcrumb";
+import { Input } from "@/components/ui/input"; // Assuming shadcn/ui Input
+import { Textarea } from "@/components/ui/textarea"; // Assuming shadcn/ui Textarea
+import { Button } from "@/components/ui/button"; // Assuming shadcn/ui Button
+import api from "@/lib/api"; // Your existing API instance
+import { toast } from "sonner"; // For notifications
 
 const offices = [
   {
@@ -36,6 +42,99 @@ const offices = [
 
 export default function ContactPage() {
   const [selectedOfficeIndex, setSelectedOfficeIndex] = useState(0);
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [companyName, setCompanyName] = useState("");
+  const [location, setLocation] = useState("");
+  const [phone, setPhone] = useState("");
+  const [message, setMessage] = useState("");
+  const [captchaText, setCaptchaText] = useState("");
+  const [captchaInput, setCaptchaInput] = useState("");
+  const [honeypot, setHoneypot] = useState(""); // Honeypot field
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Function to generate a random CAPTCHA string
+  const generateCaptcha = () => {
+    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    let result = "";
+    for (let i = 0; i < 6; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    setCaptchaText(result);
+    setCaptchaInput(""); // Clear captcha input on refresh
+  };
+
+  useEffect(() => {
+    generateCaptcha(); // Generate CAPTCHA on component mount
+  }, []);
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    if (captchaInput.toUpperCase() !== captchaText) {
+      toast.error("CAPTCHA verification failed. Please try again.");
+      generateCaptcha(); // Regenerate CAPTCHA on failure
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (honeypot) { // If honeypot field is filled, it's likely a bot
+      toast.error("Bot detected. Submission blocked.");
+      setIsSubmitting(false);
+      return;
+    }
+
+    try {
+      const response = await api.post("/contact-forms/", {
+        first_name: firstName,
+        last_name: lastName,
+        email: email,
+        company_name: companyName,
+        location: location,
+        phone: phone,
+        message: message,
+        captcha: captchaText, // Send the generated CAPTCHA text
+        captcha_answer: captchaInput.toUpperCase(), // Send the user's input for verification
+        honeypot: honeypot, // Send honeypot value
+      });
+
+      if (response.status === 201) {
+        toast.success("Message sent successfully! We will get back to you soon.");
+        // Clear form fields
+        setFirstName("");
+        setLastName("");
+        setEmail("");
+        setCompanyName("");
+        setLocation("");
+        setPhone("");
+        setMessage("");
+        setCaptchaInput("");
+        generateCaptcha(); // Generate new CAPTCHA
+      }
+    } catch (error: any) {
+      console.error("Error submitting contact form:", error);
+      if (error.response && error.response.data) {
+        // Display specific backend errors
+        const errors = error.response.data;
+        if (errors.captcha || errors.captcha_answer) {
+          toast.error("CAPTCHA verification failed. Please try again.");
+          generateCaptcha();
+        } else if (errors.honeypot) {
+          toast.error("Bot detected. Submission blocked.");
+        } else {
+          // General error message for other validation errors
+          const errorMessages = Object.values(errors).flat().join(". ");
+          toast.error(`Failed to send message: ${errorMessages}`);
+        }
+      } else {
+        toast.error("An unexpected error occurred. Please try again.");
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <>
@@ -50,7 +149,7 @@ export default function ContactPage() {
       </div>
 
       <section className="max-w-7xl mx-auto px-4 sm:px-8 py-8">
-        <h2 className="text-xl sm:text-2xl font-semibold mb-1">Contact us</h2>
+        <h2 className="text-xl sm:text-2xl font-semibold mb-1 text-gray-900">Contact us</h2>
         <p className="text-gray-700 mb-6">
           We love to hear from you! Please let us know if you have any questions
           or concerns and we will get back to you soon. Thank you!
@@ -64,15 +163,15 @@ export default function ContactPage() {
                 key={index}
                 type="button"
                 onClick={() => setSelectedOfficeIndex(index)}
-                className={`text-left bg-white border rounded-lg p-4 shadow-sm transition-all ${
+                className={`text-left bg-white border rounded-lg p-4 shadow-sm transition-all duration-300 ease-in-out ${
                   selectedOfficeIndex === index
-                    ? "border-green-600 ring-2 ring-green-200"
-                    : "border-gray-200"
+                    ? "border-green-600 ring-2 ring-green-200 scale-[1.01]"
+                    : "border-gray-200 hover:shadow-md"
                 }`}
                 style={{ cursor: "pointer" }}>
                 <div className="flex items-center gap-2 mb-2">
                   <CheckCircle className="h-5 w-5 text-green-600" />
-                  <span className="font-semibold text-sm">{office.title}</span>
+                  <span className="font-semibold text-sm text-gray-900">{office.title}</span>
                 </div>
                 <div className="text-gray-800 text-sm mb-1">
                   {office.address}
@@ -94,53 +193,109 @@ export default function ContactPage() {
 
           {/* Right - Contact Form */}
           <form
-            className="flex-1 bg-white border border-gray-200 rounded-lg p-6 shadow-sm flex flex-col gap-4"
-            onSubmit={e => e.preventDefault()}>
+            className="flex-1 bg-white border border-gray-200 rounded-lg p-6 shadow-lg flex flex-col gap-4"
+            onSubmit={handleSubmit}>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Send us a message</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <input
+              <Input
                 type="text"
-                placeholder="First name"
-                className="border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                placeholder="First Name"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
                 required
+                className="rounded-md border border-gray-300 focus:ring-green-500 focus:border-green-500"
               />
-              <input
+              <Input
                 type="text"
-                placeholder="Last name"
-                className="border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                placeholder="Last Name"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
                 required
+                className="rounded-md border border-gray-300 focus:ring-green-500 focus:border-green-500"
               />
-              <input
+              <Input
                 type="email"
                 placeholder="Email"
-                className="border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 col-span-1 sm:col-span-2"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 required
+                className="col-span-1 sm:col-span-2 rounded-md border border-gray-300 focus:ring-green-500 focus:border-green-500"
               />
+              <Input
+                type="text"
+                placeholder="Company Name (Optional)"
+                value={companyName}
+                onChange={(e) => setCompanyName(e.target.value)}
+                className="rounded-md border border-gray-300 focus:ring-green-500 focus:border-green-500"
+              />
+              <Input
+                type="text"
+                placeholder="Location (Optional)"
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                className="rounded-md border border-gray-300 focus:ring-green-500 focus:border-green-500"
+              />
+              <Input
+                type="text"
+                placeholder="Phone (Optional)"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                className="rounded-md border border-gray-300 focus:ring-green-500 focus:border-green-500"
+              />
+              <Textarea
+                placeholder="Your Message"
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                required
+                rows={4}
+                className="col-span-1 sm:col-span-2 rounded-md border border-gray-300 focus:ring-green-500 focus:border-green-500"
+              />
+
+              {/* CAPTCHA */}
+              <div className="col-span-1 sm:col-span-2 flex items-center gap-2">
+                <div className="flex-1 flex items-center bg-gray-100 border border-gray-300 rounded-md p-2 text-lg font-bold text-gray-700 justify-center select-none">
+                  {captchaText}
+                </div>
+                <Button
+                  type="button"
+                  onClick={generateCaptcha}
+                  variant="outline"
+                  size="icon"
+                  className="h-10 w-10 text-gray-600 hover:bg-gray-100"
+                  aria-label="Refresh CAPTCHA"
+                >
+                  <RefreshCcw className="h-5 w-5" />
+                </Button>
+                <Input
+                  type="text"
+                  placeholder="Enter CAPTCHA"
+                  value={captchaInput}
+                  onChange={(e) => setCaptchaInput(e.target.value)}
+                  required
+                  maxLength={6}
+                  className="flex-1 rounded-md border border-gray-300 focus:ring-green-500 focus:border-green-500 uppercase"
+                />
+              </div>
+
+              {/* Honeypot field - hidden from users */}
               <input
                 type="text"
-                placeholder="Company name"
-                className="border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                name="honeypot"
+                tabIndex={-1} // Make it not focusable
+                autoComplete="off" // Prevent browser autofill
+                value={honeypot}
+                onChange={(e) => setHoneypot(e.target.value)}
+                className="hidden" // Hide it visually
               />
-              <input
-                type="text"
-                placeholder="Location"
-                className="border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
-              />
-              <input
-                type="text"
-                placeholder="Phone"
-                className="border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
-              />
-              <textarea
-                placeholder="Message"
-                className="border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 col-span-1 sm:col-span-2"
-                rows={2}
-              />
+
             </div>
-            <button
+            <Button
               type="submit"
-              className="mt-2 bg-green-600 hover:bg-green-700 text-white font-semibold text-sm rounded py-2 px-4 transition-colors">
-              Send Message
-            </button>
+              className="mt-2 bg-green-600 hover:bg-green-700 text-white font-semibold text-base rounded-md py-3 px-6 transition-colors"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? "Sending Message..." : "Send Message"}
+            </Button>
           </form>
         </div>
       </section>

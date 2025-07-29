@@ -1,124 +1,170 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-// import { Dialog, DialogClose, DialogContent } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-// import { X } from "lucide-react";
-import React, { JSX } from "react";
+import React, { JSX, useState, FormEvent } from "react";
 import Image from 'next/image';
+import api from "@/lib/api"; // Your existing API instance
+import { toast } from "sonner"; // For notifications
+import { useUser } from "@/context/UserContext"; // Assuming you have a UserContext
+import axios from "axios";
 
+interface QuoteFormProps {
+  productId: number;
+  productDetails: {
+    image: string;
+    title: string;
+    description: string;
+    price: string | number;
+  };
+  onClose?: () => void; // Optional callback to close the dialog
+}
 
-const productData = {
-  title: "Hand Pallet Truck",
-  quantity: 1,
-  lockInPeriod: "2 months",
-  location:
-    "No: 21, Greams Lane, Off, Greams Road, Chennai, Tamil Nadu 600006, India",
-  description:
-    "MHEBazar Rentals' hand pallet trucks are a cost-effective and reliable solution for material handling needs. With top-quality equipment and maintenance-included costing, you can enjoy hassle-free ownership. Trained operators and technical consulting are available, and renting eliminates obsolescence and depreciation costs. Choose the Opex model for capital savings and transform fixed assets into flexible business expenditures. With comprehensive maintenance included offerings, you can rely on MHEBazar Rentals for faster and consistent solutions for all your MHE needs.",
-};
+const QuoteForm = ({ productId, productDetails, onClose }: QuoteFormProps): JSX.Element => {
+  const { user } = useUser(); // Get user from context
+  const [fullName, setFullName] = useState(user?.first_name && user?.last_name ? `${user.first_name} ${user.last_name}` : "");
+  const [companyName, setCompanyName] = useState("");
+  const [email, setEmail] = useState(user?.email || "");
+  const [phone, setPhone] = useState(user?.phone || "");
+  const [message, setMessage] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-const formFields = [
-  { id: "fullName", placeholder: "Full name", type: "text" },
-  { id: "companyName", placeholder: "Company name", type: "text" },
-  { id: "email", placeholder: "Email", type: "email" },
-  { id: "phone", placeholder: "Phone", type: "tel" },
-];
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
 
-const QuoteForm = (): JSX.Element => {
+    if (!user) {
+      toast.error("You must be logged in to submit a quote request.");
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (!message.trim()) {
+      toast.error("Please provide a message for your quote request.");
+      setIsSubmitting(false);
+      return;
+    }
+
+    try {
+      const response = await api.post("/quotes/", {
+        product: productId,
+        message: message,
+        // The backend `QuoteSerializer` does not directly accept full_name, company_name, email, phone.
+        // These fields are typically handled by the user's profile or implicitly through authentication.
+        // If you need to store these per quote, you'd extend your Django Quote model and serializer.
+        // For now, we collect them on the frontend but only send what the backend expects.
+      });
+
+      if (response.status === 201) {
+        toast.success("Quote request submitted successfully! We will get back to you soon.");
+        // Clear form fields
+        setFullName("");
+        setCompanyName("");
+        setEmail("");
+        setPhone("");
+        setMessage("");
+        onClose?.(); // Close the dialog if callback is provided
+      }
+    } catch (error: unknown) {
+      console.error("Error submitting quote form:", error);
+      if (axios.isAxiosError(error) && error.response) {
+        const errorMessages = Object.values(error.response.data).flat().join(". ");
+        toast.error(`Failed to submit quote: ${errorMessages || error.response.statusText || 'Unknown error'}`);
+      } else {
+        toast.error("An unexpected error occurred. Please try again.");
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
-    <div className="h-[90vh] overflow-auto">
-      <div className="sm:max-w-[736px] p-0 border-none">
-        <Card className="border-none">
-          <CardContent className="flex flex-col w-full items-start gap-6 p-6 relative bg-white">
-            <div className="flex-col items-start gap-6 self-stretch w-full flex">
-              <div className="items-start gap-8 self-stretch w-full flex">
-                <Image
-                  src={"/no-product.png"} // Replace `imageUrl` with actual variable
-                  alt="Hand Pallet Truck"
-                  width={329}
-                  height={262}
-                  className="relative object-cover"
-                />
-                <div className="flex-col items-start gap-2 pt-4 pb-0 px-0 flex-1 grow flex">
-                  <h2 className="self-stretch mt-[-1.00px] [font-family:'Inter-Bold',Helvetica] font-bold text-black text-2xl tracking-[0] leading-[normal]">
-                    {productData.title}
-                  </h2>
-
-                  <p className="self-stretch [font-family:'Inter-Regular',Helvetica] font-normal text-[#434344] text-base tracking-[0] leading-6">
-                    Qty : {productData.quantity}
+    <div className="h-auto max-h-[90vh] overflow-y-auto w-full">
+      <Card className="border-none shadow-none">
+        <CardContent className="flex flex-col w-full items-start gap-6 p-6 relative bg-white">
+          <div className="flex flex-col items-start gap-6 self-stretch w-full">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-8 self-stretch w-full">
+              <Image
+                src={productDetails.image || "/no-product.png"}
+                alt={productDetails.title}
+                width={150} // Adjusted width for better display in form
+                height={120} // Adjusted height
+                className="relative object-cover rounded-md"
+              />
+              <div className="flex-col items-start gap-2 pt-0 sm:pt-4 pb-0 px-0 flex-1 flex">
+                <h2 className="self-stretch font-bold text-gray-900 text-xl sm:text-2xl tracking-[0] leading-[normal]">
+                  {productDetails.title}
+                </h2>
+                {productDetails.description && (
+                  <p className="self-stretch font-normal text-gray-700 text-sm sm:text-base tracking-[0] leading-6">
+                    {productDetails.description}
                   </p>
-
-                  <p className="self-stretch [font-family:'Inter-Regular',Helvetica] font-normal text-[#434344] text-base tracking-[0] leading-6">
-                    Lock In period: {productData.lockInPeriod}
+                )}
+                {productDetails.price !== "0.00" && ( // Only show price if not 0.00
+                  <p className="self-stretch font-semibold text-green-600 text-base tracking-[0] leading-6">
+                    Price: ₹{typeof productDetails.price === "number" ? productDetails.price.toLocaleString("en-IN") : productDetails.price}
                   </p>
-
-                  <p className="self-stretch [font-family:'Inter-Regular',Helvetica] font-normal text-[#434344] text-base tracking-[0] leading-6">
-                    <span className="[font-family:'Inter-Regular',Helvetica] font-normal text-[#434344] text-base tracking-[0] leading-6">
-                      Location: {productData.location}
-                    </span>
-                  </p>
-                </div>
-              </div>
-
-              <p className="self-stretch [font-family:'Inter-Regular',Helvetica] font-normal text-[#434344] text-base tracking-[0] leading-6">
-                {productData.description}
-              </p>
-
-              <div className="flex-col items-start gap-4 self-stretch w-full flex">
-                <h3 className="self-stretch mt-[-1.00px] [font-family:'Inter-Bold',Helvetica] font-bold text-black text-2xl text-center tracking-[0] leading-[normal]">
-                  Get a Quote
-                </h3>
-
-                <div className="items-center gap-6 self-stretch w-full flex">
-                  <div className="flex-1">
-                    <Input
-                      className="h-[52px] [font-family:'Inter-Regular',Helvetica] font-normal text-[#666869] text-[13px]"
-                      placeholder={formFields[0].placeholder}
-                    />
-                  </div>
-                  <div className="flex-1">
-                    <Input
-                      className="h-[52px] [font-family:'Inter-Regular',Helvetica] font-normal text-[#666869] text-[13px]"
-                      placeholder={formFields[1].placeholder}
-                    />
-                  </div>
-                </div>
-
-                <div className="items-center gap-6 self-stretch w-full flex">
-                  <div className="flex-1">
-                    <Input
-                      className="h-[52px] [font-family:'Inter-Regular',Helvetica] font-normal text-[#666869] text-[13px]"
-                      placeholder={formFields[2].placeholder}
-                      type="email"
-                    />
-                  </div>
-                  <div className="flex-1">
-                    <Input
-                      className="h-[52px] [font-family:'Inter-Regular',Helvetica] font-normal text-[#666869] text-[13px]"
-                      placeholder={formFields[3].placeholder}
-                      type="tel"
-                    />
-                  </div>
-                </div>
-
-                <div className="self-stretch w-full">
-                  <Textarea
-                    className="min-h-[72px] [font-family:'Inter-Regular',Helvetica] font-normal text-[#666869] text-[13px]"
-                    placeholder="Message"
-                  />
-                </div>
+                )}
               </div>
             </div>
 
-            <Button className="w-full h-auto items-center justify-center gap-3 p-4 bg-[#5ca131] rounded-md hover:bg-hover">
-              <span className="[font-family:'Inter-Bold',Helvetica] font-bold text-white text-[13px] tracking-[0] leading-[normal]">
-                Submit
-              </span>
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
+            <div className="flex flex-col items-start gap-4 self-stretch w-full">
+              <h3 className="self-stretch font-bold text-gray-900 text-xl text-center w-full tracking-[0] leading-[normal] mt-4">
+                Get a Quote
+              </h3>
+
+              <form onSubmit={handleSubmit} className="flex flex-col gap-4 w-full">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
+                  <Input
+                    className="h-[52px] text-sm text-gray-700 placeholder:text-gray-500 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 p-3"
+                    placeholder="Full name"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    required
+                  />
+                  <Input
+                    className="h-[52px] text-sm text-gray-700 placeholder:text-gray-500 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 p-3"
+                    placeholder="Company name (Optional)"
+                    value={companyName}
+                    onChange={(e) => setCompanyName(e.target.value)}
+                  />
+                  <Input
+                    className="h-[52px] text-sm text-gray-700 placeholder:text-gray-500 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 p-3"
+                    placeholder="Email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
+                  <Input
+                    className="h-[52px] text-sm text-gray-700 placeholder:text-gray-500 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 p-3"
+                    placeholder="Phone (Optional)"
+                    type="tel"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                  />
+                </div>
+
+                <Textarea
+                  className="min-h-[100px] text-sm text-gray-700 placeholder:text-gray-500 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 p-3"
+                  placeholder="Your Message (e.g., specific requirements, quantity, desired timeline)"
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  required
+                />
+
+                <Button
+                  type="submit"
+                  className="w-full h-auto items-center justify-center gap-3 p-4 bg-green-600 rounded-md hover:bg-green-700 text-white font-bold text-base transition-colors"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? "Submitting..." : "Submit Quote Request"}
+                </Button>
+              </form>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
