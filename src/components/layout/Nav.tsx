@@ -12,6 +12,8 @@ import {
   Package,
   Heart,
   LogOut,
+  UserIcon,
+  Repeat
 } from "lucide-react";
 import { useRef, useState, JSX, useEffect } from "react";
 import React from "react";
@@ -183,6 +185,17 @@ export default function Navbar(): JSX.Element {
 
             {/* Right Section */}
             <div className="flex items-center gap-4">
+
+              {/* Compare Icon using Repeat */}
+              <Link
+                href="/compare"
+                className="flex items-center text-gray-600 hover:text-green-600 transition"
+                aria-label="Compare Products"
+              >
+                <Repeat className="w-5 h-5" />
+              </Link>
+
+
               {/* Conditional rendering for Cart and Notifications: Only if user is logged in */}
               {!isLoading && user && (
                 <>
@@ -221,25 +234,28 @@ export default function Navbar(): JSX.Element {
                 >
                   {isLoading ? (
                     <div className="w-10 h-10 rounded-full bg-gray-200 animate-pulse flex items-center justify-center">
-                      <User className="w-5 h-5 text-gray-500" />
+                      <UserIcon className="w-5 h-5 text-gray-500" />
                     </div>
                   ) : user ? (
-                    <Image
-                      src={
-                        Array.isArray(user.username) &&
-                        user.username.length > 0 
-                          ? user.username[0].image
-                          : "https://randomuser.me/api/portraits/men/32.jpg"
-                      }
-                      alt="Profile"
-                      width={40}
-                      height={40}
-                      className="w-10 h-10 rounded-full border-2 border-white shadow-sm object-cover"
-                      style={{ maxWidth: 40 }}
-                    />
+                    <>
+                      {Array.isArray(user.username) &&
+                      user.username[0]?.image ? (
+                        <Image
+                          src={user.username[0].image}
+                          alt="Profile"
+                          width={40}
+                          height={40}
+                          className="w-10 h-10 rounded-full border-2 border-white shadow-sm object-cover"
+                        />
+                      ) : (
+                        <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
+                          <UserIcon className="w-5 h-5 text-gray-500" />
+                        </div>
+                      )}
+                    </>
                   ) : (
                     <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
-                      <User className="w-5 h-5 text-gray-500" />
+                      <UserIcon className="w-5 h-5 text-gray-500" />
                     </div>
                   )}
                 </button>

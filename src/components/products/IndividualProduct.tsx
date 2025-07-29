@@ -32,17 +32,17 @@ import MheWriteAReview from "@/components/forms/product/ProductReviewForm";
 import ReviewSection from "./Reviews"; // Import ReviewSection
 
 // Helper function for SEO-friendly slug
-const slugify = (text: string): string => {
-  return text
-    .toString()
-    .toLowerCase()
-    .trim()
-    .replace(/\s+/g, '-')       // Replace spaces with -
-    .replace(/[^\w-]+/g, '')     // Remove all non-word chars
-    .replace(/--+/g, '-')        // Replace multiple - with single -
-    .replace(/^-+/, '')          // Trim - from start of text
-    .replace(/-+$/, '');         // Trim - from end of text
-};
+// const slugify = (text: string): string => {
+//   return text
+//     .toString()
+//     .toLowerCase()
+//     .trim()
+//     .replace(/\s+/g, '-')       // Replace spaces with -
+//     .replace(/[^\w-]+/g, '')     // Remove all non-word chars
+//     .replace(/--+/g, '-')        // Replace multiple - with single -
+//     .replace(/^-+/, '')          // Trim - from start of text
+//     .replace(/-+$/, '');         // Trim - from end of text
+// };
 
 
 type ProductImage = {
@@ -80,12 +80,12 @@ type ProductData = {
 };
 
 // API response for product list
-interface ProductsApiResponse {
-  count: number;
-  next: string | null;
-  previous: string | null;
-  results: ProductData[];
-}
+// interface ProductsApiResponse {
+//   count: number;
+//   next: string | null;
+//   previous: string | null;
+//   results: ProductData[];
+// }
 
 // Cart Item type from API
 interface CartItemApi {
@@ -105,10 +105,11 @@ interface WishlistItemApi {
 
 interface ProductSectionProps {
   productSlug: string;
+  productId: number | string | null;
 }
 
 
-export default function ProductSection({ productSlug }: ProductSectionProps) {
+export default function ProductSection({ productId, productSlug }: ProductSectionProps) {
   const router = useRouter();
   const { user } = useUser();
 
@@ -136,17 +137,15 @@ export default function ProductSection({ productSlug }: ProductSectionProps) {
   // Fetch product data by slug
   useEffect(() => {
     async function fetchData() {
-      if (!productSlug) {
+      // Use the unique productId for fetching
+      if (!productId) {
         router.push('/404');
         return;
       }
       try {
-        // Fetch all products to find the one matching the slug
-        const res = await api.get<ProductsApiResponse>(`/products/`);
-        const allProducts = res.data.results;
-        
-        // Find the product by slug
-        const foundProduct = allProducts.find(p => slugify(p.name) === productSlug);
+        // Fetch the single product directly. The response should be one object, not a list.
+        const res = await api.get<ProductData>(`/products/${productId}/`);
+        const foundProduct = res.data; // The result is the product data
 
         if (foundProduct) {
           setData(foundProduct);
@@ -158,11 +157,12 @@ export default function ProductSection({ productSlug }: ProductSectionProps) {
         }
       } catch (error) {
         console.error("Failed to fetch product data:", error);
-        router.push('/404'); // Redirect to 404 on API error
+        router.push('/404'); // Redirect on API error
       }
     }
     fetchData();
-  }, [productSlug, router]);
+    // 3. Update the dependency array to use productId
+  }, [productId, router]);
 
 
   // Function to fetch initial status of wishlist and cart for this product
@@ -450,7 +450,7 @@ export default function ProductSection({ productSlug }: ProductSectionProps) {
   });
 
   return (
-    <div className="max-w-7xl mx-auto p-2 sm:p-4 bg-white">
+    <div className="px-4 mx-auto p-2 sm:p-4 bg-white">
       <div className="flex flex-col md:flex-row gap-8">
         {/* Left Side - Product Images */}
         <div className="flex flex-row-reverse gap-2 lg:gap-4 w-full md:w-fit">
@@ -524,7 +524,7 @@ export default function ProductSection({ productSlug }: ProductSectionProps) {
           <div className="flex flex-col lg:flex-row gap-4">
             <div className="w-full lg:w-2/3">
               {/* Product Title */}
-              <h1 className="text-2xl font-semibold text-gray-900 mb-2">{data.name}</h1>
+              <h1 className="text-2xl font-semibold text-gray-900 mb-2">{productSlug}</h1>
               <div className="text-base text-gray-600 mb-2">
                 {data.category_name} {data.subcategory_name ? `> ${data.subcategory_name}` : ''}
               </div>

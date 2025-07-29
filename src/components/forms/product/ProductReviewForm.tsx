@@ -166,52 +166,56 @@ export default function MheWriteAReview({ isOpen, onOpenChange, productId }: Pro
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[736px] p-6 gap-6">
+      <DialogContent className="sm:max-w-[736px] p-6 gap-6 rounded-lg shadow-lg">
+        {/* Close Button */}
         <div className="absolute right-4 top-4">
           <Button
             variant="ghost"
             size="icon"
-            className="h-6 w-6"
+            className="h-8 w-8 rounded-full text-gray-500 hover:bg-gray-100 hover:text-gray-700"
             onClick={() => onOpenChange(false)}
             aria-label="Close review form"
           >
-            <X className="h-4 w-4" />
+            <X className="h-5 w-5" />
           </Button>
         </div>
 
-        <div className="flex items-start gap-8 w-full">
+        {/* Header Section */}
+        <div className="flex items-start gap-4 sm:gap-8 w-full">
+          {/* Product Image Placeholder */}
           <Image
             src="/no-product.png" // Placeholder, ideally fetch product image
             alt="Product image for review"
             width={79}
             height={64}
-            className="object-cover"
+            className="object-cover rounded-md"
           />
 
-          <DialogHeader className="pt-4 flex-1">
-            <DialogTitle className="font-bold text-2xl tracking-normal">
+          <DialogHeader className="pt-2 sm:pt-4 flex-1">
+            <DialogTitle className="font-bold text-xl sm:text-2xl tracking-normal text-gray-900">
               How was the item?
             </DialogTitle>
           </DialogHeader>
         </div>
 
-        <div className="flex items-center gap-2">
-          <span className="font-bold text-base">Rate the item?</span>
-          <div className="flex items-center gap-1">
+        {/* Rate the item section */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 mt-4">
+          <span className="font-semibold text-base text-gray-800">Rate the item?</span>
+          <div className="flex items-center gap-0.5">
             {stars.map((_, index) => (
               <Button
                 key={index}
                 variant="ghost"
                 size="icon"
-                className="h-6 w-6 p-0"
+                className="h-8 w-8 p-0"
                 onClick={() => setRating(index + 1)}
                 aria-label={`Rate ${index + 1} stars`}
               >
                 <Star
-                  className={`h-6 w-6 ${
+                  className={`h-6 w-6 transition-colors duration-200 ${
                     index < rating
                       ? "fill-yellow-400 text-yellow-400"
-                      : "text-gray-300"
+                      : "text-gray-300 hover:text-yellow-300"
                   }`}
                 />
               </Button>
@@ -219,24 +223,27 @@ export default function MheWriteAReview({ isOpen, onOpenChange, productId }: Pro
           </div>
         </div>
 
-        <div className="flex flex-col items-start gap-4 w-full">
-          <h3 className="font-bold text-base">Write a review</h3>
+        {/* Write a review section */}
+        <div className="flex flex-col items-start gap-4 w-full mt-4">
+          <h3 className="font-semibold text-base text-gray-800">Write a review</h3>
 
           <div className="flex flex-col items-start justify-center gap-6 w-full">
             <Textarea
-              className="min-h-[124px] text-[13px] text-[#666869]"
+              className="min-h-[120px] text-sm text-gray-700 placeholder:text-gray-500 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 p-3"
               placeholder="What should other customers know?"
               value={reviewText}
               onChange={(e) => setReviewText(e.target.value)}
               aria-label="Review text content"
             />
 
-            <Card className="w-full bg-[#f9fcf8] border-[1.5px] border-dashed border-[#cdf0b8]">
-              <CardContent className="flex items-center justify-center gap-3 p-4 cursor-pointer"
-                          onClick={() => fileInputRef.current?.click()} // Trigger file input click
+            {/* Image/Video Upload Card */}
+            <Card className="w-full bg-green-50 border-2 border-dashed border-green-300 rounded-lg">
+              <CardContent
+                className="flex flex-col sm:flex-row items-center justify-center gap-3 p-4 cursor-pointer"
+                onClick={() => fileInputRef.current?.click()} // Trigger file input click
               >
-                <Camera className="w-6 h-6" />
-                <span className="text-[13px] text-[#666869]">
+                <Camera className="w-6 h-6 text-green-700" />
+                <span className="text-sm text-green-800 font-medium">
                   {selectedFiles.length > 0 ?
                     `${selectedFiles.length} file(s) selected (will be uploaded after review text)` :
                     "Share a video or photo (Optional)"
@@ -253,25 +260,26 @@ export default function MheWriteAReview({ isOpen, onOpenChange, productId }: Pro
                 />
               </CardContent>
               {selectedFiles.length > 0 && (
-                <div className="p-2 pt-0 text-sm text-gray-700">
-                  <p>Selected files:</p>
+                <div className="p-2 pt-0 text-sm text-gray-700 bg-green-100 border-t border-green-200 rounded-b-lg">
+                  <p className="font-medium mb-1">Selected files:</p>
                   <ul className="list-disc list-inside">
                     {selectedFiles.map((file, index) => (
-                      <li key={file.name + index}>{file.name}</li>
+                      <li key={file.name + index} className="text-gray-800">{file.name}</li>
                     ))}
                   </ul>
                 </div>
               )}
             </Card>
 
+            {/* Title your review section */}
             <div className="flex flex-col items-start gap-2 w-full">
-              <label htmlFor="review-title" className="font-bold text-base">
+              <label htmlFor="review-title" className="font-semibold text-base text-gray-800">
                 Title your review{" "}
-                <span className="font-normal text-xs">(required)</span>
+                <span className="font-normal text-xs text-gray-600">(required)</span>
               </label>
               <Input
                 id="review-title"
-                className="p-4 text-[13px] text-[#666869]"
+                className="p-3 text-sm text-gray-700 placeholder:text-gray-500 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
                 placeholder="What should other customers know?"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
@@ -280,13 +288,14 @@ export default function MheWriteAReview({ isOpen, onOpenChange, productId }: Pro
             </div>
           </div>
 
-          <div className="w-full">
+          {/* Submit Button */}
+          <div className="w-full mt-4">
             <Button
-              className="w-full py-[19px] bg-[#5ca131] hover:bg-[#478831] text-[13px] font-bold"
+              className="w-full py-4 bg-green-600 hover:bg-green-700 text-white text-base font-bold rounded-md shadow-md transition-colors duration-200"
               onClick={handleSubmitReview}
               disabled={isSubmitting}
             >
-              {isSubmitting ? "Submitting..." : "Submit"}
+              {isSubmitting ? "Submitting..." : "Submit Review"}
             </Button>
           </div>
         </div>
