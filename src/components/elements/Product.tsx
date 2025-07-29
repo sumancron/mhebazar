@@ -90,7 +90,7 @@ const ProductCard = ({
 
   return (
     <div
-      className={`bg-white rounded-2xl shadow-sm border border-[#ecf0f7] overflow-hidden flex flex-col w-80 h-96 ${!isAvailable ? "opacity-50 pointer-events-none" : ""
+      className={`bg-white rounded-2xl m-5 shadow-sm border border-[#ecf0f7] overflow-hidden flex flex-col w-80 h-96 ${!isAvailable ? "opacity-50 pointer-events-none" : ""
         }`}
     >
       {/* Image Container */}

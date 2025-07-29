@@ -44,6 +44,8 @@ const navigationLinks = [
   { name: "Spare Parts", href: "/spare-parts" },
   { name: "Services", href: "/services" },
   { name: "Training", href: "/training" },
+  { name: "Blogs", href: "/blog" },
+
 ];
 
 export default function Navbar(): JSX.Element {
