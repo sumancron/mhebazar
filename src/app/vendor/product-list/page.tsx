@@ -11,7 +11,8 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import Image from "next/image";
+//import Image from "next/image";
+
 import { useEffect, useState } from "react";
 import { ChevronDown, SlidersHorizontal, X } from "lucide-react";
 import api from "@/lib/api";
@@ -292,7 +293,7 @@ export default function ProductList() {
 
               {/* Image container - remove the dropdown from here */}
               <div className="relative h-24 w-24 flex-shrink-0">
-                <Image
+                <img
                   src={product.images?.[0]?.image
                     ? (product.images[0].image.startsWith('data:')
                       ? product.images[0].image

@@ -28,7 +28,8 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import Image from "next/image";
+//import Image from "next/image";
+
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from 'sonner';
@@ -440,7 +441,7 @@ const VendorProducts = () => {
                     <TableCell>
                       <div className="flex items-center gap-4">
                         <div className="relative h-24 w-24 flex-shrink-0">
-                          <Image
+                          <img
                             src={product.images?.[0]?.image
                               ? getImageUrl(product.images[0].image)
                               : "/no-product.png"

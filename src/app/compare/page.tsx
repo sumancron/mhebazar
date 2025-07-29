@@ -4,7 +4,8 @@ import React, { useState, ChangeEvent, useEffect, useCallback } from "react";
 import Breadcrumb from "@/components/elements/Breadcrumb";
 import { ProductCardContainer } from "@/components/elements/Product";
 import { Plus, X } from "lucide-react";
-import Image from "next/image";
+//import Image from "next/image";
+
 import api from "@/lib/api";
 import { toast } from "sonner";
 // import { useRouter } from "next/navigation";
@@ -429,7 +430,7 @@ const ComparePage = () => {
                     aria-label={`Add ${product.name}`}
                   >
                     <div className="w-16 h-16 relative flex-shrink-0 border border-gray-200 rounded-md overflow-hidden">
-                      <Image
+                      <img
                         src={product.images[0]?.image || "/images/placeholder.jpg"}
                         alt={product.name}
                         fill

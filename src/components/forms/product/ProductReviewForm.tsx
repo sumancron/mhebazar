@@ -13,7 +13,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Camera, Star, X } from "lucide-react";
 import React, { useState, ChangeEvent } from "react";
-import Image from "next/image";
+//import Image from "next/image";
+
 import api from "@/lib/api";
 import axios from "axios";
 import { toast } from "sonner";
@@ -183,7 +184,7 @@ export default function MheWriteAReview({ isOpen, onOpenChange, productId }: Pro
         {/* Header Section */}
         <div className="flex items-start gap-4 sm:gap-8 w-full">
           {/* Product Image Placeholder */}
-          <Image
+          <img
             src="/no-product.png" // Placeholder, ideally fetch product image
             alt="Product image for review"
             width={79}

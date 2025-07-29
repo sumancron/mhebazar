@@ -30,7 +30,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { toast } from 'sonner';
 import api from '@/lib/api';
 import CategoryForm from "@/components/forms/uploadForm/CategoryForm";
-import Image from "next/image";
+//import Image from "next/image";
+
 
 // Types
 interface Category {
@@ -415,7 +416,7 @@ const CategoriesTable = () => {
                     <TableCell>
                       <div className="flex items-center gap-4">
                         <div className="relative h-16 w-16 flex-shrink-0">
-                          <Image
+                          <img
                             src={getImageUrl(category.cat_image)}
                             alt={category.name}
                             fill
@@ -485,7 +486,7 @@ const CategoriesTable = () => {
                           className="h-8 px-2"
                           onClick={() => document.getElementById(`image-upload-${category.id}`)?.click()}
                         >
-                          <ImageIcon className="w-3 h-3 mr-1" />
+                          <imgIcon className="w-3 h-3 mr-1" />
                           Image
                         </Button>
                         <input

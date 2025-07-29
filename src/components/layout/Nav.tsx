@@ -15,7 +15,8 @@ import {
 } from "lucide-react";
 import { useRef, useState, JSX, useEffect } from "react";
 import React from "react";
-import Image from "next/image";
+//import Image from "next/image";
+
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import CategoryMenu from "./NavOptions";
@@ -151,7 +152,7 @@ export default function Navbar(): JSX.Element {
             {/* Logo */}
             <div className="flex items-center">
               <Link href="/" className="flex items-center">
-                <Image
+                <img
                   src="/mhe-logo.png"
                   alt="MHE BAZAR Logo"
                   width={140}
@@ -222,7 +223,7 @@ export default function Navbar(): JSX.Element {
                       <User className="w-5 h-5 text-gray-500" />
                     </div>
                   ) : user ? (
-                    <Image
+                    <img
                       src={
                         Array.isArray(user.username) &&
                         user.username.length > 0 
@@ -508,7 +509,7 @@ export default function Navbar(): JSX.Element {
                   className="flex items-center"
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  <Image
+                  <img
                     src="/mhe-logo.png"
                     alt="MHE BAZAR Logo"
                     width={120}

@@ -3,7 +3,8 @@
 
 import React, { useState, useCallback, useEffect, useRef } from "react";
 import { Heart, Repeat, Share2, ShoppingCart, Minus, Plus, Trash2 } from "lucide-react";
-import Image from "next/image";
+//import Image from "next/image";
+
 import Link from "next/link";
 import api from "@/lib/api";
 import axios from "axios";
@@ -103,7 +104,7 @@ const ProductCard = ({
       {/* Image Container */}
       <div className="relative w-full h-48 flex-shrink-0">
         <Link href={productDetailUrl} className="block w-full h-full">
-          <Image
+          <img
             src={image}
             alt={title}
             width={320}

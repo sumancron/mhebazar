@@ -806,7 +806,7 @@ export default function ProductForm({ product }: ProductFormProps) {
                       className="w-full h-10 border-gray-300 text-gray-600 text-sm"
                       onClick={() => document.getElementById('images-input')?.click()}
                     >
-                      <ImageIcon className="w-4 h-4 mr-2" />
+                      <imgIcon className="w-4 h-4 mr-2" />
                       Select Product Images
                     </Button>
                     {imageFiles.length > 0 && (
@@ -814,7 +814,7 @@ export default function ProductForm({ product }: ProductFormProps) {
                         {imageFiles.map((file, idx) => (
                           <div key={idx} className="relative group">
                             <div className="aspect-square bg-gray-100 rounded overflow-hidden">
-                              <Image
+                              <img
                                 src={URL.createObjectURL(file)}
                                 alt={`Preview ${idx + 1}`}
                                 fill
@@ -844,7 +844,7 @@ export default function ProductForm({ product }: ProductFormProps) {
                       {product.images.map((img) => (
                         <div key={img.id} className="relative group">
                           <div className="aspect-square bg-gray-100 rounded overflow-hidden">
-                            <Image
+                            <img
                               src={img.image}
                               alt={product.name}
                               fill

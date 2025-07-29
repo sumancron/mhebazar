@@ -2,7 +2,8 @@
 
 import { LayoutGrid } from "lucide-react";
 import Link from "next/link";
-import Image from "next/image";
+//import Image from "next/image";
+
 import { JSX, useEffect, useState } from "react";
 import axios from "axios";
 import api from "@/lib/api"; // Assuming your custom api wrapper is correctly configured
@@ -48,7 +49,7 @@ function CategoryItem({ imageSrc, label, slug }: CategoryItemProps): JSX.Element
     <Link href={`/${slug}`} className="flex flex-col items-center group"> {/* Redirect on click */}
       <div className="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 lg:w-36 lg:h-36 rounded-full bg-blue-50 flex items-center justify-center mb-2 overflow-hidden transform group-hover:scale-105 transition-transform duration-200">
         {imageSrc && !showInitials ? (
-          <Image
+          <img
             src={imageSrc}
             alt={label}
             width={100} // Adjust based on your design for better quality

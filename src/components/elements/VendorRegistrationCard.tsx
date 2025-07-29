@@ -9,7 +9,7 @@ export default function VendorRegistrationCard() {
         <div className="flex w-full overflow-hidden rounded-xl border border-gray-200 bg-white">
           {/* Left image with fade */}
           <div className="relative w-[40%] h-[160px] sm:h-[180px] md:h-[200px] lg:h-[220px]">
-            <Image
+            <img
               src="/vendorcard.png"
               alt="Register Now"
               fill

@@ -3,7 +3,8 @@
 "use client"; // This component runs on the client-side
 
 import { useEffect, useState, ChangeEvent, useCallback } from "react";
-import Image from "next/image";
+//import Image from "next/image";
+
 import Link from "next/link";
 import {
   User, Mail, MapPin, Edit2, Plus, Trash2, LogOut, ShoppingBag, Phone,
@@ -338,7 +339,7 @@ export default function AccountPage() {
               <h1 className="text-xl font-semibold text-gray-900">Account Settings</h1>
             </div>
             <div className="hidden sm:flex items-center gap-3 pl-3 border-l border-gray-200">
-              <Image src={userData.profile_photo || `https://ui-avatars.com/api/?name=${userData.first_name}+${userData.last_name}&background=3b82f6&color=fff&size=128`} alt="Avatar" width={32} height={32} className="w-8 h-8 rounded-full" />
+              <img src={userData.profile_photo || `https://ui-avatars.com/api/?name=${userData.first_name}+${userData.last_name}&background=3b82f6&color=fff&size=128`} alt="Avatar" width={32} height={32} className="w-8 h-8 rounded-full" />
               <span className="text-sm font-medium text-gray-700">{userData.full_name}</span>
             </div>
           </div>
@@ -351,7 +352,7 @@ export default function AccountPage() {
           <aside className="hidden lg:block w-80 bg-white rounded-xl border border-gray-200 h-fit p-6">
             <div className="flex items-center gap-4 mb-8 pb-6 border-b border-gray-100">
               <div className="relative">
-                <Image src={userData.profile_photo || `https://ui-avatars.com/api/?name=${userData.first_name}+${userData.last_name}&background=3b82f6&color=fff&size=128`} alt="Avatar" width={64} height={64} className="w-16 h-16 rounded-full border-2 border-blue-100" />
+                <img src={userData.profile_photo || `https://ui-avatars.com/api/?name=${userData.first_name}+${userData.last_name}&background=3b82f6&color=fff&size=128`} alt="Avatar" width={64} height={64} className="w-16 h-16 rounded-full border-2 border-blue-100" />
                 <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-white"></div>
               </div>
               <div className="flex-1 min-w-0">
@@ -406,7 +407,7 @@ export default function AccountPage() {
                 </div>
                 <div className="p-4">
                   <div className="flex items-center gap-4 mb-6 pb-4 border-b border-gray-100">
-                    <Image src={userData.profile_photo || `https://ui-avatars.com/api/?name=${userData.first_name}+${userData.last_name}&background=3b82f6&color=fff&size=128`} alt="Avatar" width={48} height={48} className="w-12 h-12 rounded-full border-2 border-blue-100" />
+                    <img src={userData.profile_photo || `https://ui-avatars.com/api/?name=${userData.first_name}+${userData.last_name}&background=3b82f6&color=fff&size=128`} alt="Avatar" width={48} height={48} className="w-12 h-12 rounded-full border-2 border-blue-100" />
                     <div>
                       <h3 className="font-semibold text-gray-900">{userData.full_name}</h3>
                       <p className="text-sm text-gray-500">{userData.email}</p>

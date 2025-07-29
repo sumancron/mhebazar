@@ -215,7 +215,7 @@ const CartSummary: React.FC<CartSummaryProps> = ({ onNext, onUpdateTotal }) => {
         <Card key={item.id}>
           <CardContent className="p-4">
             <div className="flex items-center gap-4">
-              <Image
+              <img
                 src={
                   item.product_details.images?.[0]?.image || "/no-product.png"
                 }

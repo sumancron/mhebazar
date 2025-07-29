@@ -286,7 +286,7 @@ export default function SubcategoryForm({ subcategory, onSuccess }: SubcategoryF
       <Label className="text-sm text-gray-600 mb-1 block">{label}</Label>
       {preview ? (
         <div className="relative w-32 h-32">
-          <Image src={preview} alt={label} layout="fill" objectFit="cover" className="rounded-md border" />
+          <img src={preview} alt={label} layout="fill" objectFit="cover" className="rounded-md border" />
           <Button
             type="button"
             variant="destructive"
@@ -312,7 +312,7 @@ export default function SubcategoryForm({ subcategory, onSuccess }: SubcategoryF
             onClick={() => document.getElementById(id)?.click()}
             className="w-full h-10 border-gray-300 text-gray-600 text-sm"
           >
-            <ImageIcon className="w-4 h-4 mr-2" />
+            <imgIcon className="w-4 h-4 mr-2" />
             Select Image
           </Button>
         </>

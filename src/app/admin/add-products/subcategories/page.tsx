@@ -30,7 +30,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { toast } from 'sonner';
 import api from '@/lib/api';
 import SubcategoryForm from '@/components/forms/uploadForm/SubcategoryForm';
-import Image from "next/image";
+//import Image from "next/image";
+
 import { Subcategory, Category } from '@/types';
 
 const SubcategoriesTable = () => {
@@ -443,7 +444,7 @@ const SubcategoriesTable = () => {
                     <TableCell>
                       <div className="flex items-center gap-4">
                         <div className="relative h-16 w-16 flex-shrink-0">
-                          <Image
+                          <img
                             src={getImageUrl(subcategory.sub_image)}
                             alt={subcategory.name}
                             fill
@@ -510,7 +511,7 @@ const SubcategoriesTable = () => {
                           className="h-8 px-2"
                           onClick={() => document.getElementById(`sub-image-upload-${subcategory.id}`)?.click()}
                         >
-                          <ImageIcon className="w-3 h-3 mr-1" />
+                          <imgIcon className="w-3 h-3 mr-1" />
                           Image
                         </Button>
                         <input

@@ -41,7 +41,7 @@ export default function LeadershipTeam() {
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-8">
           {teamMembers.map((member, index) => (
             <div key={index} className="bg-white rounded-lg overflow-hidden shadow-sm">
-              <Image
+              <img
                 src={member.image}
                 alt={member.name}
                 width={600}
@@ -59,7 +59,7 @@ export default function LeadershipTeam() {
                 </p>
                 <div className="mt-4">
                   <a href="#" aria-label="LinkedIn">
-                    <Image
+                    <img
                       src="/linkedin.png"
                       alt="LinkedIn"
                       width={20}

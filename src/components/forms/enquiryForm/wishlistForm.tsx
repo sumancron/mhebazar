@@ -111,7 +111,7 @@ export default function WishlistForm() {
           <CardContent className="p-4">
             <div className="flex items-center gap-4">
 
-<Image
+<img
   src={item.product.images?.[0] || '/no-product.png'}
   alt={item.product.name}
   width={64}

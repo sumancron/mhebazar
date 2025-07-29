@@ -7,7 +7,8 @@ import {
   RotateCcw,
   ShieldCheck,
 } from "lucide-react";
-import Image from "next/image";
+//import Image from "next/image";
+
 import Link from "next/link";
 
 export default function Footer() {
@@ -49,7 +50,7 @@ export default function Footer() {
 
             {/* Address & Contact - Takes up 1 column */}
             <div className="lg:col-span-2">
-              <Image
+              <img
                 src="/mhe-logo.png"
                 alt="MHE Bazar"
                 width={120}

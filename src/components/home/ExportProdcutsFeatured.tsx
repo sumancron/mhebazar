@@ -2,7 +2,8 @@
 
 import React, { useEffect, useState } from "react";
 import ProductCard from "@/components/elements/Product";
-import Image from "next/image";
+//import Image from "next/image";
+
 import axios from "axios";
 
 const NEXT_PUBLIC_API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "";
@@ -69,7 +70,7 @@ export default function ExportProductsFeatured() {
             ))
           ) : (
             <div className="col-span-full flex flex-col items-center justify-center py-16 bg-white rounded-2xl shadow-[0_4px_16px_0_rgba(0,0,0,0.04)]">
-              <Image
+              <img
                 src="/no-product.png"
                 alt="No product"
                 width={112}

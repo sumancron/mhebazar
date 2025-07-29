@@ -16,7 +16,8 @@ import {
   ShoppingCart,
   Trash2,
 } from "lucide-react";
-import Image from "next/image";
+//import Image from "next/image";
+
 import { useRouter } from "next/navigation";
 import api from "@/lib/api";
 import axios from "axios";
@@ -468,7 +469,7 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
             onMouseEnter={() => setIsZoomed(true)}
             onMouseLeave={() => setIsZoomed(false)}
           >
-            <Image
+            <img
               src={data.images[selectedImage]?.image || "/no-product.png"}
               alt={data.name}
               className="h-full object-contain transition-transform duration-200 ease-out"
@@ -507,7 +508,7 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
                   selectedImage === index ? "border-orange-500" : "border-gray-200"
                 } hover:border-orange-300 transition-colors`}
               >
-                <Image
+                <img
                   src={img.image}
                   alt={`${data.name} thumbnail ${index + 1}`}
                   className="w-full h-full object-cover"

@@ -3,7 +3,8 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronRight } from "lucide-react";
-import Image from "next/image";
+//import Image from "next/image";
+
 import Link from "next/link";
 import { useEffect, useState, useMemo } from "react";
 import api from "@/lib/api";
@@ -283,7 +284,7 @@ export default function CategoryMenu({
                     >
                       <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0">
                         {getSubCategoryImage(subCategory) ? (
-                          <Image
+                          <img
                             src={getSubCategoryImage(subCategory) as string}
                             alt={subCategory.name}
                             width={64}
