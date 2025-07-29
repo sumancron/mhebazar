@@ -9,8 +9,42 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import api from "@/lib/api";
+import { useEffect, useState } from "react";
+
+export interface Category {
+  id: number;
+  name: string;
+  slug: string;
+}
 
 export default function Footer() {
+  const [categories, setCategories] = useState<Category[]>([]);
+
+  const createSlug = (name: string) => name.toLowerCase().replace(/\s+/g, "-");
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Fetch categories and subcategories in parallel for better performance
+        const categoryResponse = await api.get("/categories/")
+
+        // Update state with data from the API response
+        // Make sure the response structure matches (e.g., response.data)
+        setCategories(categoryResponse.data);
+      } catch (error) {
+        console.error("Failed to fetch data:", error);
+        // You could set an error state here to inform the user
+      }
+    };
+
+    fetchData();
+  }, []); // Empty dependency array ensures this runs only once when the component mounts
+
+  const midpoint = Math.ceil(categories.length / 2);
+  const firstColumn = categories.slice(0, midpoint);
+  const secondColumn = categories.slice(midpoint);
+
   return (
     <footer className="bg-white border-t">
       {/* Top blue subscribe section */}
@@ -133,54 +167,30 @@ export default function Footer() {
             <div className="lg:col-span-2">
               <h3 className="font-bold text-gray-800 mb-4 text-lg">Category</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-2 text-sm">
+                {/* First Column */}
                 <div className="space-y-2">
-                  <Link href="/category/battery" className="block text-gray-600 hover:text-blue-700 transition">
-                    Battery
-                  </Link>
-                  <Link href="/category/pallet-truck" className="block text-gray-600 hover:text-blue-700 transition">
-                    Pallet Truck
-                  </Link>
-                  <Link href="/category/stacker" className="block text-gray-600 hover:text-blue-700 transition">
-                    Stacker
-                  </Link>
-                  <Link href="/category/platform-truck" className="block text-gray-600 hover:text-blue-700 transition">
-                    Platform Truck
-                  </Link>
-                  <Link href="/category/tow-truck" className="block text-gray-600 hover:text-blue-700 transition">
-                    Tow Truck
-                  </Link>
-                  <Link href="/category/dock-leveller" className="block text-gray-600 hover:text-blue-700 transition">
-                    Dock Leveller
-                  </Link>
-                  <Link href="/category/scissors-lift" className="block text-gray-600 hover:text-blue-700 transition">
-                    Scissors Lift
-                  </Link>
-                  <Link href="/category/reach-truck" className="block text-gray-600 hover:text-blue-700 transition">
-                    Reach Truck
-                  </Link>
+                  {firstColumn.map((category) => (
+                    <Link
+                      key={category.id}
+                      href={`/${createSlug(category.name)}`}
+                      className="block text-gray-600 hover:text-blue-700 transition"
+                    >
+                      {category.name}
+                    </Link>
+                  ))}
                 </div>
+
+                {/* Second Column */}
                 <div className="space-y-2">
-                  <Link href="/category/racking-system" className="block text-gray-600 hover:text-blue-700 transition">
-                    Racking System
-                  </Link>
-                  <Link href="/category/forklift" className="block text-gray-600 hover:text-blue-700 transition">
-                    Forklift
-                  </Link>
-                  <Link href="/category/container-handler" className="block text-gray-600 hover:text-blue-700 transition">
-                    Container Handler
-                  </Link>
-                  <Link href="/category/explosionproof-mhe" className="block text-gray-600 hover:text-blue-700 transition">
-                    Explosionproof MHE
-                  </Link>
-                  <Link href="/category/solution" className="block text-gray-600 hover:text-blue-700 transition">
-                    Solution
-                  </Link>
-                  <Link href="/category/order-picker" className="block text-gray-600 hover:text-blue-700 transition">
-                    Order Picker
-                  </Link>
-                  <Link href="/category/agv" className="block text-gray-600 hover:text-blue-700 transition">
-                    AGV (Automated Guided Vehicle)
-                  </Link>
+                  {secondColumn.map((category) => (
+                    <Link
+                      key={category.id}
+                      href={`/${createSlug(category.name)}`}
+                      className="block text-gray-600 hover:text-blue-700 transition"
+                    >
+                      {category.name}
+                    </Link>
+                  ))}
                 </div>
               </div>
             </div>
@@ -224,7 +234,7 @@ export default function Footer() {
       {/* Features row */}
       <div className="bg-white border-t py-8">
         <div className="max-w-7xl mx-auto px-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 lg:gap-8">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6 lg:gap-8">
             <div className="flex flex-col items-center text-center">
               <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-3">
                 <Globe className="w-6 h-6 text-blue-700" />

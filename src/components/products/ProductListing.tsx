@@ -7,24 +7,14 @@ import { ProductCardContainer } from "@/components/elements/Product";
 import SideFilter from "@/components/products/SideFilter";
 import Image from "next/image";
 import { Toaster } from "sonner"; // Import Toaster for sonner
+import QuoteForm from "../forms/enquiryForm/quotesForm";
+import { Product } from "@/types";
 
-// Types
-export interface Product {
-  id: string;
-  image: string;
-  title: string;
-  subtitle: string;
-  price: number;
-  currency: string;
-  direct_sale: boolean;
-  category_name: string;
-  subcategory_name: string;
-  is_active: boolean;
-  hide_price: boolean;
-  stock_quantity: number;
-  manufacturer: string;
-  average_rating: number | null;
-}
+import {
+  Dialog,
+  DialogContent,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 
 interface ProductGridProps {
   products: Product[];
@@ -45,57 +35,90 @@ function ProductGrid({
     );
   }
 
+  console.log(products);
+
   if (viewMode === "list") {
     return (
-      <div className="space-y-3 sm:space-y-4">
+      <div className="space-y-3">
         {products.map((product: Product) => (
           <div
             key={product.id}
-            className={`flex flex-col sm:flex-row bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden ${
-              (!product.is_active || (product.direct_sale && product.stock_quantity === 0)) ? 'opacity-50 pointer-events-none' : ''
-            }`}
+            className={`bg-white rounded-lg shadow-sm border-2 hover:bg-[#f3faff] transition-all duration-200 overflow-hidden ${(!product.is_active || (product.direct_sale && product.stock_quantity === 0))
+                ? 'opacity-50 pointer-events-none'
+                : 'hover:shadow-md hover:border-[#4a8c28]'
+              }`}
           >
-            <div className="w-full sm:w-48 h-48 sm:h-32 flex-shrink-0 relative">
-              <Image
-                src={product.image}
-                alt={product.title}
-                width={300}
-                height={300}
-                className="object-cover w-full h-full rounded-t-lg sm:rounded-l-lg sm:rounded-t-none"
-                quality={85}
-              />
-            </div>
-            <div className="flex-1 p-3 sm:p-4">
-              <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-1 sm:mb-2 line-clamp-2">
-                {product.title}
-              </h3>
-              <p className="text-xs sm:text-sm text-gray-600 mb-2 line-clamp-2">
-                {product.subtitle}
-              </p>
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0">
-                {!product.hide_price && (
-                  <span className="text-lg sm:text-2xl font-bold text-green-600">
-                    {product.currency} {product.price.toLocaleString("en-IN")}
-                  </span>
-                )}
-                {product.direct_sale ? (
-                  <div className="flex gap-2">
-                    <button className="w-full sm:w-auto bg-green-500 hover:bg-green-600 text-white px-4 sm:px-6 py-2 rounded-md transition-colors duration-200 text-sm font-medium"
-                      disabled={!product.is_active || product.stock_quantity === 0}
-                    >
-                      Add to Cart {/* This button isn't connected to the actual logic directly here, ProductCardContainer handles it */}
-                    </button>
-                    <button className="w-full sm:w-auto bg-yellow-400 hover:bg-yellow-500 text-black px-4 sm:px-6 py-2 rounded-md transition-colors duration-200 text-sm font-medium"
-                      disabled={!product.is_active || product.stock_quantity === 0}
-                    >
-                      Buy Now
-                    </button>
-                  </div>
-                ) : (
-                  <button className="w-full sm:w-auto bg-blue-500 hover:bg-blue-600 text-white px-4 sm:px-6 py-2 rounded-md transition-colors duration-200 text-sm font-medium">
-                    Get a Quote
-                  </button>
-                )}
+            <div className="flex items-center">
+              {/* Image Section - Always on Left */}
+              <div className="w-24 sm:w-32 md:w-40 h-20 sm:h-24 md:h-28 flex-shrink-0 p-2 relative">
+                <Image
+                  src={product.image}
+                  alt={product.title}
+                  width={200}
+                  height={200}
+                  className="object-cover w-full h-full rounded-l-lg"
+                  quality={85}
+                />
+              </div>
+
+              {/* Content Section - Always on Right */}
+              <div className="flex-1 p-3 sm:p-4 flex items-center justify-between min-h-[80px] sm:min-h-[96px] md:min-h-[112px]">
+                {/* Product Info */}
+                <div className="flex-1 min-w-0 pr-4">
+                  <h3 className="text-sm sm:text-base md:text-lg font-semibold text-gray-900 mb-1 line-clamp-2">
+                    {product.title}
+                  </h3>
+                  <p className="text-xs sm:text-sm text-gray-600 mb-2 line-clamp-2">
+                    {product.subtitle}
+                  </p>
+
+                  {/* Price */}
+                  {(product.hide_price == true || product.price <= "0") ? (
+                    <span className="text-lg font-semibold text-gray-400 tracking-wider">
+                      {product.currency} *******
+                    </span>
+                  ) : (
+                    <span className="text-lg font-semibold text-green-600 tracking-wide">
+                      {product.currency} {typeof product.price === "number" ? product.price.toLocaleString("en-IN") : product.price}
+                    </span>
+                  )}
+                </div>
+
+                {/* Action Buttons - Always on Far Right */}
+                <div className="flex flex-col gap-2 flex-shrink-0">
+                  {product.direct_sale ? (
+                    <>
+                      <button
+                        className="bg-[#5ca131] hover:bg-[#4a8c28] text-white px-3 sm:px-4 py-2 rounded-md transition-colors duration-200 text-xs sm:text-sm font-medium shadow-sm hover:shadow-md whitespace-nowrap"
+                        disabled={!product.is_active || product.stock_quantity === 0}
+                      >
+                        Add to Cart
+                      </button>
+                      <button
+                        className="bg-yellow-400 hover:bg-yellow-500 text-black px-3 sm:px-4 py-2 rounded-md transition-colors duration-200 text-xs sm:text-sm font-medium shadow-sm hover:shadow-md whitespace-nowrap"
+                        disabled={!product.is_active || product.stock_quantity === 0}
+                      >
+                        Buy Now
+                      </button>
+                    </>
+                  ) : (
+                      <Dialog>
+                        {/* Fixed: Ensuring DialogTrigger has exactly one child */}
+                        <DialogTrigger asChild>
+                          <button
+                            className="flex items-center justify-center rounded-lg bg-[#5ca131] hover:bg-[#4a8a29] py-2 px-4 text-white font-medium transition-colors duration-200 w-full"
+                            aria-label="Get a quote"
+                            disabled={!product.is_active}
+                          >
+                            Get a Quote
+                          </button>
+                        </DialogTrigger>
+                        <DialogContent className="w-full sm:max-w-2xl">
+                          <QuoteForm product={product} />
+                        </DialogContent>
+                      </Dialog>
+                  )}
+                </div>
               </div>
             </div>
           </div>

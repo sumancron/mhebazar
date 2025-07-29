@@ -16,6 +16,7 @@ import {
   DialogContent,
   DialogTrigger,
 } from "@/components/ui/dialog"
+import { Product } from "@/types";
 
 // Helper function for SEO-friendly slug
 const slugify = (text: string): string => {
@@ -144,7 +145,7 @@ const ProductCard = ({
           <p className="text-xs text-gray-500 mb-2 line-clamp-1">{subtitle}</p>
           {/* Price */}
           <div className="mb-3">
-            {hide_price ? (
+            {(hide_price == true || price <= "0") ? (
               <span className="text-lg font-semibold text-gray-400 tracking-wider">
                 {currency} *******
               </span>
@@ -220,8 +221,8 @@ const ProductCard = ({
                     Get a Quote
                   </button>
                 </DialogTrigger>
-                <DialogContent className="w-fit">
-                  <QuoteForm />
+                <DialogContent className="w-full max-w-2xl">
+                  <QuoteForm product={productData} />
                 </DialogContent>
               </Dialog>
             )}
@@ -238,8 +239,8 @@ const ProductCard = ({
                 Get a Quote
               </button>
             </DialogTrigger>
-            <DialogContent>
-              <QuoteForm />
+            <DialogContent className="w-full max-w-2xl">
+              <QuoteForm product={productData} />
             </DialogContent>
           </Dialog>
         )}

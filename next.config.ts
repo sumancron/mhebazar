@@ -11,7 +11,6 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  distDir: 'dist',
 };
 
 

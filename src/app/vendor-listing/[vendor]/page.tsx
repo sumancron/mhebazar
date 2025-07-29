@@ -42,11 +42,11 @@ interface ApiResponse<T> {
   results: T[];
 }
 
-interface ApiUser {
-  id: number;
-  username: string;
-  full_name: string;
-}
+// interface ApiUser {
+//   id: number;
+//   username: string;
+//   full_name: string;
+// }
 
 interface ApiVendor {
   user: number;
@@ -71,7 +71,7 @@ export default function VendorPage({ params }: { params: Promise<{ vendor: strin
   const [products, setProducts] = useState<Product[]>([]);
   const [totalProducts, setTotalProducts] = useState<number>(0);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [, setErrorMessage] = useState<string | null>(null);
   const [noProductsFoundMessage, setNoProductsFoundMessage] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [totalPages, setTotalPages] = useState<number>(1);
@@ -84,7 +84,7 @@ export default function VendorPage({ params }: { params: Promise<{ vendor: strin
   const [sortBy, setSortBy] = useState<string>('relevance');
 
   const [vendorData, setVendorData] = useState<ApiVendor | null>(null);
-  const [vendorUserId, setVendorUserId] = useState<number | null>(null);
+  const [, setVendorUserId] = useState<number | null>(null);
   const [isVendorValid, setIsVendorValid] = useState<boolean>(true);
 
   // Fetch vendor user ID based on brand name

@@ -31,6 +31,8 @@ import {
 import MheWriteAReview from "@/components/forms/product/ProductReviewForm";
 import ReviewSection from "./Reviews"; // Import ReviewSection
 
+import DOMPurify from 'dompurify';
+
 // Helper function for SEO-friendly slug
 // const slugify = (text: string): string => {
 //   return text
@@ -714,7 +716,7 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
             <ChevronDown className={`w-5 h-5 transition-transform ${openAccordion === "desc" ? "rotate-180" : ""}`} />
           </button>
           {openAccordion === "desc" && (
-            <div className="px-4 py-3 text-gray-700 text-sm whitespace-pre-line">{data.description}</div>
+            <div className="px-4 py-3 text-gray-700 text-sm whitespace-pre-line" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(data.description) }} />
           )}
         </div>
         {/* Specification */}
