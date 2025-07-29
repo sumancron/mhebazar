@@ -13,6 +13,7 @@ import {
   Heart,
   LogOut,
   UserIcon,
+  Repeat
 } from "lucide-react";
 import { useRef, useState, JSX, useEffect } from "react";
 import React from "react";
@@ -182,6 +183,17 @@ export default function Navbar(): JSX.Element {
 
             {/* Right Section */}
             <div className="flex items-center gap-4">
+
+              {/* Compare Icon using Repeat */}
+              <Link
+                href="/compare"
+                className="flex items-center text-gray-600 hover:text-green-600 transition"
+                aria-label="Compare Products"
+              >
+                <Repeat className="w-5 h-5" />
+              </Link>
+
+
               {/* Conditional rendering for Cart and Notifications: Only if user is logged in */}
               {!isLoading && user && (
                 <>
