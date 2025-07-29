@@ -7,8 +7,7 @@ import AnalyticsDashboard from '@/components/admin/Graph';
 import api from '@/lib/api'; // Use the configured axios instance
 import Cookies from 'js-cookie';
 import { toast } from "sonner";
-//import Image from "next/image";
-
+import Image from "next/image";
 
 // Shadcn UI Components
 import { Button } from "@/components/ui/button";
@@ -304,7 +303,7 @@ const CompleteDashboard = () => {
                         {products.map(product => (
                           <div key={product.id} className="flex items-center justify-between">
                             <div className="flex items-center gap-4">
-                              <img src={product.images?.[0]?.image || '/no-product.png'} alt={product.name} width={48} height={48} className="rounded bg-gray-100 object-contain" />
+                              <Image src={product.images?.[0]?.image || '/no-product.png'} alt={product.name} width={48} height={48} className="rounded bg-gray-100 object-contain" />
                               <div>
                                 <p className="font-medium text-gray-900">{product.name}</p>
                                 <p className="text-sm text-gray-500">{product.category_name}</p>

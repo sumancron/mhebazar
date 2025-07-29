@@ -1,8 +1,7 @@
 // src/components/products/Reviews.tsx
 "use client";
 
-//import Image from "next/image";
-
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState, useCallback } from "react";
 import { ChevronLeft, ChevronRight, Star } from "lucide-react";
@@ -275,7 +274,7 @@ export default function ReviewSection({ productId, registerRefresher }: ReviewSe
                       key={src + "-" + i}
                       className="relative w-20 h-20 flex-shrink-0 rounded overflow-hidden bg-gray-100 shadow"
                     >
-                      <img
+                      <Image
                         src={src}
                         alt={`Review image ${i + 1}`}
                         fill
@@ -309,7 +308,7 @@ export default function ReviewSection({ productId, registerRefresher }: ReviewSe
                   <div className="flex items-center gap-3 mb-1">
                     <div className="w-9 h-9 rounded-full bg-gray-200 overflow-hidden flex items-center justify-center">
                       {review.review_images && review.review_images.length > 0 && review.review_images[0].image ? (
-                        <img
+                        <Image
                           src={review.review_images[0].image}
                           alt={review.user_name || "User"}
                           width={36}
@@ -350,7 +349,7 @@ export default function ReviewSection({ productId, registerRefresher }: ReviewSe
                         key={img.id}
                         className="relative w-16 h-16 flex-shrink-0 rounded overflow-hidden bg-gray-100 shadow"
                       >
-                        <img
+                        <Image
                           src={img.image}
                           alt="review image"
                           fill

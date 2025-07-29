@@ -5,8 +5,7 @@ import React, { useState } from "react";
 import { Grid, List, MenuIcon, X } from "lucide-react";
 import { ProductCardContainer } from "@/components/elements/Product";
 import SideFilter from "@/components/products/SideFilter";
-//import Image from "next/image";
-
+import Image from "next/image";
 import { Toaster } from "sonner"; // Import Toaster for sonner
 
 // Types
@@ -57,7 +56,7 @@ function ProductGrid({
             }`}
           >
             <div className="w-full sm:w-48 h-48 sm:h-32 flex-shrink-0 relative">
-              <img
+              <Image
                 src={product.image}
                 alt={product.title}
                 width={300}

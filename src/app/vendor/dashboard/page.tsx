@@ -2,8 +2,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { ShoppingCart, Download, FileText, Bell, AlertCircle, CheckCircle, Clock } from "lucide-react";
-//import Image from "next/image";
-
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -374,7 +373,7 @@ export default function DashboardStats() {
                   >
                     <div className="flex items-center gap-4 w-full sm:w-auto">
                       <div className="h-20 w-20 relative flex-shrink-0">
-                        <img
+                        <Image
                           src={getImageSrc(product.images)}
                           alt={product.name}
                           fill

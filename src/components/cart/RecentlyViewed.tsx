@@ -3,8 +3,7 @@
 
 import React, { useEffect, useState, useCallback } from "react";
 import { ProductCardContainer } from "@/components/elements/Product"; // Use ProductCardContainer
-//import Image from "next/image";
-
+import Image from "next/image";
 import api from "@/lib/api"; // Import your API client
 
 // Define API data structures for products
@@ -99,7 +98,7 @@ export default function RecentlyViewed() {
           ))
         ) : (
           <div className="col-span-full flex flex-col items-center justify-center py-16">
-            <img
+            <Image
               src="/no-product.png"
               alt="No product"
               width={112}

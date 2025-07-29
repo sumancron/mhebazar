@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-//import Image from "next/image";
-
+import Image from "next/image";
 import {
   Carousel,
   CarouselContent,
@@ -126,7 +125,7 @@ export default function MostPopular() {
                 <Card className="p-4 flex flex-col items-center text-center border-none shadow-none">
                   {/* Main Image */}
                   <div className="relative w-64 h-64 mb-4">
-                    <img
+                    <Image
                       src={category.mainImage}
                       alt={category.mainLabel}
                       fill
@@ -145,7 +144,7 @@ export default function MostPopular() {
                     {category.products.slice(0, 3).map((product, i) => (
                       <div key={i} className="flex flex-col items-center">
                         <div className="relative w-20 h-20 bg-gray-50 rounded-lg overflow-hidden">
-                          <img
+                          <Image
                             src={product.image}
                             alt={product.label || `Product ${i + 1}`}
                             fill

@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, useEffect, JSX } from "react"; // useRef added for image fallback
-//import Image from "next/image";
-
+import Image from "next/image";
 import Link from "next/link";
 import api from "@/lib/api"; // Your custom API client
 // import { Loader2 } from "lucide-react"; // For a better loading spinner
@@ -75,7 +74,7 @@ function TopSearchedItem({ item }: TopSearchedItemProps): JSX.Element {
     <Link href={`/products/${slug}`} className="flex items-center gap-3 sm:gap-4 bg-gray-50 p-3 sm:p-4 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer border border-gray-100 group">
       <div className="relative w-12 h-12 sm:w-16 sm:h-16 rounded-lg overflow-hidden bg-white border border-gray-200 flex-shrink-0 flex items-center justify-center">
         {image && !showInitials ? (
-          <img
+          <Image
             src={image}
             alt={alt || label}
             fill
@@ -264,7 +263,7 @@ export default function NewArrivalsAndTopSearches() {
                 key={item.id || i}
                 className="relative w-24 h-24 sm:w-32 sm:h-32 flex-shrink-0 rounded-lg overflow-hidden bg-gray-50 border border-gray-100 hover:shadow-md transition-shadow cursor-pointer group flex items-center justify-center">
                 {item.image ? (
-                  <img
+                  <Image
                     src={item.image}
                     alt={item.alt}
                     fill

@@ -1,8 +1,7 @@
 import Breadcrumb from "@/components/elements/Breadcrumb";
 import HomeBanner from "@/components/layout/HomeBanner";
 import AboutStats from "@/components/about/AboutStats";
-//import Image from "next/image";
-
+import Image from "next/image";
 import LeadershipTeam from "@/components/about/LeadershipTeam";
 import GlobalMapStats from "@/components/about/MapStats";
 import SubscriptionPlans from "@/components/elements/SubscriptionPlans";
@@ -45,7 +44,7 @@ const AboutPage = () => {
         {/* Solution div */}
         <div className="w-full flex justify-center my-8">
           <div className="w-full max-w-8xl px-2 md:px-0">
-            <img
+            <Image
               src="/about/image.png"
               alt="MHE Bazar One Stop"
               width={1640}
@@ -92,7 +91,7 @@ const AboutPage = () => {
           {/* Top Image with curved border */}
           <div className="w-full max-w-6xl mx-auto">
             <div className="overflow-hidden rounded-t-3xl rounded-b-xl shadow-lg">
-              <img
+              <Image
                 src="/about/three.png"
                 alt="MHE Bazar Vision Mission"
                 width={1600}

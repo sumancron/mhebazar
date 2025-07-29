@@ -84,7 +84,7 @@ const QuoteForm = ({ productId, productDetails, onClose }: QuoteFormProps): JSX.
         <CardContent className="flex flex-col w-full items-start gap-6 p-6 relative bg-white">
           <div className="flex flex-col items-start gap-6 self-stretch w-full">
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-8 self-stretch w-full">
-              <img
+              <Image
                 src={productDetails.image || "/no-product.png"}
                 alt={productDetails.title}
                 width={150} // Adjusted width for better display in form

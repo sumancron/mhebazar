@@ -4,8 +4,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, ChevronRight, Search } from "lucide-react";
-//import Image from "next/image";
-
+import Image from "next/image";
 import api from "@/lib/api"; // Import the API client
 
 // Define interfaces for API response
@@ -479,7 +478,7 @@ const SideFilter = ({
       </div>
       {/* Banner Image */}
       <div className="p-3 sm:p-4 mt-auto">
-        <img
+        <Image
           src="/sidebar.png"
           alt="Forklift Service"
           width={400}

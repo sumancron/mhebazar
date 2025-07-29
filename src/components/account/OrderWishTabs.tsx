@@ -1,8 +1,7 @@
 // src/components/account/OrderWishTabs.tsx
 "use client";
 import { useRouter } from "next/navigation";
-//import Image from "next/image";
-
+import Image from "next/image";
 import { useState } from "react";
 import {
   Accordion,
@@ -278,7 +277,7 @@ export default function AccountTabsUI({
                     <AccordionItem value={`order-${order.id}`} className="border-b rounded-2xl shadow-[0_4px_16px_0_rgba(0,0,0,0.03)] bg-white overflow-hidden">
                       <AccordionTrigger className="px-6 py-4 flex items-center justify-between hover:no-underline">
                         <div className="flex items-center gap-4 w-full">
-                          <img
+                          <Image
                             src={displayImage}
                             alt={displayTitle}
                             width={64}
@@ -369,7 +368,7 @@ export default function AccountTabsUI({
                                 <div className="space-y-3">
                                 {order.items.map((item) => (
                                     <div key={item.id} className="flex items-center gap-3 bg-gray-50 p-3 rounded-lg">
-                                    <img
+                                    <Image
                                         src={item.product_details?.images?.[0]?.image || "/no-product.png"}
                                         alt={item.product_details?.name || "Product Image"}
                                         width={40}
@@ -409,7 +408,7 @@ export default function AccountTabsUI({
                   key={item.id}
                   className="flex items-center bg-white rounded-2xl shadow-[0_4px_16px_0_rgba(0,0,0,0.03)] px-6 py-6"
                 >
-                  <img
+                  <Image
                     src={item.image}
                     alt={item.title}
                     width={80}

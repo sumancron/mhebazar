@@ -62,7 +62,7 @@ export default function GlobalMapStats() {
           {/* Map Image */}
           <div className="flex-1 flex items-center justify-center">
             <div className="w-full max-w-[420px] md:max-w-[600px] lg:max-w-[420px] xl:max-w-[420px] 2xl:max-w-[620px] mx-auto">
-              <img
+              <Image
                 src="/about/map.png"
                 alt="Global Impressions Map"
                 width={420}

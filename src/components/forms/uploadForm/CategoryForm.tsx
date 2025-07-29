@@ -305,7 +305,7 @@ export default function CategoryForm({ category, onSuccess }: CategoryFormProps)
                   className="w-full h-10 border-gray-300 text-gray-600 text-sm"
                   onClick={() => document.getElementById("cat-image-input")?.click()}
                 >
-                  <imgIcon className="w-4 h-4 mr-2" />
+                  <ImageIcon className="w-4 h-4 mr-2" />
                   {catImageFiles.length > 0 ? `${catImageFiles.length} file(s) selected` : "Select Image"}
                 </Button>
                 {catImageFiles.length > 0 && (
@@ -350,7 +350,7 @@ export default function CategoryForm({ category, onSuccess }: CategoryFormProps)
                   className="w-full h-10 border-gray-300 text-gray-600 text-sm"
                   onClick={() => document.getElementById("cat-banner-input")?.click()}
                 >
-                  <imgIcon className="w-4 h-4 mr-2" />
+                  <ImageIcon className="w-4 h-4 mr-2" />
                   {catBannerFiles.length > 0 ? `${catBannerFiles.length} file(s) selected` : "Select Banner"}
                 </Button>
                 {catBannerFiles.length > 0 && (

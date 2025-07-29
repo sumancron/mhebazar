@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-//import Image from "next/image";
-
+import Image from "next/image";
 import { useParams } from "next/navigation";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
@@ -112,7 +111,7 @@ export default function ProductDetails() {
                 {product.images && product.images.length > 0 ? (
                   product.images.map((img, index) => (
                     <div key={index} className="relative aspect-square">
-                      <img
+                      <Image
                         src={img.image}
                         alt={`${product.name} - ${index + 1}`}
                         fill

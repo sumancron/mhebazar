@@ -1,7 +1,6 @@
 "use client";
 import React, { useState } from "react";
-//import Image from "next/image";
-
+import Image from "next/image";
 
 interface VendorData {
   logo: string;
@@ -30,7 +29,7 @@ export default function VendorBanner({ data }: VendorBannerProps) {
     <div className="w-full bg-white">
       {/* Banner */}
       <div className="w-full aspect-[16/9] sm:aspect-[3/1] lg:aspect-[4/1] relative">
-        <img
+        <Image
           src={vendor.banner}
           alt="Vendor Banner"
           fill
@@ -42,7 +41,7 @@ export default function VendorBanner({ data }: VendorBannerProps) {
         {/* Desktop Layout - Logo and Product Count Side by Side */}
         <div className="hidden sm:flex absolute -bottom-12 lg:-bottom-16 xl:-bottom-18 items-start gap-4 lg:gap-6 px-4 sm:px-6 md:px-8 z-30">
           <div className="bg-white rounded-full border-4 border-white shadow-xl flex items-center justify-center overflow-hidden w-24 h-24 sm:w-32 sm:h-32 lg:w-40 lg:h-40 flex-shrink-0">
-            <img
+            <Image
               src={vendor.logo}
               alt="Vendor Logo"
               width={144}
@@ -63,7 +62,7 @@ export default function VendorBanner({ data }: VendorBannerProps) {
         {/* Mobile Layout - Centered Logo */}
         <div className="sm:hidden absolute -bottom-12 left-1/2 transform -translate-x-1/2 z-30">
           <div className="bg-white rounded-full border-4 border-white shadow-xl flex items-center justify-center overflow-hidden w-24 h-24">
-            <img
+            <Image
               src={vendor.logo}
               alt="Vendor Logo"
               width={80}

@@ -1,8 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
-//import Image from "next/image";
-
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -41,7 +40,7 @@ export default function VendorCard({ vendor }: Props) {
 
       {/* Logo / Placeholder */}
       <div className="relative w-24 h-20 mb-4 rounded-xl border border-gray-100 bg-gray-50 flex items-center justify-center overflow-hidden">
-        <img
+        <Image
           src={vendor.user_info.profile_photo}
           alt={vendor.brand}
           fill

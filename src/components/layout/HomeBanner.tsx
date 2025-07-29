@@ -1,7 +1,6 @@
 "use client";
 
-//import Image from "next/image";
-
+import Image from "next/image";
 import React, { useEffect, useState } from "react";
 import {
   Carousel,
@@ -83,7 +82,7 @@ export default function BannerCarousel({ className }: BannerCarouselProps) {
           {banners.map((banner, idx) => (
             <CarouselItem key={idx} className="pl-0 w-full">
               <div className="relative w-full h-[200px] sm:h-[280px] md:h-[350px] lg:h-[400px] xl:h-[450px] overflow-hidden bg-gradient-to-r from-gray-100 to-gray-200">
-                <img
+                <Image
                   src={banner.image}
                   alt={banner.alt}
                   fill
