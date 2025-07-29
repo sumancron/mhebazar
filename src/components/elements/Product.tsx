@@ -89,7 +89,7 @@ const ProductCard = ({
   const isPurchasable = is_active && (!directSale || stock_quantity > 0);
 
   const productSlug = slugify(title);
-  const productDetailUrl = `/product/${productSlug}`;
+  const productDetailUrl = `/product/${productSlug}/?id=${id}`;
 
   // Determine which form to show
   const FormComponent = productType === 'rental' ? RentalForm : QuoteForm;

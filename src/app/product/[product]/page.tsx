@@ -22,13 +22,20 @@ export async function generateMetadata({ params }: { params: { product: string }
   };
 }
 
-export default function IndividualProductPage({ params }: { params: { product: string } }) {
+export default function IndividualProductPage({
+  params,
+  searchParams,
+}: {
+  params: { product: string };
+  searchParams: { id: string };
+}) {
   const { product: productSlug } = params;
+  const productId = searchParams.id; // Get the ID from the URL query
 
   return (
     <>
       {/* ProductSection will fetch its own data based on productSlug */}
-      <ProductSection productSlug={productSlug} />
+      <ProductSection productSlug={productSlug} productId={productId} />
       {/* ReviewSection needs the actual product ID. We will pass null initially
           and Reviews.tsx will fetch reviews by slug (or fallback) if product ID
           cannot be derived directly from the URL slug here.
