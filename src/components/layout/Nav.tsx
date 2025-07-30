@@ -236,7 +236,7 @@ export default function Navbar(): JSX.Element {
                   >
                     <ShoppingCart className="w-5 h-5" />
                   </Link>
-                  {/* <Link
+                  <Link
                     href="/notifications"
                     className="flex items-center text-gray-600 hover:text-green-600 transition"
                     aria-label="Notifications"
@@ -251,7 +251,7 @@ export default function Navbar(): JSX.Element {
                       <path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
                       <path d="M13.73 21a2 2 0 01-3.46 0" />
                     </svg>
-                  </Link> */}
+                  </Link>
                 </>
               )}
 
