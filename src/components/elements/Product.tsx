@@ -97,7 +97,7 @@ const ProductCard = ({
 
   return (
     <div
-      className={`bg-white rounded-2xl m-5 shadow-sm border border-[#ecf0f7] overflow-hidden flex flex-col w-80 h-96 ${!isAvailable ? "opacity-50 pointer-events-none" : ""
+      className={`bg-white rounded-2xl shadow-sm border border-[#ecf0f7] overflow-hidden flex flex-col w-full sm:w-80 h-[400px] mx-auto my-4 ${!isAvailable && directSale ? "opacity-50 pointer-events-none" : ""
         }`}
     >
       {/* Image Container */}
@@ -118,7 +118,7 @@ const ProductCard = ({
             onClick={() => onWishlistClick(id)}
             className="bg-[#f3faff] hover:bg-[#e6f7ee] p-2 rounded-full border border-[#e0e7ef] shadow transition"
             aria-label="Add to wishlist"
-            disabled={!isPurchasable}
+            disabled={!is_active}
           >
             <Heart className={`w-4 h-4 ${isWishlisted ? "fill-red-500 text-red-500" : "text-gray-600"}`} />
           </button>
@@ -126,7 +126,7 @@ const ProductCard = ({
             onClick={() => onCompareClick(productData)}
             className="bg-[#f3faff] hover:bg-[#e6f7ee] p-2 rounded-full border border-[#e0e7ef] shadow transition"
             aria-label="Compare"
-            disabled={!isPurchasable}
+            disabled={!is_active}
           >
             <Repeat className="w-4 h-4 text-gray-600" />
           </button>
@@ -141,16 +141,16 @@ const ProductCard = ({
       </div>
 
       {/* Content */}
-      <div className="flex-1 flex flex-col justify-between px-4 py-3">
+      <div className="flex-1 flex flex-col justify-between p-4"> {/* Changed px-4 py-3 to p-4 for better overall padding */}
         <div>
           <Link href={productDetailUrl}>
-            <h3 className="text-base font-semibold text-gray-900 mb-1 line-clamp-2 hover:text-green-700 transition-colors">
+            <h3 className="text-base font-semibold text-gray-900 mb-2 line-clamp-2 hover:text-green-700 transition-colors"> {/* Increased mb-1 to mb-2 */}
               {title}
             </h3>
           </Link>
-          <p className="text-xs text-gray-500 mb-2 line-clamp-1">{subtitle}</p>
+          <p className="text-xs text-gray-500 mb-3 line-clamp-1">{subtitle}</p> {/* Increased mb-2 to mb-3 */}
           {/* Price */}
-          <div className="mb-3">
+          <div className="mb-4"> {/* Increased mb-3 to mb-4 */}
             {hide_price ? (
               <span className="text-lg font-semibold text-gray-400 tracking-wider">
                 {currency} *******
@@ -165,31 +165,31 @@ const ProductCard = ({
 
         {/* Action Buttons */}
         {directSale ? (
-          <div className="flex flex-row gap-2 w-full">
+          <div className="flex flex-col sm:flex-row gap-2 w-full"> {/* Changed to flex-col on small, row on sm+, added gap-2 */}
             {isInCart ? (
-              <div className="flex items-center bg-green-50 text-green-700 font-medium py-1 px-1 rounded-md text-sm w-[30%]">
+              <div className="flex items-center bg-green-50 text-green-700 font-medium py-1 px-1 rounded-md text-sm flex-1"> {/* Adjusted width to flex-1 */}
                 <button
                   onClick={() => cartItemId && onDecreaseQuantity(cartItemId)}
                   disabled={currentCartQuantity <= 1 || !isPurchasable}
-                  className="h-8 flex items-center justify-center rounded hover:bg-green-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="h-8 w-8 flex items-center justify-center rounded hover:bg-green-100 disabled:opacity-50 disabled:cursor-not-allowed"
                   aria-label="Decrease quantity"
                 >
                   <Minus className="w-4 h-4" />
                 </button>
-                <span className="text-green-800 font-semibold text-center h-8 flex items-center justify-center px-2">
+                <span className="text-green-800 font-semibold text-center flex-1"> {/* Flex-1 to take available space */}
                   {currentCartQuantity}
                 </span>
                 <button
                   onClick={() => cartItemId && onIncreaseQuantity(cartItemId)}
                   disabled={!isPurchasable}
-                  className="h-8 flex items-center justify-center rounded hover:bg-green-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="h-8 w-8 flex items-center justify-center rounded hover:bg-green-100 disabled:opacity-50 disabled:cursor-not-allowed"
                   aria-label="Increase quantity"
                 >
                   <Plus className="w-4 h-4" />
                 </button>
                 <button
                   onClick={() => cartItemId && onRemoveFromCart(cartItemId)}
-                  className="h-8 flex items-center justify-center rounded text-red-500 hover:bg-red-50 transition-colors ml-1"
+                  className="h-8 w-8 flex items-center justify-center rounded text-red-500 hover:bg-red-50 transition-colors ml-1"
                   aria-label="Remove from cart"
                   title="Remove from Cart"
                 >
@@ -199,38 +199,22 @@ const ProductCard = ({
             ) : (
               <button
                 onClick={() => onAddToCartClick(id)}
-                className="flex items-center justify-center gap-2 rounded-lg bg-[#5ca131] hover:bg-[#4a8a29] py-2 px-4 text-white font-medium transition-colors duration-200 w-[30%]"
+                className="flex items-center justify-center gap-2 rounded-lg bg-[#5ca131] hover:bg-[#4a8a29] py-2 px-4 text-white font-medium transition-colors duration-200 flex-1" // Adjusted width to flex-1
                 aria-label="Add to cart"
                 disabled={!isPurchasable}
               >
-                <ShoppingCart className="w-4 h-4" />
+                <ShoppingCart className="w-4 h-4" /> Add
               </button>
             )}
 
             <button
               onClick={() => onBuyNowClick(id)}
-              className="rounded-lg border border-[#5ca131] text-[#5ca131] hover:bg-[#f3faff] py-2 px-4 font-medium text-base leading-6 transition-colors duration-200 w-[70%]"
+              className="rounded-lg border border-[#5ca131] text-[#5ca131] hover:bg-[#f3faff] py-2 px-4 font-medium text-base leading-6 transition-colors duration-200 w-full sm:w-fit" // Adjusted width to w-full on small, w-fit on sm+
               aria-label="Buy now"
               disabled={!isPurchasable}
             >
-              Buy Now
+              Buy
             </button>
-            {/* Conditional form for non-purchasable direct sale products */}
-            {!isPurchasable && (
-              <Dialog>
-                <DialogTrigger asChild>
-                  <button
-                    className="flex items-center justify-center rounded-lg bg-[#5ca131] hover:bg-[#4a8a29] py-2 px-4 text-white font-medium transition-colors duration-200"
-                    aria-label={formButtonText}
-                  >
-                    {formButtonText}
-                  </button>
-                </DialogTrigger>
-                <DialogContent className="w-fit">
-                  <FormComponent productId={id} productDetails={{ image, title, description: subtitle, price }} />
-                </DialogContent>
-              </Dialog>
-            )}
           </div>
         ) : (
           <Dialog>
@@ -243,8 +227,11 @@ const ProductCard = ({
                 {formButtonText}
               </button>
             </DialogTrigger>
-            <DialogContent>
-              <FormComponent productId={id} productDetails={{ image, title, description: subtitle, price }} />
+            <DialogContent className="sm:max-w-[480px]"> {/* Added max-w for responsiveness */}
+              <FormComponent
+                productId={id}
+                productDetails={{ image, title, description: subtitle, price }}
+              />
             </DialogContent>
           </Dialog>
         )}
@@ -442,29 +429,20 @@ export const ProductCardContainer = ({
 
   const handleIncreaseQuantity = useCallback(async (cartId: number) => {
     if (!user || !cartId) return;
-    if (latestCartState.current.currentCartQuantity <= 1) { // Use ref for latest state
-      toast.info("Quantity cannot be less than 1. Use the remove button (trash icon) to take it out of cart.", {
-        action: {
-          label: 'Remove',
-          onClick: () => handleRemoveFromCart(cartId),
-        },
-      });
-      return;
-    }
     try {
-      const newQuantity = latestCartState.current.currentCartQuantity - 1; // Use ref for latest state
+      const newQuantity = latestCartState.current.currentCartQuantity + 1; // Use ref for latest state
       await api.patch(`/cart/${cartId}/`, { quantity: newQuantity });
       setCurrentCartQuantity(newQuantity); // Optimistically update
-      toast.success("Quantity decreased!");
+      toast.success("Quantity increased!");
     } catch (error) {
-      console.error("Error decreasing quantity:", error);
+      console.error("Error increasing quantity:", error);
       if (axios.isAxiosError(error) && error.response && error.response.data?.quantity) {
-        toast.error(`Failed to decrease quantity: ${error.response.data.quantity[0]}`);
+        toast.error(`Failed to increase quantity: ${error.response.data.quantity[0]}`);
       } else {
-        toast.error("Failed to decrease quantity.");
+        toast.error("Failed to increase quantity.");
       }
     }
-  }, [user, handleRemoveFromCart]);
+  }, [user]);
 
 
   const handleDecreaseQuantity = useCallback(async (cartId: number) => {

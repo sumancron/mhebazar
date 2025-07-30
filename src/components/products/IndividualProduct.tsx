@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 // src/components/products/IndividualProduct.tsx
 "use client";
 
@@ -23,6 +24,7 @@ import axios from "axios";
 import { toast } from "sonner";
 import { useUser } from "@/context/UserContext";
 import QuoteForm from "@/components/forms/enquiryForm/quotesForm";
+import RentalForm from "@/components/forms/enquiryForm/rentalForm"; // Import RentalForm
 import {
   Dialog,
   DialogContent,
@@ -32,17 +34,17 @@ import MheWriteAReview from "@/components/forms/product/ProductReviewForm";
 import ReviewSection from "./Reviews"; // Import ReviewSection
 
 // Helper function for SEO-friendly slug
-// const slugify = (text: string): string => {
-//   return text
-//     .toString()
-//     .toLowerCase()
-//     .trim()
-//     .replace(/\s+/g, '-')       // Replace spaces with -
-//     .replace(/[^\w-]+/g, '')     // Remove all non-word chars
-//     .replace(/--+/g, '-')        // Replace multiple - with single -
-//     .replace(/^-+/, '')          // Trim - from start of text
-//     .replace(/-+$/, '');         // Trim - from end of text
-// };
+const slugify = (text: string): string => {
+  return text
+    .toString()
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, '-')       // Replace spaces with -
+    .replace(/[^\w-]+/g, '')     // Remove all non-word chars
+    .replace(/--+/g, '-')        // Replace multiple - with single -
+    .replace(/^-+/, '')          // Trim - from start of text
+    .replace(/-+$/, '');         // Trim - from end of text
+};
 
 
 type ProductImage = {
@@ -60,7 +62,7 @@ type ProductData = {
   model: string | null;
   product_details: Record<string, unknown> | null;
   price: string;
-  type: string;
+  type: string; // Added type to ProductData
   is_active: boolean;
   direct_sale: boolean;
   online_payment: boolean;
@@ -78,14 +80,6 @@ type ProductData = {
   brochure: string | null;
   average_rating: number | null;
 };
-
-// API response for product list
-// interface ProductsApiResponse {
-//   count: number;
-//   next: string | null;
-//   previous: string | null;
-//   results: ProductData[];
-// }
 
 // Cart Item type from API
 interface CartItemApi {
@@ -347,10 +341,30 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
     }
   }, [user, data?.id, isWishlisted]);
 
-
   const handleCompare = useCallback(() => {
-    toast.info("Compare functionality coming soon!");
-  }, []);
+    if (!data) return;
+    const COMPARE_KEY = 'mhe_compare_products';
+    if (typeof window !== 'undefined') {
+      const currentCompare: ProductData[] = JSON.parse(localStorage.getItem(COMPARE_KEY) || '[]');
+      const existingProduct = currentCompare.find((p: ProductData) => p.id === data.id);
+
+      if (!existingProduct) {
+        const dataToStore = { ...data };
+        // If price is hidden, remove it from comparison data
+        if (data.hide_price) {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const { price: _, ...restOfData } = dataToStore;
+          currentCompare.push(restOfData as unknown as ProductData);
+        } else {
+          currentCompare.push(dataToStore);
+        }
+        localStorage.setItem(COMPARE_KEY, JSON.stringify(currentCompare));
+        toast.success("Product added to comparison!");
+      } else {
+        toast.info("Product is already in comparison.");
+      }
+    }
+  }, [data]);
 
   const handleBuyNow = useCallback(async () => {
     if (!user) {
@@ -449,6 +463,10 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
     maximumFractionDigits: 2,
   });
 
+  // Determine which form component to use based on product type
+  const FormComponent = data.type === 'rental' ? RentalForm : QuoteForm;
+  const formButtonText = data.type === 'rental' ? "Rent Now" : "Get a Quote";
+
   return (
     <div className="px-4 mx-auto p-2 sm:p-4 bg-white">
       <div className="flex flex-col md:flex-row gap-8">
@@ -485,7 +503,7 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
               <button
                 className="w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-sm hover:shadow-md transition-shadow"
                 onClick={handleWishlist}
-                disabled={!isPurchasable}
+                disabled={!data.is_active} // Wishlist should be available if product is active
               >
                 <Heart className={`w-4 h-4 ${isWishlisted ? "fill-red-500 text-red-500" : "text-gray-600"}`} />
               </button>
@@ -494,6 +512,13 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
                 onClick={handleShare}
               >
                 <Share2 className="w-4 h-4 text-gray-600" />
+              </button>
+              <button
+                className="w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-sm hover:shadow-md transition-shadow"
+                onClick={handleCompare}
+                disabled={!data.is_active} // Compare should be available if product is active
+              >
+                <RotateCcw className="w-4 h-4 text-gray-600" />
               </button>
             </div>
           </div>
@@ -524,7 +549,7 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
           <div className="flex flex-col lg:flex-row gap-4">
             <div className="w-full lg:w-2/3">
               {/* Product Title */}
-              <h1 className="text-2xl font-semibold text-gray-900 mb-2">{productSlug}</h1>
+              <h1 className="text-2xl font-semibold text-gray-900 mb-2">{data.name}</h1>
               <div className="text-base text-gray-600 mb-2">
                 {data.category_name} {data.subcategory_name ? `> ${data.subcategory_name}` : ''}
               </div>
@@ -579,7 +604,7 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
                     </p>
                   ) : (
                     <p className="text-sm font-semibold text-blue-600">
-                      Available for Quote
+                      Available for {data.type === 'rental' ? 'Rental' : 'Quote'}
                     </p>
                   )}
                   {!data.is_active && (
@@ -648,14 +673,22 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
                     <DialogTrigger asChild>
                       <button
                         className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-md text-base transition"
-                        aria-label="Get a quote"
+                        aria-label={formButtonText}
                         disabled={!data.is_active}
                       >
-                        Get a Quote
+                        {formButtonText}
                       </button>
                     </DialogTrigger>
                     <DialogContent>
-                      <QuoteForm />
+                      <FormComponent
+                        productId={data.id}
+                        productDetails={{
+                          image: data.images[0]?.image || "/no-product.png",
+                          title: data.name,
+                          description: data.description,
+                          price: data.price
+                        }}
+                      />
                     </DialogContent>
                   </Dialog>
                 )}

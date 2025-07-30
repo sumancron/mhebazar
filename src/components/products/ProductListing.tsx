@@ -10,6 +10,7 @@ import { Toaster } from "sonner"; // Import Toaster for sonner
 
 // Types
 export interface Product {
+  type: string;
   id: string;
   image: string;
   title: string;
@@ -118,8 +119,7 @@ function ProductGrid({
           directSale={product.direct_sale}
           is_active={product.is_active}
           hide_price={product.hide_price}
-          stock_quantity={product.stock_quantity}
-        />
+          type={product.type} stock_quantity={product.stock_quantity} />
       ))}
     </div>
   );
