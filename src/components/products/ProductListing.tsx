@@ -9,6 +9,7 @@ import Image from "next/image";
 import { Toaster } from "sonner"; // Import Toaster for sonner
 import QuoteForm from "../forms/enquiryForm/quotesForm";
 import { Product } from "@/types";
+import DOMPurify from 'dompurify';
 
 import {
   Dialog,
@@ -69,7 +70,7 @@ function ProductGrid({
                     {product.title}
                   </h3>
                   <p className="text-xs sm:text-sm text-gray-600 mb-2 line-clamp-2">
-                    {product.subtitle}
+                    <span dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(product.subtitle) }} />
                   </p>
 
                   {/* Price */}

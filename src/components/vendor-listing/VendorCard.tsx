@@ -27,7 +27,7 @@ export default function VendorCard({ vendor }: Props) {
   const vendorDisplayName =
     vendor.brand || vendor.company_name || vendor.full_name;
 
-  const vendorSlug = toSlug(vendorDisplayName);
+  // const vendorSlug = toSlug(vendorDisplayName);
 
   const href = isAdminPath
     ? `/admin/accounts/registered-vendors/${vendor.brand}/?user=${vendor.user_info.id}`

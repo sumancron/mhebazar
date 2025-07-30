@@ -16,7 +16,8 @@ import {
   DialogContent,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { Product } from "@/types";
+// import { Product } from "@/types";
+import DOMPurify from 'dompurify';
 
 // Helper function for SEO-friendly slug
 const slugify = (text: string): string => {
@@ -142,7 +143,7 @@ const ProductCard = ({
               {title}
             </h3>
           </Link>
-          <p className="text-xs text-gray-500 mb-2 line-clamp-1">{subtitle}</p>
+          <p className="text-xs text-gray-500 mb-2 line-clamp-1"> <span dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(subtitle) }} /></p>
           {/* Price */}
           <div className="mb-3">
             {(hide_price == true || price <= "0") ? (
