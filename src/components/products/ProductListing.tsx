@@ -55,8 +55,6 @@ function ProductGrid({
     );
   }
 
-  console.log(products);
-
   if (viewMode === "list") {
     return (
       <div className="space-y-3">
@@ -64,8 +62,8 @@ function ProductGrid({
           <div
             key={product.id}
             className={`bg-white rounded-lg shadow-sm border-2 hover:bg-[#f3faff] transition-all duration-200 overflow-hidden ${(!product.is_active || (product.direct_sale && product.stock_quantity === 0))
-                ? 'opacity-50 pointer-events-none'
-                : 'hover:shadow-md hover:border-[#4a8c28]'
+              ? 'opacity-50 pointer-events-none'
+              : 'hover:shadow-md hover:border-[#4a8c28]'
               }`}
           >
             <div className="flex items-center">
@@ -122,21 +120,21 @@ function ProductGrid({
                       </button>
                     </>
                   ) : (
-                      <Dialog>
-                        {/* Fixed: Ensuring DialogTrigger has exactly one child */}
-                        <DialogTrigger asChild>
-                          <button
-                            className="flex items-center justify-center rounded-lg bg-[#5ca131] hover:bg-[#4a8a29] py-2 px-4 text-white font-medium transition-colors duration-200 w-full"
-                            aria-label="Get a quote"
-                            disabled={!product.is_active}
-                          >
-                            Get a Quote
-                          </button>
-                        </DialogTrigger>
-                        <DialogContent className="w-full sm:max-w-2xl">
-                          <QuoteForm product={product} />
-                        </DialogContent>
-                      </Dialog>
+                    <Dialog>
+                      {/* Fixed: Ensuring DialogTrigger has exactly one child */}
+                      <DialogTrigger asChild>
+                        <button
+                          className="flex items-center justify-center rounded-lg bg-[#5ca131] hover:bg-[#4a8a29] py-2 px-4 text-white font-medium transition-colors duration-200 w-full"
+                          aria-label="Get a quote"
+                          disabled={!product.is_active}
+                        >
+                          Get a Quote
+                        </button>
+                      </DialogTrigger>
+                      <DialogContent className="w-full sm:max-w-2xl">
+                        <QuoteForm product={product} />
+                      </DialogContent>
+                    </Dialog>
                   )}
                 </div>
               </div>
@@ -148,7 +146,7 @@ function ProductGrid({
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 lg:gap-8 p-4"> {/* Increased overall gap and added padding */}
+    <div className="flex items-center justify-evenly flex-wrap gap-4 md:gap-6 lg:gap-8 p-4"> {/* Increased overall gap and added padding */}
       {products.map((product: Product) => (
         <ProductCardContainer
           key={product.id}
@@ -196,8 +194,8 @@ interface ProductListingProps {
 
 export default function ProductListing({
   products,
-  title = "Products",
-  totalCount = 0,
+  title,
+  totalCount,
   onFilterChange,
   selectedFilters,
   selectedCategoryName,
@@ -217,6 +215,7 @@ export default function ProductListing({
   const [currentView, setCurrentView] = useState<"grid" | "list">("grid");
   const [mobileFilterOpen, setMobileFilterOpen] = useState<boolean>(false);
 
+
   const handleViewChange = (view: "grid" | "list") => {
     setCurrentView(view);
   };
@@ -225,59 +224,68 @@ export default function ProductListing({
     <div className="min-h-screen bg-gray-50">
       <Toaster position="top-right" richColors />
       <div className="flex flex-col lg:flex-row">
-        {/* Sidebar Desktop */}
-        <div className="hidden lg:block flex-shrink-0 w-72 pr-4"> {/* Added right padding */}
-          <SideFilter
-            selectedFilters={selectedFilters}
-            onFilterChange={onFilterChange}
-            selectedCategoryName={selectedCategoryName}
-            selectedSubcategoryName={selectedSubcategoryName}
-            selectedTypeName={selectedTypeName}
-            minPrice={minPrice}
-            maxPrice={maxPrice}
-            selectedManufacturer={selectedManufacturer}
-            selectedRating={selectedRating}
-          />
-        </div>
 
-        {/* Sidebar Mobile Drawer */}
-        <div
-          className={`fixed inset-0 z-50 bg-black/40 transition-opacity duration-300 lg:hidden ${
-            mobileFilterOpen
-              ? "opacity-100 pointer-events-auto"
-              : "opacity-0 pointer-events-none"
-          }`}
-          onClick={() => setMobileFilterOpen(false)}
-        >
-          <aside
-            className={`absolute left-0 top-0 h-full w-full max-w-xs sm:max-w-sm bg-white shadow-xl transition-transform duration-300 ${
-              mobileFilterOpen ? "translate-x-0" : "-translate-x-full"
-            }`}
-            onClick={(e: React.MouseEvent<HTMLElement>) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between p-4 border-b">
-              <span className="font-semibold text-lg">Filter</span>
-              <button
-                onClick={() => setMobileFilterOpen(false)}
-                className="p-2 rounded hover:bg-gray-100"
-                aria-label="Close filters"
-              >
-                <X className="w-5 h-5" />
-              </button>
+        {/* --- START: Conditional Rendering for Filters --- */}
+
+        {/* Render the filters ONLY if the path does NOT start with /vendor-listing/ */}
+        {!window.location.pathname.startsWith("/vendor-listing/") && (
+          <>
+            {/* Desktop Sidebar */}
+            <div className="hidden lg:block flex-shrink-0 w-72 pr-4">
+              <SideFilter
+                selectedFilters={selectedFilters}
+                onFilterChange={onFilterChange}
+                selectedCategoryName={selectedCategoryName}
+                selectedSubcategoryName={selectedSubcategoryName}
+                selectedTypeName={selectedTypeName}
+                minPrice={minPrice}
+                maxPrice={maxPrice}
+                selectedManufacturer={selectedManufacturer}
+                selectedRating={selectedRating}
+              />
             </div>
-            <SideFilter
-              selectedFilters={selectedFilters}
-              onFilterChange={onFilterChange}
-              selectedCategoryName={selectedCategoryName}
-              selectedSubcategoryName={selectedSubcategoryName}
-              selectedTypeName={selectedTypeName}
-              minPrice={minPrice}
-              maxPrice={maxPrice}
-              selectedManufacturer={selectedManufacturer}
-              selectedRating={selectedRating}
-            />
-          </aside>
-        </div>
+
+            {/* Sidebar Mobile Drawer */}
+            <div
+              className={`fixed inset-0 z-50 bg-black/40 lg:hidden ${mobileFilterOpen
+                ? "opacity-100 pointer-events-auto"
+                : "opacity-0 pointer-events-none"
+                }`}
+              onClick={() => setMobileFilterOpen(false)}
+            >
+              <aside
+                className={`absolute left-0 top-0 h-full w-full max-w-xs bg-white shadow-xl transition-transform duration-300 ${mobileFilterOpen ? "translate-x-0" : "-translate-x-full"
+                  }`}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="flex items-center justify-between p-4 border-b">
+                  <span className="font-semibold text-lg">Filter</span>
+                  <button
+                    onClick={() => setMobileFilterOpen(false)}
+                    className="p-2 rounded hover:bg-gray-100"
+                    aria-label="Close filters"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+                <SideFilter
+                  selectedFilters={selectedFilters}
+                  onFilterChange={onFilterChange}
+                  selectedCategoryName={selectedCategoryName}
+                  selectedSubcategoryName={selectedSubcategoryName}
+                  selectedTypeName={selectedTypeName}
+                  minPrice={minPrice}
+                  maxPrice={maxPrice}
+                  selectedManufacturer={selectedManufacturer}
+                  selectedRating={selectedRating}
+                />
+              </aside>
+            </div>
+          </>
+        )}
+
+        {/* --- END: Conditional Rendering for Filters --- */}
+
 
         {/* Main Content */}
         <div className="flex-1">
@@ -286,7 +294,7 @@ export default function ProductListing({
             <div className="flex flex-col gap-3 sm:gap-2 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex-1">
                 <div className="bg-orange-100 text-orange-800 px-3 py-1 rounded-full text-xs sm:text-sm font-medium inline-block mb-2">
-                  {title}
+                  {title || 'Products'}
                 </div>
                 <p className="text-xs text-gray-500 px-3">
                   Showing {products.length} of {totalCount} results
@@ -300,9 +308,9 @@ export default function ProductListing({
                   </label>
                   <select
                     id="sort-by"
-                    className="p-1.5 sm:p-2 border border-gray-300 rounded-md text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white min-w-0"
+                    className="p-1.5 sm:p-2 border border-gray-300 rounded-md text-xs sm:text-sm"
                     value={sortBy}
-                    onChange={(e: React.ChangeEvent<HTMLSelectElement>) => onSortChange(e.target.value)}
+                    onChange={(e) => onSortChange(e.target.value)}
                   >
                     <option value="relevance">Relevance</option>
                     <option value="price_asc">Price: Low to High</option>
@@ -310,51 +318,44 @@ export default function ProductListing({
                     <option value="newest">Newest First</option>
                   </select>
                 </div>
-                {/* View Toggle */}
+                {/* View Toggle & Mobile Filter Button */}
                 <div className="flex items-center gap-2 sm:gap-3">
                   <div className="flex items-center border border-gray-300 rounded-md overflow-hidden">
                     <button
                       onClick={() => handleViewChange("grid")}
-                      className={`p-1.5 sm:p-2 transition ${
-                        currentView === "grid"
-                          ? "bg-green-500 text-white"
-                          : "text-gray-500 hover:bg-gray-100"
-                      }`}
+                      className={`p-1.5 sm:p-2 transition ${currentView === "grid" ? "bg-green-500 text-white" : "text-gray-500"}`}
                       aria-label="Grid View"
                     >
                       <Grid className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                     </button>
                     <button
                       onClick={() => handleViewChange("list")}
-                      className={`p-1.5 sm:p-2 transition ${
-                        currentView === "list"
-                          ? "bg-green-500 text-white"
-                          : "text-gray-500 hover:bg-gray-100"
-                      }`}
+                      className={`p-1.5 sm:p-2 transition ${currentView === "list" ? "bg-green-500 text-white" : "text-gray-500"}`}
                       aria-label="List View"
                     >
                       <List className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                     </button>
                   </div>
-                  {/* Mobile Filter Button */}
-                  <button
-                    className="lg:hidden flex items-center gap-1.5 sm:gap-2 bg-green-500 hover:bg-[#5CA131] text-white px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-md shadow transition text-xs sm:text-sm font-medium"
-                    onClick={() => setMobileFilterOpen(true)}
-                    aria-label="Open filters"
-                  >
-                    <MenuIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                    <span className="hidden xs:inline">Filters</span>
-                  </button>
+
+                  {/* Mobile Filter Button: Only show if NOT a vendor page */}
+                  {!window.location.pathname.startsWith("/vendor-listing/") && (
+                    <button
+                      className="lg:hidden flex items-center gap-1.5 sm:gap-2 bg-green-500 text-white px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-md"
+                      onClick={() => setMobileFilterOpen(true)}
+                      aria-label="Open filters"
+                    >
+                      <MenuIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                      <span className="hidden xs:inline">Filters</span>
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Products Grid */}
-          <div className="p-3 sm:p-4 md:p-6"> {/* Increased padding here to create space from the edges */}
+          {/* Products Grid and Pagination */}
+          <div className="p-3 sm:p-4 md:p-6">
             <ProductGrid products={products} viewMode={currentView} noProductsMessage={noProductsMessage} />
-
-            {/* Pagination */}
             {totalPages > 1 && (
               <div className="mt-6 sm:mt-8 flex flex-wrap justify-center gap-1 sm:gap-2">
                 <button

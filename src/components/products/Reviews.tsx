@@ -133,6 +133,7 @@ export default function ReviewSection({ productId, registerRefresher }: ReviewSe
 
       const allReviewImages = fetchedReviews.flatMap(review => review.review_images.map(img => img.image)); //
 
+      console.log("Fetched reviews:", fetchedReviews);
       setData({
         summary: {
           avg: parseFloat(avgRating.toFixed(1)),
