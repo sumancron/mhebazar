@@ -7,7 +7,6 @@ import { Plus, X } from "lucide-react";
 import Image from "next/image";
 import api from "@/lib/api";
 import { toast } from "sonner";
-// import { useRouter } from "next/navigation";
 
 // Define the Product type based on the API response structure
 type Product = {
@@ -21,49 +20,47 @@ type Product = {
   stock_quantity: number;
   images: { id: number; image: string }[];
   category_name: string;
-  subcategory_name: string;
+  subcategory_name: string | null;
   manufacturer: string;
   model: string;
   average_rating: number | null;
-  // Add other fields from API response if needed for comparison table
+  type: string;
+  product_details: Record<string, string | number | null>; // Added dynamic product_details
 };
 
 // Define a type for the product data as stored in local storage for comparison
 type CompareProduct = {
   id: number;
-  image: string; // This will be the first image URL
-  title: string; // Maps to product.name
-  subtitle: string; // Maps to product.description or subcategory_name
+  image: string;
+  title: string;
+  subtitle: string | null | undefined;
   price: string | number;
-  currency: string; // Assuming '₹' for now, can be dynamic if available in API
+  currency: string;
   directSale: boolean;
   is_active: boolean;
   hide_price: boolean;
   stock_quantity: number;
-  category_name: string; // Used for category-based comparison
+  category_name: string;
   manufacturer: string;
   model: string;
-  ratings: number; // Maps to product.average_rating
-  ratingsCount: number; // Not directly available in API, using a placeholder
-  soldBy: string; // Not directly available in API, using a placeholder
-  brand: string; // Maps to product.manufacturer
-  typeSize: string; // Placeholder, adjust if API provides
-  rimSize: string; // Placeholder, adjust if API provides
-  vehicleType: string; // Placeholder, adjust if API provides
+  ratings: number; // Mapped from average_rating
+  ratingsCount: number; // Placeholder, not in API
+  soldBy: string; // Placeholder
+  brand: string; // Mapped from manufacturer
+  type: string;
+  product_details: Record<string, string | number | null>; // Added dynamic product_details
 };
 
-const tableFields = [
+// Static table fields for common product attributes
+const staticTableFields = [
   { label: "Price", key: "price", isCurrency: true },
   { label: "Customer Ratings", key: "ratings", isRating: true },
-  { label: "Sold by", key: "soldBy" }, // Placeholder
-  { label: "Brand", key: "brand" }, // Maps to manufacturer
+  { label: "Sold by", key: "soldBy" },
+  { label: "Brand", key: "brand" },
   { label: "Category", key: "category_name" },
-  { label: "Subcategory", key: "subcategory_name" }, // Assuming subcategory_name is available
+  { label: "Subcategory", key: "subcategory_name" },
   { label: "Manufacturer", key: "manufacturer" },
   { label: "Model", key: "model" },
-  { label: "Type Size", key: "typeSize" }, // Placeholder
-  { label: "Rim Size", key: "rimSize" }, // Placeholder
-  { label: "Vehicle Type", key: "vehicleType" }, // Placeholder
 ];
 
 const maxColumns = 4;
@@ -76,29 +73,52 @@ const ComparePage = () => {
   const [searchResults, setSearchResults] = useState<Product[]>([]);
   const [loadingSearch, setLoadingSearch] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  // const router = useRouter();
+  const [dynamicProductDetailsKeys, setDynamicProductDetailsKeys] = useState<string[]>([]);
+
+  // Function to collect unique product_details keys from all products in comparison
+  const collectDynamicProductDetailsKeys = useCallback((currentProducts: CompareProduct[]) => {
+    const uniqueKeys = new Set<string>();
+    currentProducts.forEach(product => {
+      if (product.product_details) {
+        Object.keys(product.product_details).forEach(key => uniqueKeys.add(key));
+      }
+    });
+    // Sort keys alphabetically for consistent display
+    setDynamicProductDetailsKeys(Array.from(uniqueKeys).sort());
+  }, []);
 
   // Load products from local storage on component mount
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const storedProducts: CompareProduct[] = JSON.parse(localStorage.getItem(COMPARE_KEY) || '[]');
-      if (storedProducts.length > 0) {
-        setProducts(storedProducts);
-        // Set the category of the first product to ensure subsequent additions are of the same category
-        setSelectedCategory(storedProducts[0].category_name);
+      try {
+        const storedProducts: CompareProduct[] = JSON.parse(localStorage.getItem(COMPARE_KEY) || '[]');
+        if (storedProducts.length > 0) {
+          setProducts(storedProducts);
+          setSelectedCategory(storedProducts[0].category_name);
+          collectDynamicProductDetailsKeys(storedProducts);
+        }
+      } catch (error) {
+        console.error("Failed to parse products from local storage:", error);
+        localStorage.removeItem(COMPARE_KEY); // Clear invalid data
+        setProducts([]);
+        setSelectedCategory(null);
       }
     }
-  }, []);
+  }, [collectDynamicProductDetailsKeys]);
+
+  // Update dynamic keys whenever 'products' state changes
+  useEffect(() => {
+    collectDynamicProductDetailsKeys(products);
+  }, [products, collectDynamicProductDetailsKeys]);
+
 
   // Handle adding a product from the modal to the comparison list
   const handleAddProduct = (product: Product) => {
-    // Check if the product is already in the comparison list
     if (products.some((p) => p.id === product.id)) {
       toast.info("This product is already in your comparison list.");
       return;
     }
 
-    // Ensure all products are of the same category
     if (selectedCategory && product.category_name !== selectedCategory) {
       toast.error(`Only products from the "${selectedCategory}" category can be compared together.`);
       return;
@@ -106,11 +126,11 @@ const ComparePage = () => {
 
     const newCompareProduct: CompareProduct = {
       id: product.id,
-      image: product.images[0]?.image || "/images/placeholder.jpg", // Use a placeholder if no image
+      image: product.images[0]?.image || "/images/placeholder.jpg",
       title: product.name,
-      subtitle: product.subcategory_name || product.description,
+      subtitle: product.subcategory_name || product.description || '', // Ensure string fallback
       price: product.price,
-      currency: "₹", // Assuming Rupee, adjust if API provides
+      currency: "₹",
       directSale: product.direct_sale,
       is_active: product.is_active,
       hide_price: product.hide_price,
@@ -119,21 +139,20 @@ const ComparePage = () => {
       manufacturer: product.manufacturer,
       model: product.model,
       ratings: product.average_rating || 0,
-      ratingsCount: 0, // Placeholder as not in API
-      soldBy: "N/A", // Placeholder as not in API
+      ratingsCount: 0, // Placeholder
+      soldBy: "N/A", // Placeholder
       brand: product.manufacturer,
-      typeSize: "N/A", // Placeholder as not in API
-      rimSize: "N/A", // Placeholder as not in API
-      vehicleType: "N/A", // Placeholder as not in API
+      type: product.type,
+      product_details: product.product_details || {}, // Ensure product_details is an object
     };
 
     const updatedProducts = [...products, newCompareProduct];
     setProducts(updatedProducts);
     localStorage.setItem(COMPARE_KEY, JSON.stringify(updatedProducts));
-    setSelectedCategory(newCompareProduct.category_name); // Set category if it's the first product
+    setSelectedCategory(newCompareProduct.category_name);
     setShowModal(false);
     setSearch("");
-    setSearchResults([]); // Clear search results after adding
+    setSearchResults([]);
     toast.success(`${product.name} added to comparison!`);
   };
 
@@ -155,6 +174,7 @@ const ComparePage = () => {
 
     if (searchTerm.length < 2) { // Only search if at least 2 characters
       setSearchResults([]);
+      setLoadingSearch(false);
       return;
     }
 
@@ -163,13 +183,15 @@ const ComparePage = () => {
       const response = await api.get<{ results: Product[] }>(`/products/`, {
         params: {
           search: searchTerm,
-          category_name: selectedCategory || undefined, // Filter by category if one is selected
+          // Only filter by category if a category is already selected in comparison
+          category_name: selectedCategory || undefined,
+          is_active: true, // Only search for active products
         },
       });
       setSearchResults(response.data.results);
     } catch (error) {
       console.error("Error searching products:", error);
-      toast.error("Failed to search products.");
+      toast.error("Failed to search products. Please try again later.");
       setSearchResults([]);
     } finally {
       setLoadingSearch(false);
@@ -178,9 +200,14 @@ const ComparePage = () => {
 
   const displayProducts = products.slice(0, maxColumns);
 
+  // Combine static and dynamic table fields
+  const allTableFields = [
+    ...staticTableFields,
+    ...dynamicProductDetailsKeys.map(key => ({ label: key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()), key: `product_details.${key}` }))
+  ];
+
   return (
     <>
-      {/* Breadcrumb */}
       <div className="w-full px-4 sm:px-8 pt-6">
         <Breadcrumb
           items={[
@@ -190,14 +217,12 @@ const ComparePage = () => {
         />
       </div>
 
-      {/* Title */}
       <div className="w-full px-4 sm:px-8 mt-4 mb-6">
         <h2 className="text-2xl font-bold text-gray-900 tracking-tight">Compare Products</h2>
       </div>
 
-      {/* Product Cards Row */}
-      <div className="w-full px-2 sm:px-8 mb-10">
-        <div className="flex flex-wrap gap-6 justify-center md:justify-normal overflow-x-auto pb-2">
+      <div className="w-full px-4 sm:px-8 mb-10 overflow-x-auto">
+        <div className="flex flex-nowrap gap-6 pb-2 justify-center md:justify-start">
           {displayProducts.map((product) => (
             <div key={product.id} className="flex-shrink-0 relative">
               <ProductCardContainer
@@ -211,6 +236,7 @@ const ComparePage = () => {
                 is_active={product.is_active}
                 hide_price={product.hide_price}
                 stock_quantity={product.stock_quantity}
+                type={product.type}
               />
               <button
                 onClick={() => handleRemoveProduct(product.id)}
@@ -221,7 +247,6 @@ const ComparePage = () => {
               </button>
             </div>
           ))}
-          {/* Add Product Card */}
           {displayProducts.length < maxColumns && (
             <div
               onClick={() => setShowModal(true)}
@@ -240,9 +265,8 @@ const ComparePage = () => {
         </div>
       </div>
 
-      {/* Comparison Table */}
       {products.length > 0 && (
-        <div className="w-full px-2 sm:px-8 mb-10">
+        <div className="w-full px-4 sm:px-8 mb-10">
           <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-x-auto">
             <table className="min-w-full text-sm divide-y divide-gray-200">
               <thead className="bg-gray-50">
@@ -269,9 +293,9 @@ const ComparePage = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {tableFields.map((field) => (
+                {allTableFields.map((field) => ( // Use allTableFields here
                   <tr key={field.key} className="border-t last:border-b">
-                    <td className="py-4 px-4 font-medium text-gray-700 sticky left-0 bg-gray-50 z-10">
+                    <td className="py-4 px-4 font-medium text-gray-700 sticky left-0 bg-gray-50 z-10 whitespace-nowrap">
                       {field.label}
                     </td>
                     {Array.from({ length: maxColumns }).map((_, idx) => {
@@ -286,7 +310,13 @@ const ComparePage = () => {
                           </td>
                         );
 
-                      const value = product[field.key as keyof CompareProduct];
+                      let value: unknown;
+                      if (field.key.startsWith('product_details.')) {
+                        const detailKey = field.key.split('.')[1];
+                        value = product.product_details?.[detailKey];
+                      } else {
+                        value = product[field.key as keyof CompareProduct];
+                      }
 
                       if (field.isCurrency)
                         return (
@@ -373,8 +403,8 @@ const ComparePage = () => {
               className="absolute top-3 right-3 text-gray-400 hover:text-gray-700 text-3xl focus:outline-none"
               onClick={() => {
                 setShowModal(false);
-                setSearch(""); // Clear search when closing modal
-                setSearchResults([]); // Clear search results when closing modal
+                setSearch("");
+                setSearchResults([]);
               }}
               aria-label="Close"
               tabIndex={0}
@@ -442,7 +472,7 @@ const ComparePage = () => {
                         {product.name}
                       </div>
                       <div className="text-sm text-gray-500 truncate">
-                        {product.subcategory_name || product.description}
+                        {product.subcategory_name || product.description || 'N/A'}
                       </div>
                       {product.category_name && (
                         <div className="text-xs text-gray-400 mt-1">Category: {product.category_name}</div>

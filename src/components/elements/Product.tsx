@@ -20,7 +20,8 @@ import {
 
 // Helper function for SEO-friendly slug
 const slugify = (text: string): string => {
-  return text
+  // Ensure text is always a string before calling toString()
+  return (text || '') // Fallback to empty string if text is null/undefined
     .toString()
     .toLowerCase()
     .trim()
@@ -36,7 +37,7 @@ interface ProductCardDisplayProps {
   id: number;
   image: string;
   title: string;
-  subtitle: string;
+  subtitle: string | null | undefined; // Changed to allow null/undefined
   price: string | number;
   currency: string;
   directSale: boolean;
@@ -88,7 +89,8 @@ const ProductCard = ({
   const isAvailable = is_active && (!directSale || stock_quantity > 0);
   const isPurchasable = is_active && (!directSale || stock_quantity > 0);
 
-  const productSlug = slugify(title);
+  // Ensure title is a string before passing to slugify
+  const productSlug = slugify(title || ''); // Add fallback to empty string
   const productDetailUrl = `/product/${productSlug}/?id=${id}`;
 
   // Determine which form to show
@@ -97,7 +99,7 @@ const ProductCard = ({
 
   return (
     <div
-      className={`bg-white rounded-2xl shadow-sm border border-[#ecf0f7] overflow-hidden flex flex-col w-full sm:w-80 h-[400px] mx-auto my-4 ${!isAvailable && directSale ? "opacity-50 pointer-events-none" : ""
+      className={`bg-white rounded-2xl shadow-sm border border-[#ecf0f7] overflow-hidden flex flex-col w-full sm:w-80 h-[400px] ${!isAvailable && directSale ? "opacity-50 pointer-events-none" : ""
         }`}
     >
       {/* Image Container */}
@@ -141,16 +143,17 @@ const ProductCard = ({
       </div>
 
       {/* Content */}
-      <div className="flex-1 flex flex-col justify-between p-4"> {/* Changed px-4 py-3 to p-4 for better overall padding */}
+      <div className="flex-1 flex flex-col justify-between p-4">
         <div>
           <Link href={productDetailUrl}>
-            <h3 className="text-base font-semibold text-gray-900 mb-2 line-clamp-2 hover:text-green-700 transition-colors"> {/* Increased mb-1 to mb-2 */}
+            <h3 className="text-base font-semibold text-gray-900 mb-2 line-clamp-2 hover:text-green-700 transition-colors">
               {title}
             </h3>
           </Link>
-          <p className="text-xs text-gray-500 mb-3 line-clamp-1">{subtitle}</p> {/* Increased mb-2 to mb-3 */}
+          {/* Ensure subtitle is rendered safely */}
+          <p className="text-xs text-gray-500 mb-3 line-clamp-1">{subtitle || 'N/A'}</p>
           {/* Price */}
-          <div className="mb-4"> {/* Increased mb-3 to mb-4 */}
+          <div className="mb-4">
             {hide_price ? (
               <span className="text-lg font-semibold text-gray-400 tracking-wider">
                 {currency} *******
@@ -165,9 +168,9 @@ const ProductCard = ({
 
         {/* Action Buttons */}
         {directSale ? (
-          <div className="flex flex-col sm:flex-row gap-2 w-full"> {/* Changed to flex-col on small, row on sm+, added gap-2 */}
+          <div className="flex flex-col sm:flex-row gap-2 w-full">
             {isInCart ? (
-              <div className="flex items-center bg-green-50 text-green-700 font-medium py-1 px-1 rounded-md text-sm flex-1"> {/* Adjusted width to flex-1 */}
+              <div className="flex items-center bg-green-50 text-green-700 font-medium py-1 px-1 rounded-md text-sm flex-1">
                 <button
                   onClick={() => cartItemId && onDecreaseQuantity(cartItemId)}
                   disabled={currentCartQuantity <= 1 || !isPurchasable}
@@ -176,7 +179,7 @@ const ProductCard = ({
                 >
                   <Minus className="w-4 h-4" />
                 </button>
-                <span className="text-green-800 font-semibold text-center flex-1"> {/* Flex-1 to take available space */}
+                <span className="text-green-800 font-semibold text-center flex-1">
                   {currentCartQuantity}
                 </span>
                 <button
@@ -199,7 +202,7 @@ const ProductCard = ({
             ) : (
               <button
                 onClick={() => onAddToCartClick(id)}
-                className="flex items-center justify-center gap-2 rounded-lg bg-[#5ca131] hover:bg-[#4a8a29] py-2 px-4 text-white font-medium transition-colors duration-200 flex-1" // Adjusted width to flex-1
+                className="flex items-center justify-center gap-2 rounded-lg bg-[#5ca131] hover:bg-[#4a8a29] py-2 px-4 text-white font-medium transition-colors duration-200 flex-1"
                 aria-label="Add to cart"
                 disabled={!isPurchasable}
               >
@@ -209,7 +212,7 @@ const ProductCard = ({
 
             <button
               onClick={() => onBuyNowClick(id)}
-              className="rounded-lg border border-[#5ca131] text-[#5ca131] hover:bg-[#f3faff] py-2 px-4 font-medium text-base leading-6 transition-colors duration-200 w-full sm:w-fit" // Adjusted width to w-full on small, w-fit on sm+
+              className="rounded-lg border border-[#5ca131] text-[#5ca131] hover:bg-[#f3faff] py-2 px-4 font-medium text-base leading-6 transition-colors duration-200 w-full sm:w-fit"
               aria-label="Buy now"
               disabled={!isPurchasable}
             >
@@ -227,10 +230,10 @@ const ProductCard = ({
                 {formButtonText}
               </button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[480px]"> {/* Added max-w for responsiveness */}
+            <DialogContent className="sm:max-w-[480px]">
               <FormComponent
                 productId={id}
-                productDetails={{ image, title, description: subtitle, price }}
+                productDetails={{ image, title, description: subtitle || '', price }} // Ensure description is string here
               />
             </DialogContent>
           </Dialog>
@@ -246,7 +249,7 @@ interface ProductCardContainerProps {
   id: number;
   image: string;
   title: string;
-  subtitle: string;
+  subtitle: string | null | undefined; // Changed to allow null/undefined
   price: string | number;
   currency: string;
   directSale: boolean;

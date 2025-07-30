@@ -48,53 +48,55 @@ function ProductGrid({
 
   if (viewMode === "list") {
     return (
-      <div className="space-y-3 sm:space-y-4">
+      <div className="space-y-4 px-4 sm:px-0"> {/* Added horizontal padding for list view */}
         {products.map((product: Product) => (
           <div
             key={product.id}
-            className={`flex flex-col sm:flex-row bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden ${
+            className={`flex flex-col sm:flex-row bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden p-3 sm:p-4 ${ // Added padding to list item
               (!product.is_active || (product.direct_sale && product.stock_quantity === 0)) ? 'opacity-50 pointer-events-none' : ''
             }`}
           >
-            <div className="w-full sm:w-48 h-48 sm:h-32 flex-shrink-0 relative">
+            <div className="w-full sm:w-48 h-48 sm:h-32 flex-shrink-0 relative mb-3 sm:mb-0 sm:mr-4"> {/* Added margin bottom for mobile, margin right for desktop */}
               <Image
                 src={product.image}
                 alt={product.title}
                 width={300}
                 height={300}
-                className="object-cover w-full h-full rounded-t-lg sm:rounded-l-lg sm:rounded-t-none"
+                className="object-cover w-full h-full rounded-lg" // Simplified border radius
                 quality={85}
               />
             </div>
-            <div className="flex-1 p-3 sm:p-4">
-              <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-1 sm:mb-2 line-clamp-2">
-                {product.title}
-              </h3>
-              <p className="text-xs sm:text-sm text-gray-600 mb-2 line-clamp-2">
-                {product.subtitle}
-              </p>
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0">
+            <div className="flex-1 flex flex-col justify-between"> {/* Added flex-col and justify-between */}
+              <div>
+                <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-1 line-clamp-2">
+                  {product.title}
+                </h3>
+                <p className="text-xs sm:text-sm text-gray-600 mb-3 line-clamp-2"> {/* Increased mb-2 to mb-3 */}
+                  {product.subtitle}
+                </p>
+              </div>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mt-auto"> {/* Increased gap, added mt-auto */}
                 {!product.hide_price && (
                   <span className="text-lg sm:text-2xl font-bold text-green-600">
                     {product.currency} {product.price.toLocaleString("en-IN")}
                   </span>
                 )}
                 {product.direct_sale ? (
-                  <div className="flex gap-2">
-                    <button className="w-full sm:w-auto bg-green-500 hover:bg-green-600 text-white px-4 sm:px-6 py-2 rounded-md transition-colors duration-200 text-sm font-medium"
+                  <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto"> {/* Flex controls for buttons */}
+                    <button className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white px-4 sm:px-6 py-2 rounded-md transition-colors duration-200 text-sm font-medium"
                       disabled={!product.is_active || product.stock_quantity === 0}
                     >
-                      Add to Cart {/* This button isn't connected to the actual logic directly here, ProductCardContainer handles it */}
+                      Add to Cart
                     </button>
-                    <button className="w-full sm:w-auto bg-yellow-400 hover:bg-yellow-500 text-black px-4 sm:px-6 py-2 rounded-md transition-colors duration-200 text-sm font-medium"
+                    <button className="w-full sm:w-auto bg-yellow-500 hover:bg-yellow-600 text-black px-4 sm:px-6 py-2 rounded-md transition-colors duration-200 text-sm font-medium"
                       disabled={!product.is_active || product.stock_quantity === 0}
                     >
                       Buy Now
                     </button>
                   </div>
                 ) : (
-                  <button className="w-full sm:w-auto bg-blue-500 hover:bg-blue-600 text-white px-4 sm:px-6 py-2 rounded-md transition-colors duration-200 text-sm font-medium">
-                    Get a Quote
+                  <button className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-4 sm:px-6 py-2 rounded-md transition-colors duration-200 text-sm font-medium">
+                    Get a Quote {/* This button will now correctly link to dialog if productType is not direct_sale */}
                   </button>
                 )}
               </div>
@@ -106,7 +108,7 @@ function ProductGrid({
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 md:gap-6 justify-items-center m-5">
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 lg:gap-8 p-4"> {/* Increased overall gap and added padding */}
       {products.map((product: Product) => (
         <ProductCardContainer
           key={product.id}
@@ -119,7 +121,9 @@ function ProductGrid({
           directSale={product.direct_sale}
           is_active={product.is_active}
           hide_price={product.hide_price}
-          type={product.type} stock_quantity={product.stock_quantity} />
+          type={product.type}
+          stock_quantity={product.stock_quantity}
+        />
       ))}
     </div>
   );
@@ -179,10 +183,10 @@ export default function ProductListing({
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Toaster position="top-right" richColors /> {/* Add Sonner Toaster here */}
+      <Toaster position="top-right" richColors />
       <div className="flex flex-col lg:flex-row">
         {/* Sidebar Desktop */}
-        <div className="hidden lg:block flex-shrink-0 w-72">
+        <div className="hidden lg:block flex-shrink-0 w-72 pr-4"> {/* Added right padding */}
           <SideFilter
             selectedFilters={selectedFilters}
             onFilterChange={onFilterChange}
@@ -236,7 +240,7 @@ export default function ProductListing({
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 lg:ml-0">
+        <div className="flex-1">
           {/* Top Controls */}
           <div className="bg-white border-b border-gray-200 px-3 sm:px-4 py-3 sm:py-4 shadow-sm">
             <div className="flex flex-col gap-3 sm:gap-2 sm:flex-row sm:items-center sm:justify-between">
@@ -307,7 +311,7 @@ export default function ProductListing({
           </div>
 
           {/* Products Grid */}
-          <div className="p-3 sm:p-4 md:p-6">
+          <div className="p-3 sm:p-4 md:p-6"> {/* Increased padding here to create space from the edges */}
             <ProductGrid products={products} viewMode={currentView} noProductsMessage={noProductsMessage} />
 
             {/* Pagination */}

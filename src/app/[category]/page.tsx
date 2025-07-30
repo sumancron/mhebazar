@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 // src/app/[category]/page.tsx
 /* eslint-disable @typescript-eslint/no-unused-expressions */
 // src/app/[category]/page.tsx
@@ -64,6 +63,7 @@ export default function CategoryOrTypePage({
   const [products, setProducts] = useState<Product[]>([]);
   const [totalProducts, setTotalProducts] = useState<number>(0);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [noProductsFoundMessage, setNoProductsFoundMessage] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -226,6 +226,7 @@ return { type: 'invalid', name: null, subName: null };
           stock_quantity: p.stock_quantity,
           manufacturer: p.manufacturer,
           average_rating: p.average_rating,
+          type: p.type, // Make sure 'type' is included here
         }));
 
         setProducts(transformedProducts);
