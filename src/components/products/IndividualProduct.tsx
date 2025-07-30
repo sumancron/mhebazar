@@ -33,6 +33,8 @@ import {
 import MheWriteAReview from "@/components/forms/product/ProductReviewForm";
 import ReviewSection from "./Reviews"; // Import ReviewSection
 
+import DOMPurify from 'dompurify';
+
 // Helper function for SEO-friendly slug
 const slugify = (text: string): string => {
   return text
@@ -116,7 +118,7 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
   const [isInCart, setIsInCart] = useState(false);
   const [currentCartQuantity, setCurrentCartQuantity] = useState(0);
   const [cartItemId, setCartItemId] = useState<number | null>(null);
-  const [isReviewFormOpen, setIsReviewFormOpen] = useState(false);
+  // const [isReviewFormOpen, setIsReviewFormOpen] = useState(false);
 
   // Function to trigger review section refresh
   const reviewsRefresher = useRef<(() => void) | null>(null);
@@ -421,19 +423,7 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
     }
   }, [data]);
 
-  // Callback to be passed to MheWriteAReview, which it calls on successful submission/close
-  const onReviewFormClose = useCallback(() => {
-    setIsReviewFormOpen(false);
-    // Trigger refresh in ReviewSection
-    if (reviewsRefresher.current) {
-      reviewsRefresher.current();
-    }
-    // Also, refetch product data to update average_rating if a new review affects it
-    // This is optional if average_rating is only updated on backend periodically
-    // or if the impact is acceptable to be delayed. For real-time update,
-    // you might need to re-fetch individual product details:
-    // fetchProductData(productSlug); // (You'd need to make fetchData accept productSlug directly)
-  }, []); // Added productSlug to dependencies if `fetchProductData` is to be called
+  console.log("Product data:", data);
 
   // Callback to allow ReviewSection to register its refresh function
   const registerReviewsRefresher = useCallback((refresher: () => void) => {
@@ -569,12 +559,20 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
                 ) : (
                   <span className="text-sm text-gray-600">No ratings yet</span>
                 )}
-                <span
-                  className="text-sm text-blue-600 hover:underline cursor-pointer"
-                  onClick={() => setIsReviewFormOpen(true)}
-                >
-                  Write a Review
-                </span>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <span
+                      className="text-sm text-blue-600 hover:underline cursor-pointer"
+                    >
+                      Write a Review
+                    </span>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <MheWriteAReview
+                      productId={data.id}
+                    />
+                  </DialogContent>
+                </Dialog>
                 {data.manufacturer && (
                   <span className="text-sm text-gray-600">by {data.manufacturer}</span>
                 )}
@@ -679,16 +677,8 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
                         {formButtonText}
                       </button>
                     </DialogTrigger>
-                    <DialogContent>
-                      <FormComponent
-                        productId={data.id}
-                        productDetails={{
-                          image: data.images[0]?.image || "/no-product.png",
-                          title: data.name,
-                          description: data.description,
-                          price: data.price
-                        }}
-                      />
+                    <DialogContent className="w-full max-w-2xl">
+                        <QuoteForm product={data} />
                     </DialogContent>
                   </Dialog>
                 )}
@@ -747,7 +737,7 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
             <ChevronDown className={`w-5 h-5 transition-transform ${openAccordion === "desc" ? "rotate-180" : ""}`} />
           </button>
           {openAccordion === "desc" && (
-            <div className="px-4 py-3 text-gray-700 text-sm whitespace-pre-line">{data.description}</div>
+            <div className="px-4 py-3 text-gray-700 text-sm whitespace-pre-line" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(data.description) }} />
           )}
         </div>
         {/* Specification */}
@@ -785,13 +775,13 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
           )}
         </div>
       </div>
-      {data.id && ( // Only render review form if product data and ID are available
+      {/* {data.id && ( // Only render review form if product data and ID are available
         <MheWriteAReview
           isOpen={isReviewFormOpen}
           onOpenChange={onReviewFormClose} // Use the specific handler
           productId={data.id}
         />
-      )}
+      )} */}
 
       {/* Render ReviewSection if product data is available, pass the refresher */}
       {data.id && <ReviewSection productId={data.id} registerRefresher={registerReviewsRefresher} />}

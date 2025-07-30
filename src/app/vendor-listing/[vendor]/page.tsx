@@ -35,24 +35,30 @@ interface ApiProduct {
   // Add other fields from your ProductSerializer as needed
 }
 
-interface VendorProfile {
-    user: {
-        id: number;
-        first_name: string;
-        last_name: string;
-        username: string;
-        email: string;
-        profile_photo: string | null;
-        description: string | null;
-        // Add other user fields if necessary
-    };
-    company_name: string;
-    brand: string;
-    company_email: string;
-    company_phone: string;
-    company_address: string;
-    // Add other vendor profile fields if necessary for your banner
+interface ApiResponse<T> {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: T[];
 }
+
+// interface ApiUser {
+//   id: number;
+//   username: string;
+//   full_name: string;
+// }
+
+interface ApiVendor {
+  user: number;
+  company_name: string;
+  company_phone: string;
+  company_email: string;
+  brand: string;
+}
+
+const formatNameFromSlug = (slug: string): string => {
+  return slug.replace(/-/g, ' ').split(' ').map((word: string) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+};
 
 export default function VendorPage({ params }: { params: { vendor: string } }) {
   const router = useRouter();

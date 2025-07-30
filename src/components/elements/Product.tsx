@@ -17,6 +17,8 @@ import {
   DialogContent,
   DialogTrigger,
 } from "@/components/ui/dialog"
+// import { Product } from "@/types";
+import DOMPurify from 'dompurify';
 
 // Helper function for SEO-friendly slug
 const slugify = (text: string): string => {
@@ -103,14 +105,14 @@ const ProductCard = ({
         }`}
     >
       {/* Image Container */}
-      <div className="relative w-full h-48 flex-shrink-0">
+      <div className="relative w-full h-56 flex-shrink-0">
         <Link href={productDetailUrl} className="block w-full h-full">
           <Image
             src={image}
             alt={title}
             width={320}
-            height={192}
-            className="object-cover w-full h-full rounded-t-2xl"
+            height={224}
+            className="object-fill w-full h-full rounded-t-2xl"
             quality={85}
           />
         </Link>
@@ -150,11 +152,10 @@ const ProductCard = ({
               {title}
             </h3>
           </Link>
-          {/* Ensure subtitle is rendered safely */}
-          <p className="text-xs text-gray-500 mb-3 line-clamp-1">{subtitle || 'N/A'}</p>
+          <p className="text-xs text-gray-500 mb-2 line-clamp-1"> <span dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(subtitle) }} /></p>
           {/* Price */}
-          <div className="mb-4">
-            {hide_price ? (
+          <div className="mb-3">
+            {(hide_price == true || price <= "0") ? (
               <span className="text-lg font-semibold text-gray-400 tracking-wider">
                 {currency} *******
               </span>
@@ -218,6 +219,23 @@ const ProductCard = ({
             >
               Buy
             </button>
+            {/* Moved "Get a Quote" for non-purchasable direct sale products inside the directSale block */}
+            {!isPurchasable && (
+              <Dialog>
+                {/* Fixed: Ensuring DialogTrigger has exactly one child */}
+                <DialogTrigger asChild>
+                  <button
+                    className="flex items-center justify-center rounded-lg bg-[#5ca131] hover:bg-[#4a8a29] py-2 px-4 text-white font-medium transition-colors duration-200"
+                    aria-label="Get a quote"
+                  >
+                    Get a Quote
+                  </button>
+                </DialogTrigger>
+                <DialogContent className="w-full max-w-2xl">
+                  <QuoteForm product={productData} />
+                </DialogContent>
+              </Dialog>
+            )}
           </div>
         ) : (
           <Dialog>
@@ -230,11 +248,8 @@ const ProductCard = ({
                 {formButtonText}
               </button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[480px]">
-              <FormComponent
-                productId={id}
-                productDetails={{ image, title, description: subtitle || '', price }} // Ensure description is string here
-              />
+            <DialogContent className="w-full max-w-2xl">
+              <QuoteForm product={productData} />
             </DialogContent>
           </Dialog>
         )}

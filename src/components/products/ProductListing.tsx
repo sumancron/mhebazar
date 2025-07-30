@@ -7,6 +7,15 @@ import { ProductCardContainer } from "@/components/elements/Product";
 import SideFilter from "@/components/products/SideFilter";
 import Image from "next/image";
 import { Toaster } from "sonner"; // Import Toaster for sonner
+import QuoteForm from "../forms/enquiryForm/quotesForm";
+import { Product } from "@/types";
+import DOMPurify from 'dompurify';
+
+import {
+  Dialog,
+  DialogContent,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 
 // Types
 export interface Product {
@@ -46,59 +55,90 @@ function ProductGrid({
     );
   }
 
+  console.log(products);
+
   if (viewMode === "list") {
     return (
-      <div className="space-y-4 px-4 sm:px-0"> {/* Added horizontal padding for list view */}
+      <div className="space-y-3">
         {products.map((product: Product) => (
           <div
             key={product.id}
-            className={`flex flex-col sm:flex-row bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden p-3 sm:p-4 ${ // Added padding to list item
-              (!product.is_active || (product.direct_sale && product.stock_quantity === 0)) ? 'opacity-50 pointer-events-none' : ''
-            }`}
+            className={`bg-white rounded-lg shadow-sm border-2 hover:bg-[#f3faff] transition-all duration-200 overflow-hidden ${(!product.is_active || (product.direct_sale && product.stock_quantity === 0))
+                ? 'opacity-50 pointer-events-none'
+                : 'hover:shadow-md hover:border-[#4a8c28]'
+              }`}
           >
-            <div className="w-full sm:w-48 h-48 sm:h-32 flex-shrink-0 relative mb-3 sm:mb-0 sm:mr-4"> {/* Added margin bottom for mobile, margin right for desktop */}
-              <Image
-                src={product.image}
-                alt={product.title}
-                width={300}
-                height={300}
-                className="object-cover w-full h-full rounded-lg" // Simplified border radius
-                quality={85}
-              />
-            </div>
-            <div className="flex-1 flex flex-col justify-between"> {/* Added flex-col and justify-between */}
-              <div>
-                <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-1 line-clamp-2">
-                  {product.title}
-                </h3>
-                <p className="text-xs sm:text-sm text-gray-600 mb-3 line-clamp-2"> {/* Increased mb-2 to mb-3 */}
-                  {product.subtitle}
-                </p>
+            <div className="flex items-center">
+              {/* Image Section - Always on Left */}
+              <div className="w-24 sm:w-32 md:w-40 h-20 sm:h-24 md:h-28 flex-shrink-0 p-2 relative">
+                <Image
+                  src={product.image}
+                  alt={product.title}
+                  width={200}
+                  height={200}
+                  className="object-cover w-full h-full rounded-l-lg"
+                  quality={85}
+                />
               </div>
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mt-auto"> {/* Increased gap, added mt-auto */}
-                {!product.hide_price && (
-                  <span className="text-lg sm:text-2xl font-bold text-green-600">
-                    {product.currency} {product.price.toLocaleString("en-IN")}
-                  </span>
-                )}
-                {product.direct_sale ? (
-                  <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto"> {/* Flex controls for buttons */}
-                    <button className="w-full sm:w-auto bg-[#5CA131] hover:bg-green-700 text-white px-4 sm:px-6 py-2 rounded-md transition-colors duration-200 text-sm font-medium"
-                      disabled={!product.is_active || product.stock_quantity === 0}
-                    >
-                      Add to Cart
-                    </button>
-                    <button className="w-full sm:w-auto bg-yellow-500 hover:bg-yellow-600 text-black px-4 sm:px-6 py-2 rounded-md transition-colors duration-200 text-sm font-medium"
-                      disabled={!product.is_active || product.stock_quantity === 0}
-                    >
-                      Buy Now
-                    </button>
-                  </div>
-                ) : (
-                  <button className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-4 sm:px-6 py-2 rounded-md transition-colors duration-200 text-sm font-medium">
-                    Get a Quote {/* This button will now correctly link to dialog if productType is not direct_sale */}
-                  </button>
-                )}
+
+              {/* Content Section - Always on Right */}
+              <div className="flex-1 p-3 sm:p-4 flex items-center justify-between min-h-[80px] sm:min-h-[96px] md:min-h-[112px]">
+                {/* Product Info */}
+                <div className="flex-1 min-w-0 pr-4">
+                  <h3 className="text-sm sm:text-base md:text-lg font-semibold text-gray-900 mb-1 line-clamp-2">
+                    {product.title}
+                  </h3>
+                  <p className="text-xs sm:text-sm text-gray-600 mb-2 line-clamp-2">
+                    <span dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(product.subtitle) }} />
+                  </p>
+
+                  {/* Price */}
+                  {(product.hide_price == true || product.price <= "0") ? (
+                    <span className="text-lg font-semibold text-gray-400 tracking-wider">
+                      {product.currency} *******
+                    </span>
+                  ) : (
+                    <span className="text-lg font-semibold text-green-600 tracking-wide">
+                      {product.currency} {typeof product.price === "number" ? product.price.toLocaleString("en-IN") : product.price}
+                    </span>
+                  )}
+                </div>
+
+                {/* Action Buttons - Always on Far Right */}
+                <div className="flex flex-col gap-2 flex-shrink-0">
+                  {product.direct_sale ? (
+                    <>
+                      <button
+                        className="bg-[#5ca131] hover:bg-[#4a8c28] text-white px-3 sm:px-4 py-2 rounded-md transition-colors duration-200 text-xs sm:text-sm font-medium shadow-sm hover:shadow-md whitespace-nowrap"
+                        disabled={!product.is_active || product.stock_quantity === 0}
+                      >
+                        Add to Cart
+                      </button>
+                      <button
+                        className="bg-yellow-400 hover:bg-yellow-500 text-black px-3 sm:px-4 py-2 rounded-md transition-colors duration-200 text-xs sm:text-sm font-medium shadow-sm hover:shadow-md whitespace-nowrap"
+                        disabled={!product.is_active || product.stock_quantity === 0}
+                      >
+                        Buy Now
+                      </button>
+                    </>
+                  ) : (
+                      <Dialog>
+                        {/* Fixed: Ensuring DialogTrigger has exactly one child */}
+                        <DialogTrigger asChild>
+                          <button
+                            className="flex items-center justify-center rounded-lg bg-[#5ca131] hover:bg-[#4a8a29] py-2 px-4 text-white font-medium transition-colors duration-200 w-full"
+                            aria-label="Get a quote"
+                            disabled={!product.is_active}
+                          >
+                            Get a Quote
+                          </button>
+                        </DialogTrigger>
+                        <DialogContent className="w-full sm:max-w-2xl">
+                          <QuoteForm product={product} />
+                        </DialogContent>
+                      </Dialog>
+                  )}
+                </div>
               </div>
             </div>
           </div>

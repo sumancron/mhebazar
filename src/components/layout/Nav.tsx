@@ -23,21 +23,23 @@ import { motion, AnimatePresence } from "framer-motion";
 import CategoryMenu from "./NavOptions";
 import VendorRegistrationDrawer from "@/components/forms/publicforms/VendorRegistrationForm";
 import SearchBar from "./SearchBar";
-import { useUser } from "@/context/UserContext"; // Correct import
-import { useRouter } from "next/navigation"; // Correct import
-// import { toast } from "sonner";
+import { useUser } from "@/context/UserContext";
+import { useRouter } from "next/navigation";
 import { handleLogout } from "@/lib/auth/logout";
+import api from "@/lib/api";
 
-const categories = [
-  "Forklifts",
-  "Pallet Trucks",
-  "Stackers",
-  "Reach Trucks",
-  "Order Pickers",
-  "Tow Tractors",
-  "Conveyor Systems",
-  "Loading Equipment",
-];
+export interface Category {
+  id: number;
+  name: string;
+  slug: string;
+}
+
+export interface Subcategory {
+  id: number;
+  name: string;
+  slug: string;
+  category: number; // Foreign key to the Category's ID
+}
 
 const navigationLinks = [
   { name: "About", href: "/about" },
@@ -51,6 +53,9 @@ const navigationLinks = [
 ];
 
 export default function Navbar(): JSX.Element {
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [subcategories, setSubcategories] = useState<Subcategory[]>([]);
+
   const [searchQuery, setSearchQuery] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [categoriesOpen, setCategoriesOpen] = useState(false);
@@ -59,8 +64,38 @@ export default function Navbar(): JSX.Element {
   const profileMenuRef = useRef<HTMLDivElement>(null);
   const categoryMenuRef = useRef<HTMLDivElement>(null);
 
+  const createSlug = (name: string) => name.toLowerCase().replace(/\s+/g, "-");
+
+  // ADD THIS STATE: Tracks the ID of the currently open category in the mobile menu
+  const [openCategory, setOpenCategory] = useState<number | null>(null);
+
   const { user, isLoading, setUser } = useUser();
   const router = useRouter();
+
+  // Close dropdown on outside click for profile menu
+  useEffect(() => {
+    const fetchData = async () => {
+      // Configure your base API URL. This can also be set in an axios instance.
+      // Example: const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/";
+      try {
+        // Fetch categories and subcategories in parallel for better performance
+        const [categoryResponse, subcategoryResponse] = await Promise.all([
+          api.get("/categories/"), // Fetches from 'api/categories/' endpoint
+          api.get("/subcategories/"), // Fetches from 'api/subcategories/' endpoint
+        ]);
+
+        // Update state with data from the API response
+        // Make sure the response structure matches (e.g., response.data)
+        setCategories(categoryResponse.data);
+        setSubcategories(subcategoryResponse.data);
+      } catch (error) {
+        console.error("Failed to fetch data:", error);
+        // You could set an error state here to inform the user
+      }
+    };
+
+    fetchData();
+  }, []); // Empty dependency array ensures this runs only once when the component mounts
 
   // Close dropdown on outside click for profile menu
   useEffect(() => {
@@ -72,11 +107,9 @@ export default function Navbar(): JSX.Element {
         setProfileMenuOpen(false);
       }
     }
-    // Only add event listener if menu is open
     if (profileMenuOpen) {
       document.addEventListener("mousedown", handleClick);
     }
-    // Cleanup function
     return () => document.removeEventListener("mousedown", handleClick);
   }, [profileMenuOpen]);
 
@@ -90,11 +123,9 @@ export default function Navbar(): JSX.Element {
         setCategoriesOpen(false);
       }
     }
-    // Only add event listener if menu is open
     if (categoriesOpen) {
       document.addEventListener("mousedown", handleClickOutside);
     }
-    // Cleanup function
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
@@ -551,17 +582,58 @@ export default function Navbar(): JSX.Element {
                   <div className="px-4 py-3 bg-gray-50 text-sm font-semibold text-gray-600 uppercase tracking-wide">
                     Categories
                   </div>
-                  {categories.map((category, index) => (
-                    <Link
-                      key={index}
-                      href={`/app/${category
-                        .toLowerCase()
-                        .replace(/\s+/g, "-")}`}
-                      className="block px-6 py-3 text-gray-700 hover:bg-green-50 border-b border-gray-100 transition"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      {category}
-                    </Link>
+                  {categories.map((category) => (
+                    <div key={category.id} className="border-b border-gray-100">
+                      <button
+                        onClick={() => {
+                          // Toggle behavior: if it's already open, close it. Otherwise, open it.
+                          setOpenCategory(openCategory === category.id ? null : category.id);
+                        }}
+                        className="w-full flex justify-between items-center px-6 py-3 text-left text-gray-700 hover:bg-green-50 transition"
+                      >
+                        <span>{category.name}</span>
+                        <ChevronDown
+                          className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${openCategory === category.id ? "rotate-180" : ""
+                            }`}
+                        />
+                      </button>
+
+                      {/* Animate the appearance of the sub-menu */}
+                      <AnimatePresence>
+                        {openCategory === category.id && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.2 }}
+                            className="overflow-hidden bg-white"
+                          >
+                            {/* Special link to all products in the category */}
+                            <Link
+                              href={`/${createSlug(category.name)}`}
+                              className="block pl-10 pr-6 py-3 text-gray-800 font-medium hover:bg-green-50/50 transition"
+                              onClick={() => setMobileMenuOpen(false)}
+                            >
+                              All {category.name}
+                            </Link>
+
+                            {/* Filter and list the subcategories for the open category */}
+                            {subcategories
+                              .filter((sub) => sub.category === category.id)
+                              .map((sub) => (
+                                <Link
+                                  key={sub.id}
+                                  href={`/${createSlug(category.name)}/${createSlug(sub.name)}`}
+                                  className="block pl-10 pr-6 py-3 text-gray-600 hover:bg-green-50/50 transition"
+                                  onClick={() => setMobileMenuOpen(false)}
+                                >
+                                  {sub.name}
+                                </Link>
+                              ))}
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
                   ))}
                 </div>
 

@@ -6,7 +6,10 @@ import Link from "next/link";
 import { useEffect, useState, useCallback } from "react";
 import { ChevronLeft, ChevronRight, Star } from "lucide-react";
 import api from "@/lib/api";
-
+import { Button } from "../ui/button";
+import { Dialog } from "@radix-ui/react-dialog";
+import { DialogContent, DialogTrigger } from "../ui/dialog";
+import MheWriteAReview from "@/components/forms/product/ProductReviewForm";
 
 // Adjusted to reflect backend model field name 'review' for text content
 interface BackendReview {
@@ -227,12 +230,34 @@ export default function ReviewSection({ productId, registerRefresher }: ReviewSe
                 </div>
               ))}
             </div>
-            <div className="bg-gray-50 rounded-lg p-4 mt-4">
-              <div className="font-semibold mb-1 text-gray-800">
-                Review this product
-              </div>
-              <div className="text-xs text-gray-500 mb-2">
-                Share your thoughts with other customers
+            <div className="max-w-md mx-auto p-2 rounded-lg">
+              <div className="space-y-4">
+                <div>
+                  <h2 className="text-lg font-semibold text-gray-900 mb-1">
+                    Review this product
+                  </h2>
+                  <p className="text-sm text-gray-600">
+                    Share your thoughts with other customers
+                  </p>
+                </div>
+
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="w-full bg-gray-50 border-gray-200 hover:bg-gray-100 py-6 px-4 rounded-lg"
+                    >
+                      <span className="text-green-600 font-medium">
+                        Write your product review
+                      </span>
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <MheWriteAReview
+                      productId={productId}
+                    />
+                  </DialogContent>
+                </Dialog>
               </div>
             </div>
           </div>
@@ -326,11 +351,10 @@ export default function ReviewSection({ productId, registerRefresher }: ReviewSe
                       {[1, 2, 3, 4, 5].map((j) => (
                         <Star
                           key={j}
-                          className={`w-4 h-4 ${
-                            review.stars >= j
+                          className={`w-4 h-4 ${review.stars >= j
                               ? "fill-yellow-400 text-yellow-400"
                               : "text-gray-300"
-                          }`}
+                            }`}
                         />
                       ))}
                       <span className="text-xs text-gray-600 ml-1">

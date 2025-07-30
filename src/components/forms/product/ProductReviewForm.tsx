@@ -3,16 +3,10 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Camera, Star, X } from "lucide-react";
-import React, { useState, ChangeEvent } from "react";
+import { Camera, Star } from "lucide-react";
+import React, { useState, ChangeEvent, useEffect } from "react";
 import Image from "next/image";
 import api from "@/lib/api";
 import axios from "axios";
@@ -20,17 +14,16 @@ import { toast } from "sonner";
 import { useUser } from "@/context/UserContext";
 
 type Props = {
-  isOpen: boolean;
-  onOpenChange: (open: boolean) => void;
   productId: number;
 };
 
 // Assuming Role ID for a regular User from models.py
 const USER_ROLE_ID = 3;
 
-export default function MheWriteAReview({ isOpen, onOpenChange, productId }: Props) {
+export default function MheWriteAReview({ productId }: Props) {
   const { user } = useUser();
   const [rating, setRating] = useState(0);
+  const [ProductData, setProdData] = useState(null);
   const [title, setTitle] = useState("");
   const [reviewText, setReviewText] = useState(""); // Maps to 'review' field in backend
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -38,6 +31,23 @@ export default function MheWriteAReview({ isOpen, onOpenChange, productId }: Pro
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const stars = Array(5).fill(0);
+
+  useEffect(() => {
+    const fetchProduct = async () => {
+      if (!productId) return;
+      try {
+        const response = await api.get(`/products/${productId}/`);
+        setProdData(response.data);
+        // Assuming the product data is available here if needed
+      } catch (error) {
+        console.error("Error fetching product data:", error);
+        toast.error("Failed to fetch product data.");
+      }
+    };
+    fetchProduct();
+  }, [productId]);
+
+  console.log("Product data:", ProductData);
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -138,14 +148,14 @@ export default function MheWriteAReview({ isOpen, onOpenChange, productId }: Pro
         fileInputRef.current.value = "";
       }
 
-      onOpenChange(false); // Close the dialog, triggering parent to refresh reviews
+      // onOpenChange(false); // Close the dialog, triggering parent to refresh reviews
     } catch (error: unknown) {
       console.error("Error submitting review:", error);
       if (axios.isAxiosError(error) && error.response) {
         // Handle specific unique_together error if user already reviewed
         if (error.response.status === 400 &&
-            (error.response.data?.non_field_errors?.[0]?.includes("user, product") ||
-             error.response.data?.non_field_errors?.[0]?.includes("The fields user, product must make a unique set."))) {
+          (error.response.data?.non_field_errors?.[0]?.includes("user, product") ||
+            error.response.data?.non_field_errors?.[0]?.includes("The fields user, product must make a unique set."))) {
           toast.error("You have already submitted a review for this product.");
         } else if (error.response.data?.detail) {
           toast.error(`Failed to submit review: ${error.response.data.detail}`);
@@ -165,141 +175,117 @@ export default function MheWriteAReview({ isOpen, onOpenChange, productId }: Pro
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[736px] p-6 gap-6 rounded-lg shadow-lg">
-        {/* Close Button */}
-        <div className="absolute right-4 top-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 rounded-full text-gray-500 hover:bg-gray-100 hover:text-gray-700"
-            onClick={() => onOpenChange(false)}
-            aria-label="Close review form"
-          >
-            <X className="h-5 w-5" />
-          </Button>
-        </div>
+    <>
+      <div className="flex items-start gap-8 w-full">
+        <Image
+          src= {ProductData?.images[0]?.image || "/placeholder.png"}
+          alt="Product image for review"
+          width={79}
+          height={64}
+          className="object-cover"
+        />
 
-        {/* Header Section */}
-        <div className="flex items-start gap-4 sm:gap-8 w-full">
-          {/* Product Image Placeholder */}
-          <Image
-            src="/no-product.png" // Placeholder, ideally fetch product image
-            alt="Product image for review"
-            width={79}
-            height={64}
-            className="object-cover rounded-md"
+        <div className="pt-4 flex-1">
+          <div className="font-bold text-2xl tracking-normal">
+            How was the item?
+          </div>
+        </div>
+      </div>
+
+      <div className="flex items-center gap-2">
+        <span className="font-bold text-base">Rate the item?</span>
+        <div className="flex items-center gap-1">
+          {stars.map((_, index) => (
+            <Button
+              key={index}
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6 p-0"
+              onClick={() => setRating(index + 1)}
+              aria-label={`Rate ${index + 1} stars`}
+            >
+              <Star
+                className={`h-6 w-6 ${index < rating
+                    ? "fill-yellow-400 text-yellow-400"
+                    : "text-gray-300"
+                  }`}
+              />
+            </Button>
+          ))}
+        </div>
+      </div>
+
+      <div className="flex flex-col items-start gap-4 w-full">
+        <h3 className="font-bold text-base">Write a review</h3>
+
+        <div className="flex flex-col items-start justify-center gap-6 w-full">
+          <Textarea
+            className="min-h-[124px] text-[13px] text-[#666869]"
+            placeholder="What should other customers know?"
+            value={reviewText}
+            onChange={(e) => setReviewText(e.target.value)}
+            aria-label="Review text content"
           />
 
-          <DialogHeader className="pt-2 sm:pt-4 flex-1">
-            <DialogTitle className="font-bold text-xl sm:text-2xl tracking-normal text-gray-900">
-              How was the item?
-            </DialogTitle>
-          </DialogHeader>
-        </div>
-
-        {/* Rate the item section */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 mt-4">
-          <span className="font-semibold text-base text-gray-800">Rate the item?</span>
-          <div className="flex items-center gap-0.5">
-            {stars.map((_, index) => (
-              <Button
-                key={index}
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 p-0"
-                onClick={() => setRating(index + 1)}
-                aria-label={`Rate ${index + 1} stars`}
-              >
-                <Star
-                  className={`h-6 w-6 transition-colors duration-200 ${
-                    index < rating
-                      ? "fill-yellow-400 text-yellow-400"
-                      : "text-gray-300 hover:text-yellow-300"
-                  }`}
-                />
-              </Button>
-            ))}
-          </div>
-        </div>
-
-        {/* Write a review section */}
-        <div className="flex flex-col items-start gap-4 w-full mt-4">
-          <h3 className="font-semibold text-base text-gray-800">Write a review</h3>
-
-          <div className="flex flex-col items-start justify-center gap-6 w-full">
-            <Textarea
-              className="min-h-[120px] text-sm text-gray-700 placeholder:text-gray-500 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 p-3"
-              placeholder="What should other customers know?"
-              value={reviewText}
-              onChange={(e) => setReviewText(e.target.value)}
-              aria-label="Review text content"
-            />
-
-            {/* Image/Video Upload Card */}
-            <Card className="w-full bg-green-50 border-2 border-dashed border-green-300 rounded-lg">
-              <CardContent
-                className="flex flex-col sm:flex-row items-center justify-center gap-3 p-4 cursor-pointer"
-                onClick={() => fileInputRef.current?.click()} // Trigger file input click
-              >
-                <Camera className="w-6 h-6 text-green-700" />
-                <span className="text-sm text-green-800 font-medium">
-                  {selectedFiles.length > 0 ?
-                    `${selectedFiles.length} file(s) selected (will be uploaded after review text)` :
-                    "Share a video or photo (Optional)"
-                  }
-                </span>
-                
-                <input
-                    type="file"
-                    multiple
-                    className="hidden"
-                    onChange={handleFileChange}
-                    ref={fileInputRef} // Attach ref
-                    accept="image/*,video/*" // Specify accepted file types
-                />
-              </CardContent>
-              {selectedFiles.length > 0 && (
-                <div className="p-2 pt-0 text-sm text-gray-700 bg-green-100 border-t border-green-200 rounded-b-lg">
-                  <p className="font-medium mb-1">Selected files:</p>
-                  <ul className="list-disc list-inside">
-                    {selectedFiles.map((file, index) => (
-                      <li key={file.name + index} className="text-gray-800">{file.name}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </Card>
-
-            {/* Title your review section */}
-            <div className="flex flex-col items-start gap-2 w-full">
-              <label htmlFor="review-title" className="font-semibold text-base text-gray-800">
-                Title your review{" "}
-                <span className="font-normal text-xs text-gray-600">(required)</span>
-              </label>
-              <Input
-                id="review-title"
-                className="p-3 text-sm text-gray-700 placeholder:text-gray-500 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
-                placeholder="What should other customers know?"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                aria-label="Review title"
-              />
-            </div>
-          </div>
-
-          {/* Submit Button */}
-          <div className="w-full mt-4">
-            <Button
-              className="w-full py-4 bg-[#5CA131] hover:bg-green-700 text-white text-base font-bold rounded-md shadow-md transition-colors duration-200"
-              onClick={handleSubmitReview}
-              disabled={isSubmitting}
+          <Card className="w-full bg-[#f9fcf8] border-[1.5px] border-dashed border-[#cdf0b8]">
+            <CardContent className="flex items-center justify-center gap-3 p-4 cursor-pointer"
+              onClick={() => fileInputRef.current?.click()} // Trigger file input click
             >
-              {isSubmitting ? "Submitting..." : "Submit Review"}
-            </Button>
+              <Camera className="w-6 h-6" />
+              <span className="text-[13px] text-[#666869]">
+                {selectedFiles.length > 0 ?
+                  `${selectedFiles.length} file(s) selected (will be uploaded after review text)` :
+                  "Share a video or photo (Optional)"
+                }
+              </span>
+
+              <input
+                type="file"
+                multiple
+                className="hidden"
+                onChange={handleFileChange}
+                ref={fileInputRef} // Attach ref
+                accept="image/*,video/*" // Specify accepted file types
+              />
+            </CardContent>
+            {selectedFiles.length > 0 && (
+              <div className="p-2 pt-0 text-sm text-gray-700">
+                <p>Selected files:</p>
+                <ul className="list-disc list-inside">
+                  {selectedFiles.map((file, index) => (
+                    <li key={file.name + index}>{file.name}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </Card>
+
+          <div className="flex flex-col items-start gap-2 w-full">
+            <label htmlFor="review-title" className="font-bold text-base">
+              Title your review{" "}
+              <span className="font-normal text-xs">(required)</span>
+            </label>
+            <Input
+              id="review-title"
+              className="p-4 text-[13px] text-[#666869]"
+              placeholder="What should other customers know?"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              aria-label="Review title"
+            />
           </div>
         </div>
-      </DialogContent>
-    </Dialog>
+
+        <div className="w-full">
+          <Button
+            className="w-full py-[19px] bg-[#5ca131] hover:bg-[#478831] text-[13px] font-bold"
+            onClick={handleSubmitReview}
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? "Submitting..." : "Submit"}
+          </Button>
+        </div>
+      </div>
+    </>
   );
 }
