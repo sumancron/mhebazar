@@ -60,7 +60,7 @@ const ServicesPage = () => {
             Fill in the form below to send us your inquiry. Our team will get back to you shortly.
           </p>
 
-          <button className="bg-green-600 hover:bg-green-700 text-white text-sm px-5 py-2 rounded-md transition">
+          <button className="bg-[#5CA131] hover:bg-green-700 text-white text-sm px-5 py-2 rounded-md transition">
             Send Inquiry
           </button>
         </div>

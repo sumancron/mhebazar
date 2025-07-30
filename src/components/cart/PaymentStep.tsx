@@ -371,7 +371,7 @@ export default function PaymentStep({ onComplete, onBack, cartTotal, shippingAdd
 
                   <Button
                     onClick={handlePlaceOrder}
-                    className="w-full bg-green-600 hover:bg-green-700 text-white py-3 text-base font-medium"
+                    className="w-full bg-[#5CA131] hover:bg-green-700 text-white py-3 text-base font-medium"
                     disabled={isProcessingOrder || cartItems.length === 0 || cartTotal <= 0}
                   >
                     {isProcessingOrder ? "Processing..." : `Place Order • ${formatPrice(cartTotal)}`}

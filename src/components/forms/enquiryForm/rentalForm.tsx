@@ -136,7 +136,7 @@ export default function RentalForm({ productId, productDetails, onClose }: Renta
               />
               <Button
                 type="submit"
-                className="w-full h-auto items-center justify-center gap-3 p-4 bg-green-600 rounded-md hover:bg-green-700 text-white font-bold text-base transition-colors"
+                className="w-full h-auto items-center justify-center gap-3 p-4 bg-[#5CA131] rounded-md hover:bg-green-700 text-white font-bold text-base transition-colors"
                 disabled={isSubmitting}
               >
                 {isSubmitting ? "Submitting..." : "Submit Rental Request"}

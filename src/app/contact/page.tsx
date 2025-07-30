@@ -291,7 +291,7 @@ export default function ContactPage() {
             </div>
             <Button
               type="submit"
-              className="mt-2 bg-green-600 hover:bg-green-700 text-white font-semibold text-base rounded-md py-3 px-6 transition-colors"
+              className="mt-2 bg-[#5CA131] hover:bg-green-700 text-white font-semibold text-base rounded-md py-3 px-6 transition-colors"
               disabled={isSubmitting}
             >
               {isSubmitting ? "Sending Message..." : "Send Message"}

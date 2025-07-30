@@ -303,7 +303,7 @@ const UsersTable = () => {
                       isActive={page === 1}
                       onClick={() => handlePageChange(1)}
                       className={`w-8 h-8 p-0 rounded-md border-none text-sm ${page === 1
-                        ? "bg-green-600 text-white hover:bg-green-700"
+                        ? "bg-[#5CA131] text-white hover:bg-green-700"
                         : "bg-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-100"
                         }`}
                     >
@@ -329,7 +329,7 @@ const UsersTable = () => {
                         isActive={page === p}
                         onClick={() => handlePageChange(p)}
                         className={`w-8 h-8 p-0 rounded-md text-sm ${page === p
-                          ? "bg-green-600 text-white hover:bg-green-700"
+                          ? "bg-[#5CA131] text-white hover:bg-green-700"
                           : "bg-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-100 border border-gray-200"
                           }`}
                       >
@@ -348,7 +348,7 @@ const UsersTable = () => {
                       isActive={page === totalPages}
                       onClick={() => handlePageChange(totalPages)}
                       className={`w-8 h-8 p-0 rounded-md border-none text-sm ${page === totalPages
-                        ? "bg-green-600 text-white hover:bg-green-700"
+                        ? "bg-[#5CA131] text-white hover:bg-green-700"
                         : "bg-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-100"
                         }`}
                     >

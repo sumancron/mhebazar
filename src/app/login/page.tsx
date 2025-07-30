@@ -261,7 +261,7 @@ const LoginPage = () => {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold rounded py-3 text-lg transition-colors"
+            className="w-full bg-[#5CA131] hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold rounded py-3 text-lg transition-colors"
           >
             {isLoading ? "Signing In..." : "Sign In"}
           </button>

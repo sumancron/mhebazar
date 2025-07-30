@@ -298,7 +298,7 @@ const VendorProducts = () => {
       onClick={onClick}
       disabled={disabled}
       className={`px-3 py-1 rounded-md text-sm transition-colors ${isActive
-        ? 'bg-green-600 text-white hover:bg-green-700'
+        ? 'bg-[#5CA131] text-white hover:bg-green-700'
         : disabled
           ? 'text-gray-400 cursor-not-allowed'
           : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100 border border-gray-200'
@@ -339,7 +339,7 @@ const VendorProducts = () => {
           <div className="flex space-x-2">
             <button
               onClick={handleApproveSelected}
-              className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 flex items-center space-x-2 transition-colors disabled:bg-gray-400"
+              className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-[#5CA131] flex items-center space-x-2 transition-colors disabled:bg-gray-400"
               disabled={selectedProducts.size === 0}
             >
               <CheckCircle className="w-4 h-4" />
@@ -502,7 +502,7 @@ const VendorProducts = () => {
                           <>
                             <Button
                               size="sm"
-                              className="bg-green-600 hover:bg-green-700 text-white h-8 px-2"
+                              className="bg-[#5CA131] hover:bg-green-700 text-white h-8 px-2"
                               onClick={() => handleProductAction(product.id, 'approve')}
                             >
                               <PackageCheck className="w-3 h-3 mr-1" />

@@ -103,7 +103,7 @@ export default function Navbar(): JSX.Element {
   return (
     <header className="bg-white shadow-sm z-50 sticky top-0">
       {/* Top Green Banner */}
-      <div className="bg-green-600 text-white">
+      <div className="bg-[#5CA131] text-white">
         <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-2">
             <div className="flex items-center gap-2 text-sm">

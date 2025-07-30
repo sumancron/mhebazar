@@ -387,7 +387,7 @@ const ComparePage = () => {
           <p className="text-lg mb-4">No products selected for comparison yet.</p>
           <button
             onClick={() => setShowModal(true)}
-            className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+            className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-[#5CA131] hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
           >
             <Plus className="-ml-1 mr-2 h-5 w-5" aria-hidden="true" />
             Add First Product

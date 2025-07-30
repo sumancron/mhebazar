@@ -185,7 +185,7 @@ export default function ProductList() {
             <Button
               // onClick={() => setOpen(true)}
               variant="default"
-              className="bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded flex items-center gap-2"
+              className="bg-[#5CA131] hover:bg-green-700 text-white font-semibold px-4 py-2 rounded flex items-center gap-2"
             >
               + Add Product
             </Button>
@@ -426,7 +426,7 @@ export default function ProductList() {
               </Button>
               <Button
                 variant="default"
-                className="bg-green-600 hover:bg-green-700 text-white"
+                className="bg-[#5CA131] hover:bg-green-700 text-white"
                 onClick={() => setShowFilter(false)}
               >
                 Apply

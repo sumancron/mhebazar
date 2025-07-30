@@ -315,7 +315,7 @@ export default function AddProductForm({ open, onClose }: Props) {
           <div className="sticky bottom-0 left-0 w-full bg-white px-8 pb-6 pt-4 border-t border-gray-100 flex justify-end">
             <button
               type="submit"
-              className="bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-3 rounded-lg transition"
+              className="bg-[#5CA131] hover:bg-green-700 text-white font-semibold px-6 py-3 rounded-lg transition"
             >
               Submit
             </button>

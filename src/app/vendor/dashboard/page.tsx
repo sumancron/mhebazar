@@ -327,7 +327,7 @@ export default function DashboardStats() {
                     <Button
                       // onClick={() => setOpen(true)}
                       variant="default"
-                      className="bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded flex items-center gap-2"
+                      className="bg-[#5CA131] hover:bg-green-700 text-white font-semibold px-4 py-2 rounded flex items-center gap-2"
                     >
                       + Add Product
                     </Button>
@@ -355,7 +355,7 @@ export default function DashboardStats() {
                 <p className="text-gray-600 mb-4">Start by adding your first product to begin selling.</p>
                 <Sheet>
                   <SheetTrigger>
-                    <Button className="bg-green-600 hover:bg-green-700">
+                    <Button className="bg-[#5CA131] hover:bg-green-700">
                       Add Your First Product
                     </Button>
                   </SheetTrigger>

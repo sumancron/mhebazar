@@ -25,7 +25,7 @@ export default function VendorRegistrationCard() {
             <h3 className="text-base md:text-lg font-semibold text-gray-800">
               Vendor registration
             </h3>
-            <button className="bg-green-600 hover:bg-green-700 text-white text-sm md:text-base font-medium px-5 py-2 rounded-md transition">
+            <button className="bg-[#5CA131] hover:bg-green-700 text-white text-sm md:text-base font-medium px-5 py-2 rounded-md transition">
               Register Now
             </button>
           </div>

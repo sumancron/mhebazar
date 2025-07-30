@@ -263,7 +263,7 @@ const SubcategoriesTable = () => {
       onClick={onClick}
       disabled={disabled}
       className={`px-3 py-1 rounded-md text-sm transition-colors ${isActive
-        ? 'bg-green-600 text-white hover:bg-green-700'
+        ? 'bg-[#5CA131] text-white hover:bg-green-700'
         : disabled
           ? 'text-gray-400 cursor-not-allowed'
           : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100 border border-gray-200'
@@ -306,7 +306,7 @@ const SubcategoriesTable = () => {
             <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
               <SheetTrigger asChild>
                 <Button
-                  className="bg-green-600 hover:bg-green-700 flex items-center space-x-2"
+                  className="bg-[#5CA131] hover:bg-green-700 flex items-center space-x-2"
                   onClick={() => setSelectedSubcategory(undefined)}
                 >
                   <Plus className="w-4 h-4" />

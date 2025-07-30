@@ -11,7 +11,7 @@ const ProductQuoteCard = () => {
       <div className="relative z-10">
         {/* Icon */}
         <div className="mb-4">
-          <div className="w-10 h-10 bg-green-600 rounded-lg flex items-center justify-center">
+          <div className="w-10 h-10 bg-[#5CA131] rounded-lg flex items-center justify-center">
             <FileText className="w-6 h-6 text-white" />
           </div>
         </div>

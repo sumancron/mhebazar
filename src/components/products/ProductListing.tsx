@@ -83,7 +83,7 @@ function ProductGrid({
                 )}
                 {product.direct_sale ? (
                   <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto"> {/* Flex controls for buttons */}
-                    <button className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white px-4 sm:px-6 py-2 rounded-md transition-colors duration-200 text-sm font-medium"
+                    <button className="w-full sm:w-auto bg-[#5CA131] hover:bg-green-700 text-white px-4 sm:px-6 py-2 rounded-md transition-colors duration-200 text-sm font-medium"
                       disabled={!product.is_active || product.stock_quantity === 0}
                     >
                       Add to Cart
@@ -298,7 +298,7 @@ export default function ProductListing({
                   </div>
                   {/* Mobile Filter Button */}
                   <button
-                    className="lg:hidden flex items-center gap-1.5 sm:gap-2 bg-green-500 hover:bg-green-600 text-white px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-md shadow transition text-xs sm:text-sm font-medium"
+                    className="lg:hidden flex items-center gap-1.5 sm:gap-2 bg-green-500 hover:bg-[#5CA131] text-white px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-md shadow transition text-xs sm:text-sm font-medium"
                     onClick={() => setMobileFilterOpen(true)}
                     aria-label="Open filters"
                   >
@@ -330,7 +330,7 @@ export default function ProductListing({
                     onClick={() => onPageChange(page)}
                     className={`px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 ${
                       currentPage === page
-                        ? "text-white bg-green-500 border border-green-500 hover:bg-green-600"
+                        ? "text-white bg-green-500 border border-green-500 hover:bg-[#5CA131]"
                         : "text-gray-500 bg-white border border-gray-300 hover:bg-gray-100"
                     }`}
                   >

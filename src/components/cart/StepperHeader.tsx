@@ -29,9 +29,9 @@ export default function StepperHeader({ steps, currentStep, completedSteps }: St
                   className={`
                     w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium
                     ${completedSteps.includes(step.id)
-                      ? 'bg-green-600 text-white'
+                      ? 'bg-[#5CA131] text-white'
                       : currentStep === step.id
-                      ? 'bg-green-600 text-white'
+                      ? 'bg-[#5CA131] text-white'
                       : 'bg-gray-200 text-gray-500'
                     }
                   `}
@@ -65,7 +65,7 @@ export default function StepperHeader({ steps, currentStep, completedSteps }: St
               {index < steps.length - 1 && (
                 <div className="flex-1 mx-4 sm:mx-6">
                   <div className={`h-0.5 ${
-                    completedSteps.includes(step.id) ? 'bg-green-600' : 'bg-gray-200'
+                    completedSteps.includes(step.id) ? 'bg-[#5CA131]' : 'bg-gray-200'
                   }`} />
                 </div>
               )}

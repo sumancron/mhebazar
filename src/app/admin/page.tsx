@@ -278,7 +278,7 @@ const CompleteDashboard = () => {
                         <Button size="sm" variant="outline" className="text-red-600 border-red-500 hover:bg-red-50" onClick={() => handleOpenRejectModal(app)}>
                           <X className="w-4 h-4 mr-1" />Reject
                         </Button>
-                        <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white" onClick={() => handleVendorApprove(app.id)}>
+                        <Button size="sm" className="bg-[#5CA131] hover:bg-green-700 text-white" onClick={() => handleVendorApprove(app.id)}>
                           <Check className="w-4 h-4 mr-1" />Approve
                         </Button>
                       </div>
@@ -313,7 +313,7 @@ const CompleteDashboard = () => {
                               <Button size="sm" variant="outline" className="text-red-600 border-red-500 hover:bg-red-50" onClick={() => handleProductAction(product.id, 'reject')}>
                                 <PackageX className="w-4 h-4 mr-1" />Reject
                               </Button>
-                              <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white" onClick={() => handleProductAction(product.id, 'approve')}>
+                              <Button size="sm" className="bg-[#5CA131] hover:bg-green-700 text-white" onClick={() => handleProductAction(product.id, 'approve')}>
                                 <PackageCheck className="w-4 h-4 mr-1" />Approve
                               </Button>
                             </div>

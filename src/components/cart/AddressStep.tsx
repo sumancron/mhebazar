@@ -431,7 +431,7 @@ export default function AddressStep({ onNext, onBack }: AddressStepProps) {
                       </div>
                     </div>
                     <div className="flex space-x-3 mt-6">
-                      <Button onClick={handleAddOrUpdateAddress} className="bg-green-600 hover:bg-green-700">
+                      <Button onClick={handleAddOrUpdateAddress} className="bg-[#5CA131] hover:bg-green-700">
                         {isEditing ? "Update Address" : "Save Address"}
                       </Button>
                       <Button variant="outline" onClick={resetForm}>
@@ -452,7 +452,7 @@ export default function AddressStep({ onNext, onBack }: AddressStepProps) {
           </Button>
           <Button
             onClick={handleContinue}
-            className="bg-green-600 hover:bg-green-700"
+            className="bg-[#5CA131] hover:bg-green-700"
             disabled={!selectedAddressId || addresses.length === 0}
           >
             Continue to Payment

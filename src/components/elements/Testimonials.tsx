@@ -789,7 +789,7 @@ export default function ReviewCarousel() {
                 key={index}
                 onClick={() => api?.scrollTo(index)}
                 className={`w-3 h-3 rounded-full transition-all duration-300 ${current === index
-                    ? 'bg-green-600'
+                    ? 'bg-[#5CA131]'
                     : index === 1
                       ? 'bg-gray-400'
                       : 'bg-gray-300'

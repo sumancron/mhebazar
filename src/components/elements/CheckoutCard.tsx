@@ -42,7 +42,7 @@ export default function CartSummary() {
       </div>
 
       {/* Place Order Button */}
-      <Button className="w-full bg-green-600 hover:bg-green-700 text-white">
+      <Button className="w-full bg-[#5CA131] hover:bg-green-700 text-white">
         Place Order
       </Button>
     </Card>

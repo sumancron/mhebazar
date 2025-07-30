@@ -337,7 +337,7 @@ export default function VendorRegistrationDrawer({ open, onClose }: Props) {
             <button
               type="submit"
               disabled={isSubmitting || isLoading}
-              className="mt-6 w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold rounded py-3 text-base transition-colors"
+              className="mt-6 w-full bg-[#5CA131] hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold rounded py-3 text-base transition-colors"
             >
               {isSubmitting ? "Submitting..." : "Submit Vendor Application"}
             </button>

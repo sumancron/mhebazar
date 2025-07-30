@@ -291,7 +291,7 @@ export default function MheWriteAReview({ isOpen, onOpenChange, productId }: Pro
           {/* Submit Button */}
           <div className="w-full mt-4">
             <Button
-              className="w-full py-4 bg-green-600 hover:bg-green-700 text-white text-base font-bold rounded-md shadow-md transition-colors duration-200"
+              className="w-full py-4 bg-[#5CA131] hover:bg-green-700 text-white text-base font-bold rounded-md shadow-md transition-colors duration-200"
               onClick={handleSubmitReview}
               disabled={isSubmitting}
             >

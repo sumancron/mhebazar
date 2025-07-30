@@ -36,7 +36,7 @@ const Navbar = () => {
           </button>
 
           {/* My Account button */}
-          <button className="flex items-center space-x-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-full transition-colors">
+          <button className="flex items-center space-x-2 bg-[#5CA131] hover:bg-green-700 text-white px-4 py-2 rounded-full transition-colors">
             <User className="h-4 w-4" />
             <span className="text-sm font-medium">My Account</span>
           </button>

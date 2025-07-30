@@ -172,7 +172,7 @@ const handleSubmit = async (e: React.FormEvent) => {
           <button
             type="submit"
             disabled={loading}
-            className="mt-2 w-full bg-green-600 hover:bg-green-700 text-white font-semibold rounded py-3 text-lg transition-colors"
+            className="mt-2 w-full bg-[#5CA131] hover:bg-green-700 text-white font-semibold rounded py-3 text-lg transition-colors"
           >
             {loading ? "Registering..." : "Sign Up"}
           </button>

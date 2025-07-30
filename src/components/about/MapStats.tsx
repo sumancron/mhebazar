@@ -33,7 +33,7 @@ export default function GlobalMapStats() {
           <button
             className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
               activeTab === 'impressions'
-                ? 'bg-green-600 text-white'
+                ? 'bg-[#5CA131] text-white'
                 : 'bg-[#f3fbea] text-gray-800'
             }`}
             onClick={() => {
@@ -45,7 +45,7 @@ export default function GlobalMapStats() {
           <button
             className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
               activeTab === 'clicks'
-                ? 'bg-green-600 text-white'
+                ? 'bg-[#5CA131] text-white'
                 : 'bg-[#f3fbea] text-gray-800'
             }`}
             onClick={() => {
