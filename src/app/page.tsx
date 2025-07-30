@@ -25,7 +25,7 @@ export default function HomePage() {
       <div className="max-w-[90vw] mx-auto">
         <CategoryButtons />
 
-        <div className="flex flex-col md:flex-row gap-14 w-full px-4 py-8 mx-auto justify-center items-start">
+        <div className="flex flex-col md:flex-row gap-14 w-full py-8 mx-auto justify-center items-start">
           <div className="flex-1">
             <MostPopular />
           </div>

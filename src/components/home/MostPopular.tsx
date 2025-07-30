@@ -140,14 +140,15 @@ export default function MostPopular() {
                   <p className="text-xs text-gray-500 mb-6">{category.note}</p>
 
                   {/* Products */}
-                  <div className="grid grid-cols-3 gap-4 w-full max-w-sm">
+                  <div className="flex justify-evenly w-full">
                     {category.products.slice(0, 3).map((product, i) => (
                       <div key={i} className="flex flex-col items-center">
-                        <div className="relative w-20 h-20 bg-gray-50 rounded-lg overflow-hidden">
+                        <div className="relative w-36 h-36 bg-gray-50 rounded-lg overflow-hidden">
                           <Image
                             src={product.image}
                             alt={product.label || `Product ${i + 1}`}
-                            fill
+                            width={250}
+                            height={250}
                             className="object-contain p-1"
                           />
                         </div>

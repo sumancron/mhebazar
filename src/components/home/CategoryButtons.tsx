@@ -73,14 +73,14 @@ export default function CategoriesSection(): JSX.Element {
   const [error, setError] = useState<string | null>(null);
   const [showAll, setShowAll] = useState(false); // To toggle between showing initial 6 and all
 
-  const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+  // const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
   useEffect(() => {
     const fetchCategories = async () => {
       try {
         setLoading(true);
         // Fetch data from your API endpoint
-        const response = await api.get<{ count: number; next: string | null; previous: string | null; results: Category[] }>(`${API_BASE_URL}/categories/`);
+        const response = await api.get<{ count: number; next: string | null; previous: string | null; results: Category[] }>(`/categories/`);
 
         let fetchedCategories: Category[] = [];
         if (response.data && Array.isArray(response.data.results)) {
@@ -115,7 +115,7 @@ export default function CategoriesSection(): JSX.Element {
     };
 
     fetchCategories();
-  }, [API_BASE_URL]); // `API_BASE_URL` is a dependency as it's used in fetchCategories
+  }, []); // `API_BASE_URL` is a dependency as it's used in fetchCategories
 
   // Determine which categories to display based on 'showAll' state
   // Filter out any categories that might not have a name (though unlikely from your API)
