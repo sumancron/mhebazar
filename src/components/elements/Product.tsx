@@ -96,14 +96,14 @@ const ProductCard = ({
         }`}
     >
       {/* Image Container */}
-      <div className="relative w-full h-48 flex-shrink-0">
+      <div className="relative w-full h-56 flex-shrink-0">
         <Link href={productDetailUrl} className="block w-full h-full">
           <Image
             src={image}
             alt={title}
             width={320}
-            height={192}
-            className="object-cover w-full h-full rounded-t-2xl"
+            height={224}
+            className="object-fill w-full h-full rounded-t-2xl"
             quality={85}
           />
         </Link>

@@ -2,11 +2,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Loader2, AlertCircle } from "lucide-react";
 import api from "@/lib/api";
 import { toast } from "sonner";
 import { Product } from "@/types";
+import DOMPurify from 'dompurify';
 
 
 const QuoteForm = ({ product }: { product: Product }) => {
@@ -130,20 +131,20 @@ const QuoteForm = ({ product }: { product: Product }) => {
             <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 mb-8">
               <div className="w-full lg:w-1/2 xl:w-2/5">
                 <img
-                  src={product?.image || "/no-product.png"}
-                  alt={product?.title || "Product"}
-                  className="w-full h-48 sm:h-64 lg:h-72 object-cover rounded-lg shadow-sm"
+                  src={product?.image || product?.images[0].image || "/no-product.png"}
+                  alt={product?.title || product?.name || "Product"}
+                  className="w-full h-48 sm:h-64 lg:h-72 object-contain rounded-lg shadow-sm"
                 />
               </div>
 
               <div className="flex-1 space-y-3">
                 <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 leading-tight">
-                  {product?.title}
+                  {product?.title || product?.name || "Product"}
                 </h2>
 
                 <div className="space-y-2 text-sm sm:text-base text-gray-600">
                   <p>
-                    <span className="font-medium">Qty:</span> {product?.stock_quantity}
+                    <span className="font-medium">Qty:</span> {product?.stock_quantity || data?.stock_quantity || 0}
                   </p>
 
                   {/* <p>
@@ -160,7 +161,7 @@ const QuoteForm = ({ product }: { product: Product }) => {
             {/* Product Description */}
             <div className="mb-8">
               <p className="text-sm sm:text-base text-gray-600 leading-relaxed">
-                {product?.subtitle}
+                <span dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(product?.subtitle || product?.description || "No description available.") }} />
               </p>
             </div>
 
