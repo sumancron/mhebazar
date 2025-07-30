@@ -43,6 +43,8 @@ const BlogListPage: React.FC = () => {
   const [previousPage, setPreviousPage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  console.log("comit")
+
   const fetchBlogs = async (page = 1, search = "") => {
     try {
       setLoading(true);
