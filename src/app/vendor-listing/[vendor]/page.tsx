@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-expressions */
 // src/app/vendor-listing/[vendor]/page.tsx
 "use client";
 
@@ -17,6 +16,7 @@ const PRODUCT_TYPE_CHOICES = [
   "Type3",
 ];
 
+// Assuming this structure from your backend Product serializer
 interface ApiProduct {
   id: number;
   category_name: string;
@@ -24,7 +24,7 @@ interface ApiProduct {
   images: { id: number; image: string }[];
   name: string;
   description: string;
-  price: string;
+  price: string; // Price might be string from backend Decimal field
   direct_sale: boolean;
   type: string;
   is_active: boolean;
@@ -32,345 +32,361 @@ interface ApiProduct {
   stock_quantity: number;
   manufacturer: string;
   average_rating: number | null;
-  user: number; // Add user ID to product interface
+  // Add other fields from your ProductSerializer as needed
 }
 
-interface ApiResponse<T> {
-  count: number;
-  next: string | null;
-  previous: string | null;
-  results: T[];
+interface VendorProfile {
+    user: {
+        id: number;
+        first_name: string;
+        last_name: string;
+        username: string;
+        email: string;
+        profile_photo: string | null;
+        description: string | null;
+        // Add other user fields if necessary
+    };
+    company_name: string;
+    brand: string;
+    company_email: string;
+    company_phone: string;
+    company_address: string;
+    // Add other vendor profile fields if necessary for your banner
 }
 
-interface ApiUser {
-  id: number;
-  username: string;
-  full_name: string;
-}
-
-interface ApiVendor {
-  user: number;
-  company_name: string;
-  company_phone: string;
-  company_email: string;
-  brand: string;
-}
-
-const formatNameFromSlug = (slug: string): string => {
-  return slug.replace(/-/g, ' ').split(' ').map((word: string) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
-};
-
-export default function VendorPage({ params }: { params: Promise<{ vendor: string }> }) {
+export default function VendorPage({ params }: { params: { vendor: string } }) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // Unwrap params using React.use()
-  const { vendor: vendorSlug } = React.use(params);
-  const formattedVendorName: string = formatNameFromSlug(vendorSlug);
+  const [products, setProducts] = useState<ApiProduct[]>([]);
+  const [totalProducts, setTotalProducts] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [loadingProducts, setLoadingProducts] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const [products, setProducts] = useState<Product[]>([]);
-  const [totalProducts, setTotalProducts] = useState<number>(0);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [noProductsFoundMessage, setNoProductsFoundMessage] = useState<string | null>(null);
-  const [currentPage, setCurrentPage] = useState<number>(1);
-  const [totalPages, setTotalPages] = useState<number>(1);
-  const [selectedFilters, setSelectedFilters] = useState<Set<string>>(new Set<string>());
-
-  const [minPrice, setMinPrice] = useState<number | ''>('');
-  const [maxPrice, setMaxPrice] = useState<number | ''>('');
-  const [selectedManufacturer, setSelectedManufacturer] = useState<string | null>(null);
-  const [selectedRating, setSelectedRating] = useState<number | null>(null);
-  const [sortBy, setSortBy] = useState<string>('relevance');
-
-  const [vendorData, setVendorData] = useState<ApiVendor | null>(null);
+  // New states for vendor details
   const [vendorUserId, setVendorUserId] = useState<number | null>(null);
-  const [isVendorValid, setIsVendorValid] = useState<boolean>(true);
+  const [loadingVendor, setLoadingVendor] = useState(true);
+  const [vendorData, setVendorData] = useState<VendorProfile | null>(null);
 
-  // Fetch vendor user ID based on brand name
-  const fetchVendorUserId = useCallback(async (brandName: string) => {
+  // Filter states
+  const [minPriceFilter, setMinPriceFilter] = useState<number | ''>('');
+  const [maxPriceFilter, setMaxPriceFilter] = useState<number | ''>('');
+  const [manufacturerFilter, setManufacturerFilter] = useState<string[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string[]>([]);
+  const [selectedSubcategory, setSelectedSubcategory] = useState<string[]>([]);
+  const [selectedType, setSelectedType] = useState<string[]>([]); // Assuming 'type' is a filterable field
+  const [selectedRating, setSelectedRating] = useState<number | null>(null);
+  const [sortBy, setSortBy] = useState<string>('relevance'); // Default sort option
+
+  const [initialized, setInitialized] = useState(false);
+
+  useEffect(() => {
+    // Initialize filter states from URL search params on first load
+    const initialMinPrice = searchParams.get('min_price');
+    const initialMaxPrice = searchParams.get('max_price');
+    const initialManufacturer = searchParams.get('manufacturer');
+    const initialCategory = searchParams.get('category');
+    const initialSubcategory = searchParams.get('subcategory');
+    const initialType = searchParams.get('type');
+    const initialRating = searchParams.get('rating');
+    const initialSortBy = searchParams.get('sort_by');
+
+    if (initialMinPrice) setMinPriceFilter(parseFloat(initialMinPrice));
+    if (initialMaxPrice) setMaxPriceFilter(parseFloat(initialMaxPrice));
+    if (initialManufacturer) setManufacturerFilter(initialManufacturer.split(','));
+    if (initialCategory) setSelectedCategory(initialCategory.split(','));
+    if (initialSubcategory) setSelectedSubcategory(initialSubcategory.split(','));
+    if (initialType) setSelectedType(initialType.split(','));
+    if (initialRating) setSelectedRating(parseInt(initialRating));
+    if (initialSortBy) setSortBy(initialSortBy);
+
+    setInitialized(true);
+  }, [searchParams]);
+
+  // Fetch vendor details first
+  const fetchVendorDetails = useCallback(async (brandName: string) => {
     try {
-      // Assuming 'brand' is available as a filter on users or vendors endpoint
-      const response = await api.get<ApiResponse<ApiVendor>>(`/vendor/?brand=${brandName}`);
-      if (response.data.results.length > 0) {
-        const vendor = response.data.results[0];
-        setVendorData(vendor);
-        setVendorUserId(vendor.user); // The user ID associated with this vendor
-        return vendor.user;
+      setLoadingVendor(true);
+      setError(null);
+      // Call the new backend endpoint to get vendor by brand name
+      const response = await api.get(`/users/vendor/by-brand/${brandName}/`);
+      if (response.status === 200 && response.data) {
+        setVendorData(response.data);
+        setVendorUserId(response.data.user.id); // Assuming the user ID is nested under 'user'
+      } else {
+        // If data is not found or response is unexpected, treat as not found
+        console.error("Vendor details not found or unexpected response:", response);
+        notFound();
       }
-      return null;
-    } catch (err) {
-      console.error("[Vendor Page] Failed to fetch vendor user ID:", err);
-      return null;
+    } catch (err: any) {
+      console.error("[Vendor Page] Failed to fetch vendor details:", err);
+      if (err.response && err.response.status === 404) {
+        // If vendor brand is not found, show 404 page
+        notFound();
+      } else {
+        setError("Failed to load vendor details. Please try again later.");
+      }
+    } finally {
+      setLoadingVendor(false);
     }
   }, []);
 
-  // Fetch products for the specific vendor
-  const fetchProductsData = useCallback(async (
-    userId: number,
-    page: number,
-    minPriceFilter: number | '',
-    maxPriceFilter: number | '',
-    manufacturerFilter: string | null,
-    ratingFilter: number | null,
-    sortByFilter: string
-  ) => {
-    setIsLoading(true);
-    setNoProductsFoundMessage(null);
-    setProducts([]);
-    setTotalProducts(0);
-    setTotalPages(1);
+  // Fetch products for the specific vendor once vendorUserId is available
+  const fetchProductsData = useCallback(
+    async (
+      userId: number,
+      page: number,
+      minPrice: number | '',
+      maxPrice: number | '',
+      manufacturers: string[],
+      categories: string[],
+      subcategories: string[],
+      types: string[],
+      rating: number | null,
+      sort: string
+    ) => {
+      setLoadingProducts(true);
+      setError(null);
+      try {
+        const queryParams: Record<string, any> = {
+          page: page,
+          user: userId, // Filter by the vendor's user ID
+        };
 
-    try {
-      const queryParams = new URLSearchParams();
-      queryParams.append("user", userId.toString()); // Filter by user ID
-      queryParams.append("page", page.toString());
-
-      if (minPriceFilter !== '') {
-        queryParams.append("min_price", minPriceFilter.toString());
-      }
-      if (maxPriceFilter !== '') {
-        queryParams.append("max_price", maxPriceFilter.toString());
-      }
-      if (manufacturerFilter) {
-        queryParams.append("manufacturer", manufacturerFilter);
-      }
-      if (ratingFilter !== null) {
-        queryParams.append("min_average_rating", ratingFilter.toString());
-      }
-      if (sortByFilter && sortByFilter !== 'relevance') {
-        let sortParam = '';
-        if (sortByFilter === 'price_asc') {
-          sortParam = 'price';
-        } else if (sortByFilter === 'price_desc') {
-          sortParam = '-price';
-        } else if (sortByFilter === 'newest') {
-          sortParam = '-created_at';
+        if (minPrice !== '') queryParams.min_price = minPrice;
+        if (maxPrice !== '') queryParams.max_price = maxPrice;
+        if (manufacturers.length > 0) queryParams.manufacturer = manufacturers.join(',');
+        if (categories.length > 0) queryParams.category = categories.join(',');
+        if (subcategories.length > 0) queryParams.subcategory = subcategories.join(',');
+        if (types.length > 0) queryParams.type = types.join(',');
+        if (rating !== null) queryParams.average_rating__gte = rating; // Assuming average_rating__gte filter
+        if (sort) {
+          switch (sort) {
+            case 'price_asc':
+              queryParams.ordering = 'price';
+              break;
+            case 'price_desc':
+              queryParams.ordering = '-price';
+              break;
+            case 'rating_desc':
+              queryParams.ordering = '-average_rating';
+              break;
+            case 'newest':
+              queryParams.ordering = '-created_at';
+              break;
+            // 'relevance' is default or handled by backend if no ordering
+            default:
+              break;
+          }
         }
-        if (sortParam) {
-          queryParams.append("ordering", sortParam);
+
+        const response = await api.get('/products/', { params: queryParams });
+        if (response.status === 200) {
+          setProducts(response.data.results);
+          setTotalProducts(response.data.count);
         }
+      } catch (err) {
+        console.error("[Vendor Products Page] Failed to fetch products:", err);
+        setError("Failed to load products. Please try again later.");
+      } finally {
+        setLoadingProducts(false);
       }
+    },
+    []
+  );
 
-      const response = await api.get<ApiResponse<ApiProduct>>(
-        `/products/?${queryParams.toString()}`
-      );
-
-      if (response.data.results.length === 0) {
-        setNoProductsFoundMessage(`No products found for ${formattedVendorName} with the selected filters.`);
-      }
-
-      const transformedProducts: Product[] = response.data.results.map((p: ApiProduct) => ({
-        id: p.id.toString(),
-        image: p.images.length > 0 ? p.images[0].image : "/placeholder-product.jpg",
-        title: p.name,
-        subtitle: p.description,
-        price: parseFloat(p.price),
-        currency: "₹",
-        category_name: p.category_name,
-        subcategory_name: p.subcategory_name,
-        direct_sale: p.direct_sale,
-        is_active: p.is_active,
-        hide_price: p.hide_price,
-        stock_quantity: p.stock_quantity,
-        manufacturer: p.manufacturer,
-        average_rating: p.average_rating,
-      }));
-
-      setProducts(transformedProducts);
-      setTotalProducts(response.data.count);
-      setTotalPages(Math.ceil(response.data.count / 10)); // Assuming 10 items per page
-      console.log(`[Vendor Page] Products for vendor "${formattedVendorName}" fetched successfully.`);
-    } catch (err: unknown) {
-      console.error(`[Vendor Page] Failed to fetch products for vendor "${formattedVendorName}":`, err);
-      setErrorMessage(`Failed to load vendor products. An API error occurred.`);
-      setProducts([]);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [formattedVendorName]);
-
-  // Effect to load vendor and then products
+  // Effect to fetch vendor details when the brand name changes
   useEffect(() => {
-    const loadVendorAndProducts = async () => {
-      setIsLoading(true);
-      const userId = await fetchVendorUserId(formattedVendorName); // Use formatted name as brand
-      if (userId) {
-        setVendorUserId(userId);
-        setIsVendorValid(true);
-        await fetchProductsData(
-          userId,
-          currentPage,
-          minPrice,
-          maxPrice,
-          selectedManufacturer,
-          selectedRating,
-          sortBy
-        );
-      } else {
-        setIsLoading(false);
-        setIsVendorValid(false);
-        notFound(); // Trigger Next.js 404
+    if (params.vendor) {
+      fetchVendorDetails(params.vendor);
+    }
+  }, [params.vendor, fetchVendorDetails]);
+
+  // Effect to fetch products when vendorUserId or filters change
+  useEffect(() => {
+    if (vendorUserId !== null && initialized) { // Ensure vendorUserId is set and filters are initialized
+      const currentUrl = new URL(window.location.href);
+      let changed = false;
+
+      // Update URL for filters
+      const updateSearchParam = (key: string, value: string | number | null | string[]) => {
+        const currentParam = currentUrl.searchParams.get(key);
+        const newValue = Array.isArray(value) ? value.join(',') : value !== null ? String(value) : null;
+
+        if (newValue && newValue !== currentParam) {
+          currentUrl.searchParams.set(key, newValue);
+          changed = true;
+        } else if (!newValue && currentParam) {
+          currentUrl.searchParams.delete(key);
+          changed = true;
+        }
+      };
+
+      updateSearchParam('page', currentPage > 1 ? currentPage : null);
+      updateSearchParam('min_price', minPriceFilter !== '' ? minPriceFilter : null);
+      updateSearchParam('max_price', maxPriceFilter !== '' ? maxPriceFilter : null);
+      updateSearchParam('manufacturer', manufacturerFilter.length > 0 ? manufacturerFilter : null);
+      updateSearchParam('category', selectedCategory.length > 0 ? selectedCategory : null);
+      updateSearchParam('subcategory', selectedSubcategory.length > 0 ? selectedSubcategory : null);
+      updateSearchParam('type', selectedType.length > 0 ? selectedType : null);
+      updateSearchParam('rating', selectedRating);
+      updateSearchParam('sort_by', sortBy !== 'relevance' ? sortBy : null);
+
+      if (changed) {
+        router.push(currentUrl.toString(), { scroll: false });
       }
-    };
-    loadVendorAndProducts();
+
+      fetchProductsData(
+        vendorUserId,
+        currentPage,
+        minPriceFilter,
+        maxPriceFilter,
+        manufacturerFilter,
+        selectedCategory,
+        selectedSubcategory,
+        selectedType,
+        selectedRating,
+        sortBy
+      );
+    }
   }, [
-    vendorSlug,
-    formattedVendorName,
-    fetchVendorUserId,
-    fetchProductsData,
+    vendorUserId, // New dependency: fetch products only after vendorUserId is resolved
     currentPage,
-    minPrice,
-    maxPrice,
-    selectedManufacturer,
+    minPriceFilter,
+    maxPriceFilter,
+    manufacturerFilter,
+    selectedCategory,
+    selectedSubcategory,
+    selectedType,
     selectedRating,
     sortBy,
-  ]);
-
-  // Handle filter changes (similar to CategoryOrTypePage but without path change for category/type/subcategory)
-  const handleFilterChange = useCallback((
-    filterValue: string | number,
-    filterType: "category" | "subcategory" | "type" | "price_range" | "manufacturer" | "rating" | "sort_by",
-    newValue?: string | number | { min: number | ""; max: number | ""; } | null
-  ) => {
-    const currentPath = `/vendor-listing/${vendorSlug}`;
-    const newSearchParams = new URLSearchParams(searchParams.toString());
-
-    if (filterType === "price_range") {
-      if (typeof newValue === 'object' && newValue !== null && 'min' in newValue && 'max' in newValue) {
-        const { min, max } = newValue as { min: number | '', max: number | '' };
-        min === '' ? newSearchParams.delete('min_price') : newSearchParams.set('min_price', String(min));
-        max === '' ? newSearchParams.delete('max_price') : newSearchParams.set('max_price', String(max));
-        setMinPrice(min);
-        setMaxPrice(max);
-      }
-    } else if (filterType === "manufacturer") {
-      newValue ? newSearchParams.set('manufacturer', String(newValue)) : newSearchParams.delete('manufacturer');
-      setSelectedManufacturer(newValue ? String(newValue) : null);
-    } else if (filterType === "rating") {
-      newValue ? newSearchParams.set('min_average_rating', String(newValue)) : newSearchParams.delete('min_average_rating');
-      setSelectedRating(newValue ? Number(newValue) : null);
-    } else if (filterType === "sort_by") {
-        if (typeof filterValue === 'string') {
-          filterValue === 'relevance' ? newSearchParams.delete('sort_by') : newSearchParams.set('sort_by', filterValue);
-          setSortBy(filterValue);
-        }
-    } else if (filterType === "category" || filterType === "subcategory" || filterType === "type") {
-      // For vendor pages, these filters should apply as query params, not change the base URL path
-      const formattedFilter = String(filterValue).toLowerCase().replace(/\s+/g, '-');
-      if (filterType === "category") {
-          newSearchParams.set('category_name', formattedFilter);
-          newSearchParams.delete('subcategory_name'); // Clear subcategory if category changes
-      } else if (filterType === "subcategory") {
-          newSearchParams.set('subcategory_name', formattedFilter);
-      } else if (filterType === "type") {
-          newSearchParams.set('type', formattedFilter);
-      }
-      // Update selected filters for highlighting in SideFilter
-      setSelectedFilters(prev => {
-        const newSet = new Set(prev);
-        // Remove references to selectedCategoryName and selectedSubcategoryName
-        if (filterType === "category") {
-          Array.from(newSet).forEach(f => {
-            // Just remove all category/subcategory filters if needed
-            newSet.delete(f);
-          });
-          newSet.add(String(filterValue));
-        } else if (filterType === "subcategory") {
-          newSet.add(String(filterValue));
-        } else if (filterType === "type") {
-          Array.from(newSet).forEach(f => {
-            if (PRODUCT_TYPE_CHOICES.map(t => t.toLowerCase()).includes(f.toLowerCase())) {
-              newSet.delete(f);
-            }
-          });
-          newSet.add(String(filterValue));
-        }
-        return newSet;
-      });
-    }
-
-    newSearchParams.set('page', '1');
-    setCurrentPage(1);
-
-    router.push(`${currentPath}?${newSearchParams.toString()}`);
-  }, [
-    vendorSlug,
-    searchParams,
-    setSelectedFilters,
+    fetchProductsData,
     router,
+    initialized, // Ensure filters are initialized before fetching
   ]);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
-    const currentUrl = new URL(window.location.href);
-    currentUrl.searchParams.set('page', page.toString());
-    router.push(currentUrl.toString());
   };
 
-  const handleSortChange = (value: string) => {
-    setSortBy(value);
-    setCurrentPage(1);
-    const currentUrl = new URL(window.location.href);
-    value === 'relevance' ? currentUrl.searchParams.delete('sort_by') : currentUrl.searchParams.set('sort_by', value);
-    currentUrl.searchParams.set('page', '1');
-    router.push(currentUrl.toString());
-  };
+  const handleFilterChange = useCallback(
+    (
+      filterValue: string | number | string[],
+      filterType: "category" | "subcategory" | "type" | "price_range" | "manufacturer" | "rating" | "sort_by",
+      newValue?: number | string | { min: number | '', max: number | '' } // Added to handle price range specifically
+    ) => {
+      setCurrentPage(1); // Reset to first page on any filter change
 
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center min-h-[calc(100vh-100px)]">
-        <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-green-500"></div>
-        <p className="ml-4 text-gray-600">Loading vendor products...</p>
-      </div>
-    );
-  }
-
-  if (!isVendorValid) {
-    notFound(); // Trigger Next.js 404
-  }
-
-  const breadcrumbItems = [
-    { label: "Home", href: "/" },
-    { label: "Vendors", href: "/vendors" },
-    { label: vendorData?.company_name || formattedVendorName, href: `/vendor-listing/${vendorSlug}` },
-  ];
-
-  // Map ApiVendor to VendorData for VendorBanner
-  const vendorBannerData = vendorData
-    ? {
-        ...vendorData,
-        logo: "/placeholder-logo.png", // Replace with actual logo if available
-        banner: "/placeholder-banner.jpg", // Replace with actual banner if available
-        productCount: totalProducts,
-        description: vendorData.company_name, // Replace with actual description if available
+      switch (filterType) {
+        case "category":
+          setSelectedCategory(Array.isArray(filterValue) ? filterValue : [String(filterValue)]);
+          break;
+        case "subcategory":
+          setSelectedSubcategory(Array.isArray(filterValue) ? filterValue : [String(filterValue)]);
+          break;
+        case "type":
+          setSelectedType(Array.isArray(filterValue) ? filterValue : [String(filterValue)]);
+          break;
+        case "price_range":
+            if (newValue && typeof newValue === 'object' && 'min' in newValue && 'max' in newValue) {
+                setMinPriceFilter(newValue.min);
+                setMaxPriceFilter(newValue.max);
+            }
+          break;
+        case "manufacturer":
+          setManufacturerFilter(Array.isArray(filterValue) ? filterValue : [String(filterValue)]);
+          break;
+        case "rating":
+          setSelectedRating(typeof filterValue === 'number' ? filterValue : null);
+          break;
+        case "sort_by":
+          setSortBy(String(filterValue));
+          break;
+        default:
+          break;
       }
-    : undefined;
+    },
+    []
+  );
+
+  const mappedProducts: Product[] = products.map((product) => ({
+    id: String(product.id),
+    image: product.images[0]?.image || '/images/default_product_image.jpg', // Use a default image if none available
+    title: product.name,
+    subtitle: product.description, // You might want a shorter 'subtitle' field from your product model
+    price: parseFloat(product.price),
+    currency: '₹', // Assuming Indian Rupee. Adjust as needed.
+    direct_sale: product.direct_sale,
+    category_name: product.category_name,
+    subcategory_name: product.subcategory_name,
+    is_active: product.is_active,
+    hide_price: product.hide_price,
+    stock_quantity: product.stock_quantity,
+    manufacturer: product.manufacturer,
+    average_rating: product.average_rating,
+  }));
+
+  if (loadingVendor) {
+    return <div className="flex justify-center items-center h-screen">Loading vendor details...</div>;
+  }
+
+  // If vendorData is null here, it means notFound() was called in fetchVendorDetails
+  // No need for explicit check here as notFound() takes care of it.
 
   return (
-    <>
-      <Breadcrumb items={breadcrumbItems} />
-      {vendorBannerData && <VendorBanner data={vendorBannerData} />}
-      <ProductListing
-        products={products}
-        title={vendorData?.company_name ? `${vendorData.company_name} Products` : `${formattedVendorName} Products`}
-        totalCount={totalProducts}
-        onFilterChange={handleFilterChange}
-        selectedFilters={selectedFilters}
-        selectedCategoryName={null} // Category/Subcategory are handled via query params, not primary route here
-        selectedSubcategoryName={null}
-        selectedTypeName={null}
-        currentPage={currentPage}
-        totalPages={totalPages}
-        onPageChange={handlePageChange}
-        noProductsMessage={noProductsFoundMessage}
-        minPrice={minPrice}
-        maxPrice={maxPrice}
-        selectedManufacturer={selectedManufacturer}
-        selectedRating={selectedRating}
-        sortBy={sortBy}
-        onSortChange={handleSortChange}
-      />
-    </>
+    <div className="min-h-screen bg-gray-50">
+      <div className="container mx-auto px-4 py-8">
+        <Breadcrumb
+          items={[
+            { name: "Home", href: "/" },
+            { name: "Vendors", href: "/vendor-listing" },
+            { name: vendorData?.company_name || "Vendor", href: "#" },
+          ]}
+        />
+        {vendorData && (
+          <VendorBanner
+            vendor={{
+              company_name: vendorData.company_name,
+              brand: vendorData.brand,
+              description: vendorData.user.description || 'No description available.',
+              profile_photo: vendorData.user.profile_photo || '/images/default_profile.png',
+              // Add other necessary fields from vendorData for the banner
+            }}
+          />
+        )}
+
+        <ProductListing
+          products={mappedProducts}
+          title={vendorData ? `Products by ${vendorData.company_name}` : "Products"}
+          totalCount={totalProducts}
+          onFilterChange={handleFilterChange}
+          currentPage={currentPage}
+          pageSize={10} // Assuming your API returns 10 items per page
+          onPageChange={handlePageChange}
+          loading={loadingProducts}
+          error={error}
+          // Pass current filter values to SideFilter for display
+          currentFilters={{
+            minPrice: minPriceFilter,
+            maxPrice: maxPriceFilter,
+            manufacturers: manufacturerFilter,
+            categories: selectedCategory,
+            subcategories: selectedSubcategory,
+            types: selectedType,
+            rating: selectedRating,
+            sortBy: sortBy,
+          }}
+          // You might need to pass available filter options (categories, manufacturers etc.)
+          // This typically comes from a separate API call or a global context
+          availableFilterOptions={{
+            categories: [], // Populate this from your backend API for categories
+            subcategories: [], // Populate this from your backend API for subcategories
+            types: PRODUCT_TYPE_CHOICES, // From your choices
+            manufacturers: [], // Populate this from your backend API or product data
+          }}
+        />
+      </div>
+    </div>
   );
 }
