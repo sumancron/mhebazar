@@ -35,20 +35,6 @@ import ReviewSection from "./Reviews"; // Import ReviewSection
 
 import DOMPurify from 'dompurify';
 
-// Helper function for SEO-friendly slug
-const slugify = (text: string): string => {
-  return text
-    .toString()
-    .toLowerCase()
-    .trim()
-    .replace(/\s+/g, '-')       // Replace spaces with -
-    .replace(/[^\w-]+/g, '')     // Remove all non-word chars
-    .replace(/--+/g, '-')        // Replace multiple - with single -
-    .replace(/^-+/, '')          // Trim - from start of text
-    .replace(/-+$/, '');         // Trim - from end of text
-};
-
-
 type ProductImage = {
   id: number;
   image: string;
@@ -119,6 +105,42 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
   const [currentCartQuantity, setCurrentCartQuantity] = useState(0);
   const [cartItemId, setCartItemId] = useState<number | null>(null);
   // const [isReviewFormOpen, setIsReviewFormOpen] = useState(false);
+
+  // Helper function for SEO-friendly slug
+  const slugify = (text: string): string => {
+    return text
+      .toString()
+      .toLowerCase()
+      .trim()
+      .replace(/\s+/g, '-')       // Replace spaces with -
+      .replace(/[^\w-]+/g, '')     // Remove all non-word chars
+      .replace(/--+/g, '-')        // Replace multiple - with single -
+      .replace(/^-+/, '')          // Trim - from start of text
+      .replace(/-+$/, '');         // Trim - from end of text
+  };
+
+  const formatKey = (key) => {
+    return key
+      .replace(/([A-Z])/g, ' $1')
+      .replace(/_/g, ' ')
+      .replace(/\b\w/g, l => l.toUpperCase())
+      .trim();
+  };
+
+  // Filter out null, undefined, and empty string values
+  const getValidSpecs = (specs) => {
+    if (!specs) return [];
+
+    return Object.entries(specs).filter(([key, value]) =>
+      value !== null &&
+      value !== undefined &&
+      value !== '' &&
+      String(value).trim() !== ''
+    );
+  };
+
+  const validSpecs = getValidSpecs(data.product_details);
+
 
   // Function to trigger review section refresh
   const reviewsRefresher = useRef<(() => void) | null>(null);
@@ -518,9 +540,8 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
               <button
                 key={img.id}
                 onClick={() => setSelectedImage(index)}
-                className={`w-16 h-16 rounded border-2 overflow-hidden ${
-                  selectedImage === index ? "border-orange-500" : "border-gray-200"
-                } hover:border-orange-300 transition-colors`}
+                className={`w-16 h-16 rounded border-2 overflow-hidden ${selectedImage === index ? "border-orange-500" : "border-gray-200"
+                  } hover:border-orange-300 transition-colors`}
               >
                 <Image
                   src={img.image}
@@ -678,7 +699,7 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
                       </button>
                     </DialogTrigger>
                     <DialogContent className="w-full max-w-2xl">
-                        <QuoteForm product={data} />
+                      <QuoteForm product={data} />
                     </DialogContent>
                   </Dialog>
                 )}
@@ -742,24 +763,66 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
         </div>
         {/* Specification */}
         <div className="border rounded-lg mb-4 overflow-hidden">
-          <button
-            className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 hover:bg-gray-100 transition"
-            onClick={() => setOpenAccordion(openAccordion === "spec" ? null : "spec")}
-          >
-            <span className="font-semibold">Specification</span>
-            <ChevronDown className={`w-5 h-5 transition-transform ${openAccordion === "spec" ? "rotate-180" : ""}`} />
-          </button>
-          {openAccordion === "spec" && (
-            <div className="px-4 py-3 text-gray-700 text-sm whitespace-pre-line">
-              {data.product_details ? (
-                Object.entries(data.product_details).map(([key, value]) => (
-                  <p key={key}><strong>{key}:</strong> {String(value)}</p>
-                ))
-              ) : (
-                <p>No specifications available.</p>
-              )}
-            </div>
-          )}
+            <button
+              className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 hover:bg-gray-100 transition"
+              onClick={() => setOpenAccordion(openAccordion === "spec" ? null : "spec")}
+            >
+            <span className="font-semibold">Product Specifications</span>
+              <ChevronDown
+                className={`w-5 h-5 transition-transform duration-200 text-gray-600 ${openAccordion === "spec" ? "rotate-180" : ""
+                  }`}
+              />
+            </button>
+
+            {openAccordion === "spec" && (
+              <div className="p-0">
+                {validSpecs.length > 0 ? (
+                  <div className="overflow-hidden">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="bg-gray-50 border-b border-gray-200">
+                          <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                            Specification
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                            Details
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-100">
+                        {validSpecs.map(([key, value], index) => (
+                          <tr
+                            key={key}
+                            className={`hover:bg-gray-50 transition-colors duration-150 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-25'
+                              }`}
+                          >
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <span className="text-sm font-medium text-gray-700">
+                                {formatKey(key)}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4">
+                              <span className="text-sm text-gray-900 font-medium">
+                                {String(value)}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div className="text-center py-12 px-6">
+                    <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+                      <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                    </div>
+                    <p className="text-gray-500 text-sm">No specifications available at this time.</p>
+                  </div>
+                )}
+              </div>
+            )}
         </div>
         {/* Vendor */}
         <div className="border rounded-lg mb-4 overflow-hidden">
