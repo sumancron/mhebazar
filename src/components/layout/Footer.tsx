@@ -1,3 +1,4 @@
+// Footer.tsx
 "use client";
 
 import {
@@ -11,6 +12,7 @@ import Image from "next/image";
 import Link from "next/link";
 import api from "@/lib/api";
 import { useEffect, useState } from "react";
+import { toast } from "sonner"; // Import toast for notifications
 
 export interface Category {
   id: number;
@@ -20,6 +22,8 @@ export interface Category {
 
 export default function Footer() {
   const [categories, setCategories] = useState<Category[]>([]);
+  const [email, setEmail] = useState<string>(''); // State for newsletter email
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false); // State for submission status
 
   const createSlug = (name: string) => name.toLowerCase().replace(/\s+/g, "-");
 
@@ -41,6 +45,35 @@ export default function Footer() {
     fetchData();
   }, []); // Empty dependency array ensures this runs only once when the component mounts
 
+  const handleNewsletterSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email) {
+      toast.error("Please enter your email address.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const response = await api.post('/newsletter-subscriptions/', { email });
+      console.log('Newsletter subscription successful:', response.data);
+      toast.success("Thank you for subscribing to our newsletter!");
+      setEmail(''); // Clear input on success
+    } catch (error: any) {
+      console.error('Error subscribing to newsletter:', error);
+      if (error.response && error.response.data && error.response.data.detail) {
+        toast.error(error.response.data.detail); // Display backend error message
+      } else if (error.response && error.response.data && error.response.data.email) {
+        toast.error(`Email: ${error.response.data.email.join(', ')}`); // Handle email specific errors
+      }
+      else {
+        toast.error("Failed to subscribe. Please try again.");
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+
   const midpoint = Math.ceil(categories.length / 2);
   const firstColumn = categories.slice(0, midpoint);
   const secondColumn = categories.slice(midpoint);
@@ -59,17 +92,21 @@ export default function Footer() {
               Get E-mail updates about our latest shop and special offers.
             </p>
           </div>
-          <form className="flex flex-col sm:flex-row items-center gap-3 md:gap-0 md:items-stretch justify-center md:justify-end w-full md:w-auto">
+          <form onSubmit={handleNewsletterSubmit} className="flex flex-col sm:flex-row items-center gap-3 md:gap-0 md:items-stretch justify-center md:justify-end w-full md:w-auto">
             <input
               type="email"
               placeholder="Enter email address"
               className="px-4 py-2 rounded md:rounded-l md:rounded-r-none w-full sm:w-72 text-black bg-white outline-none"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
             />
             <button
               type="submit"
-              className="bg-yellow-400 text-black px-6 py-2 rounded md:rounded-r md:rounded-l-none font-semibold transition hover:bg-yellow-300 w-full sm:w-auto"
+              className="bg-yellow-400 text-black px-6 py-2 rounded md:rounded-r md:rounded-l-none font-semibold transition hover:bg-yellow-300 w-full sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={isSubmitting}
             >
-              Submit
+              {isSubmitting ? 'Subscribing...' : 'Submit'}
             </button>
           </form>
         </div>

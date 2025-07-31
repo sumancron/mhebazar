@@ -4,7 +4,7 @@ import AboutStats from "@/components/about/AboutStats";
 import Image from "next/image";
 import LeadershipTeam from "@/components/about/LeadershipTeam";
 import GlobalMapStats from "@/components/about/MapStats";
-import SubscriptionPlans from "@/components/elements/SubscriptionPlans";
+// import SubscriptionPlans from "@/components/elements/SubscriptionPlans";
 import VendorRegistrationCard from "@/components/elements/VendorRegistrationCard";
 
 
@@ -154,7 +154,7 @@ const AboutPage = () => {
         <GlobalMapStats />
 
         {/* Subscription Plan div */}
-        <SubscriptionPlans />
+        {/* <SubscriptionPlans /> */}
 
         {/* Vendor Registration Card div */}
         <VendorRegistrationCard />
