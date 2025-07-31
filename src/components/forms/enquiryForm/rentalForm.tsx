@@ -7,9 +7,12 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import Image from "next/image"
 import { toast } from "sonner"
-import api from "@/lib/api" // Assuming you have your configured API instance
+import api from "@/lib/api"
 import { useUser } from "@/context/UserContext"
 import { Loader2 } from "lucide-react"
+import { Textarea } from "@/components/ui/textarea"
+import { Card, CardContent } from "@/components/ui/card"
+import DOMPurify from 'dompurify'
 
 interface RentalFormProps {
   productId: number
@@ -18,17 +21,20 @@ interface RentalFormProps {
     title: string
     description: string
     price: string | number
-    stock_quantity?: number; // Added stock_quantity for consistency
+    stock_quantity?: number
   }
-  onClose?: () => void // Optional callback to close the dialog
+  onClose?: () => void
 }
 
 export default function RentalForm({ productId, productDetails, onClose }: RentalFormProps): JSX.Element {
+  // --- Original state and functionality are preserved ---
   const { user } = useUser()
   const [startDate, setStartDate] = useState("")
   const [endDate, setEndDate] = useState("")
   const [notes, setNotes] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [success, setSuccess] = useState(false) // State for inline success message
+  const today = new Date().toISOString().split("T")[0]
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
@@ -62,11 +68,15 @@ export default function RentalForm({ productId, productDetails, onClose }: Renta
 
       if (response.status === 201) {
         toast.success("Rental request submitted successfully! We will get back to you soon.")
-        // Clear form fields
+        setSuccess(true) // Trigger inline success message
         setStartDate("")
         setEndDate("")
         setNotes("")
-        onClose?.() // Close the dialog if callback is provided
+        // Reset success message and close modal after a delay
+        setTimeout(() => {
+          setSuccess(false)
+          onClose?.()
+        }, 3000)
       }
     } catch (error: unknown) {
       console.error("Error submitting rental form:", error)
@@ -77,89 +87,136 @@ export default function RentalForm({ productId, productDetails, onClose }: Renta
         toast.error("An unexpected error occurred. Please try again.")
       }
     } finally {
-      setIsSubmitting(false)
+      // Delay setting isSubmitting to false to allow success message to show
+      if (!(success)) {
+        setIsSubmitting(false);
+      }
     }
   }
 
+  // --- New JSX using the design from QuoteForm ---
   return (
-    <div className="h-auto max-h-[90vh] overflow-y-auto custom-scrollbar w-full p-4 sm:p-6 lg:p-8 bg-gray-50 rounded-lg shadow-inner">
-      <div className="flex flex-col w-full items-start gap-6 p-0 relative bg-white rounded-lg shadow-md">
-        <div className="flex flex-col items-start gap-6 self-stretch w-full p-6">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-8 self-stretch w-full border-b pb-6 mb-6">
-            <Image
-              src={productDetails.image || "/no-product.png"}
-              alt={productDetails.title}
-              width={150}
-              height={120}
-              className="relative object-contain rounded-md shadow-sm transition-transform duration-300 hover:scale-105"
-            />
-            <div className="flex-col items-start gap-2 pt-0 sm:pt-4 pb-0 px-0 flex-1 flex">
-              <h2 className="self-stretch font-bold text-gray-900 text-xl sm:text-2xl tracking-[0] leading-[normal]">
-                {productDetails.title}
-              </h2>
-              {productDetails.description && (
-                <p className="self-stretch font-normal text-gray-700 text-sm sm:text-base tracking-[0] leading-6">
-                  {productDetails.description}
+    <div className="max-h-[90vh] overflow-auto custom-scrollbar">
+      <div className="w-full mx-auto">
+        <Card className="border-none shadow-none">
+          <CardContent className="p-4 sm:p-6 lg:p-8 bg-white">
+            {/* Success Message */}
+            {success && (
+              <div className="mb-6 p-4 bg-[#5ca131]/10 border-2 border-[#5ca131] rounded-lg">
+                <p className="text-[#5ca131] font-semibold">
+                  ✓ Request submitted successfully! We&apos;ll get back to you soon.
                 </p>
-              )}
-              {productDetails.price !== "0.00" && (
-                <p className="self-stretch font-semibold text-green-600 text-base tracking-[0] leading-6">
-                  Price: ₹{typeof productDetails.price === "number" ? productDetails.price.toLocaleString("en-IN") : productDetails.price}
-                </p>
-              )}
-               {productDetails.stock_quantity !== undefined && (
-                <p className="self-stretch font-normal text-gray-700 text-sm sm:text-base tracking-[0] leading-6">
-                  <span className="font-medium">Qty:</span> {productDetails.stock_quantity}
-                </p>
-              )}
+              </div>
+            )}
+
+            {/* Product Information */}
+            <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 mb-8">
+              <div className="w-full lg:w-1/2 xl:w-2/5">
+                <div className="relative w-full h-48 sm:h-64 lg:h-72 rounded-lg shadow-sm overflow-hidden">
+                  <Image
+                    src={productDetails.image || "/no-product.png"}
+                    alt={productDetails.title}
+                    fill
+                    className="object-contain"
+                  />
+                </div>
+              </div>
+
+              <div className="flex-1 space-y-3">
+                <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 leading-tight">
+                  {productDetails.title}
+                </h2>
+
+                <div className="space-y-2 text-sm sm:text-base text-gray-600">
+                  <p>
+                    <span className="font-medium">In Stock:</span> {productDetails.stock_quantity ?? 'N/A'}
+                  </p>
+                  {productDetails.price !== "0.00" && (
+                    <p className="text-lg font-semibold text-green-600">
+                      ₹{typeof productDetails.price === "number" ? productDetails.price.toLocaleString("en-IN") : productDetails.price}
+                      <span className="text-sm font-normal text-gray-500"> / day</span>
+                    </p>
+                  )}
+                </div>
+              </div>
             </div>
-          </div>
 
-          <div className="flex flex-col items-start gap-4 self-stretch w-full">
-            <h3 className="self-stretch font-bold text-gray-900 text-xl text-center w-full tracking-[0] leading-[normal] mt-4">
-              Request a Rental
-            </h3>
+            {/* Product Description */}
+            <div className="mb-8 prose prose-sm sm:prose-base max-w-none text-gray-600 leading-relaxed">
+              <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(productDetails.description || "No description available.") }} />
+            </div>
 
-            <form onSubmit={handleSubmit} className="flex flex-col gap-4 w-full">
-              <Input
-                type="date"
-                value={startDate}
-                onChange={e => setStartDate(e.target.value)}
-                required
-                className="h-[52px] text-sm text-gray-700 placeholder:text-gray-500 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 p-3 transition-all duration-200"
-                aria-label="Rental Start Date"
-              />
-              <Input
-                type="date"
-                value={endDate}
-                onChange={e => setEndDate(e.target.value)}
-                required
-                className="h-[52px] text-sm text-gray-700 placeholder:text-gray-500 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 p-3 transition-all duration-200"
-                aria-label="Rental End Date"
-              />
-              <Input
-                placeholder="Notes (optional)"
-                value={notes}
-                onChange={e => setNotes(e.target.value)}
-                className="h-[52px] text-sm text-gray-700 placeholder:text-gray-500 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 p-3 transition-all duration-200"
-                aria-label="Rental Notes"
-              />
-              <Button
-                type="submit"
-                className="w-full h-auto items-center justify-center gap-3 p-4 bg-[#5CA131] rounded-md hover:bg-green-700 text-white font-bold text-base transition-all duration-300 ease-in-out shadow-md hover:shadow-lg"
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="h-5 w-5 animate-spin" />
-                    Submitting...
-                  </>
-                ) : "Submit Rental Request"}
-              </Button>
-            </form>
-          </div>
-        </div>
+            {/* Quote Form - using original fields and functionality */}
+            <div className="space-y-6">
+              <h3 className="text-xl sm:text-2xl font-bold text-gray-900 text-center">
+                Request This Item
+              </h3>
+
+              <form onSubmit={handleSubmit} className="space-y-4">
+                {/* Date Inputs */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label htmlFor="start-date" className="block text-xs font-medium text-gray-600 mb-1">Start Date *</label>
+                    <Input
+                      id="start-date"
+                      name="startDate"
+                      type="date"
+                      value={startDate}
+                      onChange={(e) => setStartDate(e.target.value)}
+                      required
+                      min={today}
+                      className="h-12 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="end-date" className="block text-xs font-medium text-gray-600 mb-1">End Date *</label>
+                    <Input
+                      id="end-date"
+                      name="endDate"
+                      type="date"
+                      value={endDate}
+                      onChange={(e) => setEndDate(e.target.value)}
+                      required
+                      min={startDate || today}
+                      disabled={!startDate}
+                      className="h-12 text-sm"
+                    />
+                  </div>
+                </div>
+
+                {/* Message */}
+                <div>
+                  <label htmlFor="notes" className="block text-xs font-medium text-gray-600 mb-1">Notes</label>
+                  <Textarea
+                    id="notes"
+                    name="notes"
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    className="min-h-[80px] text-sm resize-none"
+                    placeholder="Message (optional)"
+                  />
+                </div>
+
+                {/* Submit Button */}
+                <Button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full h-12 bg-[#5ca131] hover:bg-[#459426] disabled:bg-gray-400 text-white font-bold text-sm transition-colors duration-200"
+                >
+                  {isSubmitting ? (
+                    <div className="flex items-center gap-2">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Submitting...
+                    </div>
+                  ) : (
+                    'Submit Rental Request'
+                  )}
+                </Button>
+              </form>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
-  )
-}
+  );
+};

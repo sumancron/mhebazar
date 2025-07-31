@@ -31,7 +31,7 @@ export default function Frame() {
     description: "",
   });
 
-  const [data, setData] = useState();
+  const [data, setData] = useState<any>();
   const [profilePhotoFile, setProfilePhotoFile] = useState<File | null>(null);
   const [profilePhotoPreview, setProfilePhotoPreview] = useState<string>("");
   const [bannerImages, setBannerImages] = useState<BannerImage[]>([]);
@@ -62,8 +62,7 @@ export default function Frame() {
           setProfilePhotoPreview(data.user_info.profile_photo);
         }
 
-        // Set existing banner images (assuming they come in the response)
-        console.log(user)
+        // Set existing banner images
         if (user?.user_banner && Array.isArray(user?.user_banner)) {
           setBannerImages(user?.user_banner.map((img: any) => ({
             id: img.id,
@@ -83,21 +82,15 @@ export default function Frame() {
   const handleProfilePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Validate file type
       if (!file.type.startsWith('image/')) {
-        alert('Please select an image file');
+        toast.error('Please select an image file');
         return;
       }
-
-      // Validate file size (5MB limit)
       if (file.size > 5 * 1024 * 1024) {
-        alert('File size should be less than 5MB');
+        toast.error('File size should be less than 5MB');
         return;
       }
-
       setProfilePhotoFile(file);
-
-      // Create preview
       const reader = new FileReader();
       reader.onload = (e) => {
         setProfilePhotoPreview(e.target?.result as string);
@@ -108,23 +101,19 @@ export default function Frame() {
 
   const handleBannerImagesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-
     if (files.length === 0) return;
-
-    // Validate files
     const validFiles = files.filter(file => {
       if (!file.type.startsWith('image/')) {
-        alert(`${file.name} is not an image file`);
+        toast.error(`${file.name} is not an image file`);
         return false;
       }
       if (file.size > 10 * 1024 * 1024) {
-        alert(`${file.name} is larger than 10MB`);
+        toast.error(`${file.name} is larger than 10MB`);
         return false;
       }
       return true;
     });
 
-    // Create preview URLs and add to banner images
     validFiles.forEach(file => {
       const reader = new FileReader();
       reader.onload = (e) => {
@@ -137,38 +126,32 @@ export default function Frame() {
       };
       reader.readAsDataURL(file);
     });
-
-    // Reset the input
     e.target.value = '';
   };
 
   const removeBannerImage = async (index: number) => {
     const bannerToRemove = bannerImages[index];
     if (!bannerToRemove.id) {
-      // Just remove locally if not uploaded yet
       setBannerImages(prev => prev.filter((_, i) => i !== index));
       return;
     }
-
     try {
       await api.delete(`/users/${userId}/delete_banner/${bannerToRemove.id}/`);
       setBannerImages(prev => prev.filter((_, i) => i !== index));
+      toast.success("Banner image removed.");
     } catch (error) {
       console.error("Failed to delete banner:", error);
+      toast.error("Failed to remove banner image.");
     }
   };
 
   const uploadProfilePhoto = async (): Promise<string | null> => {
     if (!profilePhotoFile) return null;
-
     const formData = new FormData();
     formData.append('profile_photo', profilePhotoFile);
-
     try {
       const response = await api.patch(`/users/${user?.id}/`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
+        headers: { 'Content-Type': 'multipart/form-data' },
       });
       return response.data.profile_photo || response.data.user_info?.profile_photo;
     } catch (error) {
@@ -179,27 +162,19 @@ export default function Frame() {
 
   const uploadBannerImages = async (userId: number) => {
     const newBanners = bannerImages.filter(banner => banner.isNew && banner.file);
-
     if (newBanners.length === 0) return bannerImages;
-
     try {
       const uploadPromises = newBanners.map(async (banner) => {
         if (!banner.file) return null;
-
         const formData = new FormData();
         formData.append('user_banner', banner.file);
-
-        const response = await api.patch(`/users/${userId}/upload_banner/`, formData
-         );
-
+        const response = await api.patch(`/users/${userId}/upload_banner/`, formData);
         return {
           index: bannerImages.findIndex(b => b === banner),
           data: response.data
         };
       });
-
       const results = await Promise.all(uploadPromises);
-
       const updated = [...bannerImages];
       results.forEach(result => {
         if (result && result.index !== -1) {
@@ -211,21 +186,16 @@ export default function Frame() {
           };
         }
       });
-      // Return it instead
       return updated;
-
     } catch (error) {
       console.error('Error uploading banners:', error);
       throw error;
     }
-
   };
 
   const handleSubmit = async () => {
     setIsUploading(true);
-
     try {
-      // First update basic profile data
       const payload = {
         username: formData.username,
         company_name: formData.companyName,
@@ -236,32 +206,20 @@ export default function Frame() {
         pcode: formData.pcode,
         description: formData.description,
       };
-
       await api.patch(`/vendor/${data?.id}/`, payload);
-
-      // Upload profile photo if changed
       if (profilePhotoFile) {
         await uploadProfilePhoto();
       }
-
-      // Upload new banner images
-      let finalBannerImages = bannerImages; // Start with current banners
+      let finalBannerImages = bannerImages;
       if (userId) {
-        // The function now returns the updated banner list
         finalBannerImages = await uploadBannerImages(userId);
       }
-
       setBannerImages(finalBannerImages);
-
       toast.success("Profile updated successfully!");
 
-      // Instead of reloading, refetch the data to update state
-      // This is better than window.location.reload()
       const response = await api.get(`/vendor/me/`);
       const updatedData = response.data;
       setData(updatedData);
-
-      // Update form data with fresh data
       setFormData({
         username: updatedData.user_info?.username || "",
         profilePhoto: updatedData.user_info?.profile_photo || "",
@@ -273,10 +231,9 @@ export default function Frame() {
         brand: updatedData.brand || "",
         description: updatedData.user_info?.description || "",
       });
-
     } catch (error) {
       console.error("Error updating profile:", error);
-      alert("Update failed. Please try again.");
+      toast.error("Update failed. Please try again.");
     } finally {
       setIsUploading(false);
     }
@@ -295,17 +252,17 @@ export default function Frame() {
   const API_BASE_URL = "http://localhost:8000/";
 
   return (
-    <div className="flex flex-col w-full max-w-7xl items-start gap-6 px-10 py-0">
-      <header className="flex items-center gap-[95px] relative self-stretch w-full">
+    <div className="flex flex-col w-full max-w-7xl mx-auto items-center gap-6 px-4 sm:px-6 lg:px-8 py-6">
+      <header className="w-full text-center lg:text-left">
         <h1 className="[font-family:'Inter-Bold',Helvetica] font-bold text-black text-2xl">
           My Profile
         </h1>
       </header>
 
-      <main className="flex w-full max-w-[1049px] items-start gap-16 pl-[60px] pr-4 py-0">
-        <section className="flex flex-col items-center gap-[7px]">
-          {/* Profile Photo Upload */}
-          <div className="relative w-[250px] h-[250px] overflow-hidden rounded-md bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center">
+      <main className="flex flex-col lg:flex-row w-full items-center lg:items-start gap-8 lg:gap-16">
+        {/* --- Profile Photo Section (Left Column on Desktop) --- */}
+        <section className="flex flex-col items-center gap-2 w-full lg:w-auto">
+          <div className="relative w-40 h-40 md:w-52 md:h-52 lg:w-[250px] lg:h-[250px] overflow-hidden rounded-md bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center">
             {profilePhotoPreview ? (
               <img
                 className="w-full h-full object-cover"
@@ -323,7 +280,6 @@ export default function Frame() {
               </div>
             )}
           </div>
-
           <label className="text-[#018cfc] text-[13px] [font-family:'Inter-Regular',Helvetica] underline cursor-pointer hover:text-blue-700">
             Upload Profile Photo
             <input
@@ -335,17 +291,12 @@ export default function Frame() {
           </label>
         </section>
 
-        <section className="flex flex-col items-start gap-8 flex-1">
+        {/* --- Form Section (Right Column on Desktop) --- */}
+        <section className="flex flex-col items-stretch gap-8 w-full lg:flex-1">
           <div className="flex flex-col items-start gap-6 w-full">
             {formFields.map((field) => (
-              <div
-                key={field.id}
-                className="flex flex-col items-start justify-center gap-2 w-full"
-              >
-                <label
-                  htmlFor={field.id}
-                  className="[font-family:'Inter-Regular',Helvetica] font-normal text-black text-base"
-                >
+              <div key={field.id} className="flex flex-col items-start justify-center gap-2 w-full">
+                <label htmlFor={field.id} className="[font-family:'Inter-Regular',Helvetica] font-normal text-black text-base">
                   {field.label}
                 </label>
                 <Input
@@ -356,12 +307,8 @@ export default function Frame() {
                 />
               </div>
             ))}
-
             <div className="flex flex-col items-start justify-center gap-2 w-full">
-              <label
-                htmlFor="description"
-                className="[font-family:'Inter-Regular',Helvetica] font-normal text-black text-base"
-              >
+              <label htmlFor="description" className="[font-family:'Inter-Regular',Helvetica] font-normal text-black text-base">
                 Description
               </label>
               <Textarea
@@ -372,15 +319,14 @@ export default function Frame() {
               />
             </div>
 
-            {/* Banner Images Section */}
+            {/* --- Banner Images Section --- */}
             <div className="flex flex-col items-start gap-4 w-full">
               <label className="[font-family:'Inter-Regular',Helvetica] font-normal text-black text-base">
                 Banner Images
               </label>
 
-              {/* Display existing banner images */}
               {bannerImages.length > 0 && (
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 w-full mb-4">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 w-full mb-4">
                   {bannerImages.map((banner, index) => (
                     <div key={index} className="relative group">
                       <img
@@ -405,14 +351,13 @@ export default function Frame() {
                 </div>
               )}
 
-              {/* Upload new banner images */}
               <Card className="w-full border-dashed border-[#cfcccc] hover:border-blue-300 transition-colors">
                 <CardContent className="flex flex-col h-[126px] items-center justify-center gap-3 p-4">
                   <label className="cursor-pointer flex flex-col items-center gap-3 w-full h-full justify-center">
                     <div className="relative w-[54px] h-[54px] flex items-center justify-center">
                       <Upload className="w-8 h-8 text-gray-400" />
                     </div>
-                    <span className="[font-family:'Inter-Regular',Helvetica] font-normal text-[#666869] text-[13px]">
+                    <span className="[font-family:'Inter-Regular',Helvetica] font-normal text-[#666869] text-[13px] text-center">
                       Upload Banner Images (Multiple files allowed)
                     </span>
                     <input
@@ -435,7 +380,7 @@ export default function Frame() {
           >
             <SaveIcon className="w-[18px] h-[18px]" />
             <span className="[font-family:'Inter-SemiBold',Helvetica] font-semibold text-white text-base">
-              {isUploading ? "Saving..." : "Save"}
+              {isUploading ? "Saving..." : "Save Changes"}
             </span>
           </Button>
         </section>

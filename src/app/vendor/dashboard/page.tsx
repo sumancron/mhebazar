@@ -111,10 +111,12 @@ const vendorApi = {
   },
 };
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_MEDIA_URL || 'http://localhost:8000';
+
 function getImageSrc(images?: { image: string }[] | string) {
-  if (typeof images === 'string' && images) return images;
+  if (typeof images === 'string' && images) return `${API_BASE_URL}${images}`;
   if (Array.isArray(images) && images.length > 0 && images[0].image) {
-    return images[0].image;
+    return `${API_BASE_URL}${images[0].image}`;
   }
   return "/no-product.png";
 }

@@ -17,7 +17,7 @@ import {
   DialogContent,
   DialogTrigger,
 } from "@/components/ui/dialog"
-// import { Product } from "@/types"; // This import is likely from a different context or unused
+// import { Product } from "@/types";
 import DOMPurify from 'dompurify';
 
 // Helper function for SEO-friendly slug
@@ -96,33 +96,32 @@ const ProductCard = ({
   const productDetailUrl = `/product/${productSlug}/?id=${id}`;
 
   // Determine which form to show
-  const FormComponent = productType === 'rental' || productType === 'used' ? RentalForm : QuoteForm;
+  // const FormComponent = productType === 'rental' ? RentalForm : QuoteForm;
   const formButtonText = productType === 'rental' || productType === 'used' ? "Rent Now" : "Get a Quote";
 
   return (
     <div
-      className={`bg-white rounded-2xl shadow-md border border-[#ecf0f7] overflow-hidden flex flex-col w-full sm:w-80 h-[420px] transition-all duration-300 ease-in-out hover:shadow-lg hover:scale-[1.02]
-        ${!isAvailable && directSale ? "opacity-50 pointer-events-none" : ""
+      className={`bg-white rounded-2xl shadow-sm border border-[#ecf0f7] overflow-hidden flex flex-col w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-sm xl:max-w-xs 2xl:max-w-sm mx-auto h-auto min-h-[400px] ${!isAvailable && directSale ? "opacity-50 pointer-events-none" : ""
         }`}
     >
       {/* Image Container */}
       <div className="relative w-full h-48 xs:h-52 sm:h-56 md:h-60 lg:h-56 xl:h-52 2xl:h-56 flex-shrink-0">
         <Link href={productDetailUrl} className="block w-full h-full">
           <Image
-            src={image || "/no-product.png"} // Ensure a fallback for src
+            src={image}
             alt={title}
             width={320}
             height={224}
-            className="object-fill w-full h-full rounded-t-2xl transition-transform duration-300 hover:scale-105"
+            className="object-fill w-full h-full rounded-t-2xl"
             quality={85}
             sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, (max-width: 1280px) 25vw, 20vw"
           />
         </Link>
         {/* Action Icons Top-Left */}
-        <div className="absolute top-3 left-3 flex flex-col gap-2 z-10">
+        <div className="absolute top-2 xs:top-3 left-2 xs:left-3 flex flex-col gap-1.5 xs:gap-2">
           <button
             onClick={() => onWishlistClick(id)}
-            className="bg-[#f3faff] hover:bg-[#e6f7ee] p-2 rounded-full border border-[#e0e7ef] shadow transition-all duration-200 transform hover:scale-110"
+            className="bg-[#f3faff] hover:bg-[#e6f7ee] p-1.5 xs:p-2 rounded-full border border-[#e0e7ef] shadow transition"
             aria-label="Add to wishlist"
             disabled={!is_active}
           >
@@ -130,7 +129,7 @@ const ProductCard = ({
           </button>
           <button
             onClick={() => onCompareClick(productData)}
-            className="bg-[#f3faff] hover:bg-[#e6f7ee] p-2 rounded-full border border-[#e0e7ef] shadow transition-all duration-200 transform hover:scale-110"
+            className="bg-[#f3faff] hover:bg-[#e6f7ee] p-1.5 xs:p-2 rounded-full border border-[#e0e7ef] shadow transition"
             aria-label="Compare"
             disabled={!is_active}
           >
@@ -138,7 +137,7 @@ const ProductCard = ({
           </button>
           <button
             onClick={() => onShareClick(window.location.origin + productDetailUrl, title)}
-            className="bg-[#f3faff] hover:bg-[#e6f7ee] p-2 rounded-full border border-[#e0e7ef] shadow transition-all duration-200 transform hover:scale-110"
+            className="bg-[#f3faff] hover:bg-[#e6f7ee] p-1.5 xs:p-2 rounded-full border border-[#e0e7ef] shadow transition"
             aria-label="Share"
           >
             <Share2 className="w-3.5 h-3.5 xs:w-4 xs:h-4 text-gray-600" />
@@ -150,15 +149,17 @@ const ProductCard = ({
       <div className="flex-1 flex flex-col justify-between p-3 xs:p-4">
         <div className="flex-1">
           <Link href={productDetailUrl}>
-            <h3 className="text-base font-semibold text-gray-900 mb-2 line-clamp-2 hover:text-green-700 transition-colors duration-200">
+            <h3 className="text-sm xs:text-base font-semibold text-gray-900 mb-1.5 xs:mb-2 line-clamp-2 hover:text-green-700 transition-colors leading-tight">
               {title}
             </h3>
           </Link>
-          <p className="text-xs text-gray-500 mb-2 line-clamp-1"> <span dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(subtitle || '') }} /></p>
+          <p className="text-xs text-gray-500 mb-1.5 xs:mb-2 line-clamp-1">
+            <span dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(subtitle) }} />
+          </p>
           {/* Price */}
-          <div className="mb-3">
-            {(hide_price === true || parseFloat(price as string) <= 0) ? ( // Convert price to number for comparison
-              <span className="text-lg font-semibold text-gray-400 tracking-wider">
+          <div className="mb-2 xs:mb-3">
+            {(hide_price == true || price <= "0") ? (
+              <span className="text-base xs:text-lg font-semibold text-gray-400 tracking-wider">
                 {currency} *******
               </span>
             ) : (
@@ -173,11 +174,11 @@ const ProductCard = ({
         {directSale ? (
           <div className="flex flex-col gap-2 w-full">
             {isInCart ? (
-              <div className="flex items-center bg-green-50 text-green-700 font-medium py-1 px-1 rounded-md text-sm flex-1 shadow-sm animate-fade-in">
+              <div className="flex items-center bg-green-50 text-green-700 font-medium py-1 px-1 rounded-md text-sm w-full">
                 <button
                   onClick={() => cartItemId && onDecreaseQuantity(cartItemId)}
                   disabled={currentCartQuantity <= 1 || !isPurchasable}
-                  className="h-8 w-8 flex items-center justify-center rounded hover:bg-green-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                  className="h-7 w-7 xs:h-8 xs:w-8 flex items-center justify-center rounded hover:bg-green-100 disabled:opacity-50 disabled:cursor-not-allowed"
                   aria-label="Decrease quantity"
                 >
                   <Minus className="w-3.5 h-3.5 xs:w-4 xs:h-4" />
@@ -188,14 +189,14 @@ const ProductCard = ({
                 <button
                   onClick={() => cartItemId && onIncreaseQuantity(cartItemId)}
                   disabled={!isPurchasable}
-                  className="h-8 w-8 flex items-center justify-center rounded hover:bg-green-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                  className="h-7 w-7 xs:h-8 xs:w-8 flex items-center justify-center rounded hover:bg-green-100 disabled:opacity-50 disabled:cursor-not-allowed"
                   aria-label="Increase quantity"
                 >
                   <Plus className="w-3.5 h-3.5 xs:w-4 xs:h-4" />
                 </button>
                 <button
                   onClick={() => cartItemId && onRemoveFromCart(cartItemId)}
-                  className="h-8 w-8 flex items-center justify-center rounded text-red-500 hover:bg-red-50 transition-colors ml-1 duration-200"
+                  className="h-7 w-7 xs:h-8 xs:w-8 flex items-center justify-center rounded text-red-500 hover:bg-red-50 transition-colors ml-1"
                   aria-label="Remove from cart"
                   title="Remove from Cart"
                 >
@@ -205,7 +206,7 @@ const ProductCard = ({
             ) : (
               <button
                 onClick={() => onAddToCartClick(id)}
-                className="flex items-center justify-center gap-2 rounded-lg bg-[#5ca131] hover:bg-[#4a8a29] py-2 px-4 text-white font-medium transition-all duration-200 flex-1 shadow-md hover:shadow-lg animate-scale-in"
+                className="flex items-center justify-center gap-1.5 xs:gap-2 rounded-lg bg-[#5ca131] hover:bg-[#4a8a29] py-2 px-3 xs:px-4 text-white font-medium transition-colors duration-200 w-full text-sm xs:text-base"
                 aria-label="Add to cart"
                 disabled={!isPurchasable}
               >
@@ -215,59 +216,61 @@ const ProductCard = ({
               </button>
             )}
 
-            <button
-              onClick={() => onBuyNowClick(id)}
-              className="rounded-lg border border-[#5ca131] text-[#5ca131] hover:bg-[#f3faff] py-2 px-4 font-medium text-base leading-6 transition-all duration-200 w-full sm:w-fit shadow-md hover:shadow-lg animate-scale-in delay-100"
-              aria-label="Buy now"
-              disabled={!isPurchasable}
-            >
-              Buy
-            </button>
-            {/* Moved "Get a Quote" for non-purchasable direct sale products inside the directSale block */}
-            {!isPurchasable && (
-              <Dialog>
-                {/* Fixed: Ensuring DialogTrigger has exactly one child */}
-                <DialogTrigger asChild>
-                  <button
-                    className="flex items-center justify-center rounded-lg bg-[#5ca131] hover:bg-[#4a8a29] py-2 px-4 text-white font-medium transition-all duration-200 shadow-md hover:shadow-lg animate-scale-in delay-200"
-                    aria-label={formButtonText}
-                  >
-                    {formButtonText}
-                  </button>
-                </DialogTrigger>
-                <DialogContent className="w-full max-w-2xl p-6 rounded-lg shadow-2xl">
-                  {/* Pass appropriate product data to the form */}
-                  <FormComponent productId={id} productDetails={{
-                    image: image || "/no-product.png", // Ensure image is not empty
-                    title: title,
-                    description: subtitle || '', // Use subtitle as description for ProductCard
-                    price: price,
-                    stock_quantity: stock_quantity // Pass stock quantity
-                  }} />
-                </DialogContent>
-              </Dialog>
-            )}
+            <div className="flex gap-2">
+              <button
+                onClick={() => onBuyNowClick(id)}
+                className="rounded-lg border border-[#5ca131] text-[#5ca131] hover:bg-[#f3faff] py-2 px-3 xs:px-4 font-medium text-sm xs:text-base leading-6 transition-colors duration-200 flex-1"
+                aria-label="Buy now"
+                disabled={!isPurchasable}
+              >
+                Buy
+              </button>
+              {/* Moved "Get a Quote" for non-purchasable direct sale products inside the directSale block */}
+              {!isPurchasable && (
+                <Dialog>
+                  {/* Fixed: Ensuring DialogTrigger has exactly one child */}
+                  <DialogTrigger asChild>
+                    <button
+                      className="flex items-center justify-center rounded-lg bg-[#5ca131] hover:bg-[#4a8a29] py-2 px-3 xs:px-4 text-white font-medium transition-colors duration-200 flex-1 text-sm xs:text-base"
+                      aria-label="Get a quote"
+                    >
+                      <span className="hidden sm:inline">Get a Quote</span>
+                      <span className="sm:hidden">Quote</span>
+                    </button>
+                  </DialogTrigger>
+                  <DialogContent className="w-[95vw] max-w-2xl mx-auto">
+                    <QuoteForm product={productData} />
+                  </DialogContent>
+                </Dialog>
+              )}
+            </div>
           </div>
         ) : (
           <Dialog>
             <DialogTrigger asChild>
               <button
-                className="flex items-center justify-center rounded-lg bg-[#5ca131] hover:bg-[#4a8a29] py-2 px-4 text-white font-medium transition-all duration-200 w-full shadow-md hover:shadow-lg animate-scale-in"
+                className="flex items-center justify-center rounded-lg bg-[#5ca131] hover:bg-[#4a8a29] py-2 px-3 xs:px-4 text-white font-medium transition-colors duration-200 w-full text-sm xs:text-base"
                 aria-label={formButtonText}
                 disabled={!is_active}
               >
                 {formButtonText}
               </button>
             </DialogTrigger>
-            <DialogContent className="w-full max-w-2xl p-6 rounded-lg shadow-2xl">
-              {/* Pass appropriate product data to the form */}
-              <FormComponent productId={id} productDetails={{
-                image: image || "/no-product.png", // Ensure image is not empty
-                title: title,
-                description: subtitle || '', // Use subtitle as description for ProductCard
-                price: price,
-                stock_quantity: stock_quantity // Pass stock quantity
-              }} />
+            <DialogContent className="w-[95vw] max-w-2xl mx-auto">
+                {productType === 'rental' || productType === 'used' ? (
+                <RentalForm
+                  productId={id}
+                  productDetails={{
+                    image: image,
+                    title: title,
+                    description: subtitle || '',
+                    price: price,
+                    stock_quantity: stock_quantity
+                  }}
+                />
+              ) : (
+                <QuoteForm product={productData} />
+              )}
             </DialogContent>
           </Dialog>
         )}
