@@ -30,7 +30,8 @@ export default function IndividualProductPage({
   searchParams: { id: string };
 }) {
   const { product: productSlug } = params;
-  const productId = searchParams.id; // Get the ID from the URL query
+  // Ensure productId is always a number for consistency
+  const productId = parseInt(searchParams.id, 10); // Get the ID from the URL query and parse as integer
 
   return (
     <>

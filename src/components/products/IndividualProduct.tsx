@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 // src/components/products/IndividualProduct.tsx
 "use client";
 
@@ -104,7 +103,7 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
   const [isInCart, setIsInCart] = useState(false);
   const [currentCartQuantity, setCurrentCartQuantity] = useState(0);
   const [cartItemId, setCartItemId] = useState<number | null>(null);
-  // const [isReviewFormOpen, setIsReviewFormOpen] = useState(false);
+  const [isReviewFormOpen, setIsReviewFormOpen] = useState(false); // State for review form dialog
 
   // Helper function for SEO-friendly slug
   const slugify = (text: string): string => {
@@ -119,7 +118,7 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
       .replace(/-+$/, '');         // Trim - from end of text
   };
 
-  const formatKey = (key) => {
+  const formatKey = (key: string) => {
     return key
       .replace(/([A-Z])/g, ' $1')
       .replace(/_/g, ' ')
@@ -128,19 +127,16 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
   };
 
   // Filter out null, undefined, and empty string values
-  const getValidSpecs = (specs) => {
+  const getValidSpecs = (specs: Record<string, unknown> | null) => {
     if (!specs) return [];
 
-    return Object.entries(specs).filter(([key, value]) =>
+    return Object.entries(specs).filter(([, value]) =>
       value !== null &&
       value !== undefined &&
       value !== '' &&
       String(value).trim() !== ''
     );
   };
-
-  const validSpecs = getValidSpecs(data.product_details);
-
 
   // Function to trigger review section refresh
   const reviewsRefresher = useRef<(() => void) | null>(null);
@@ -445,29 +441,45 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
     }
   }, [data]);
 
-  console.log("Product data:", data);
-
   // Callback to allow ReviewSection to register its refresh function
   const registerReviewsRefresher = useCallback((refresher: () => void) => {
     reviewsRefresher.current = refresher;
   }, []);
 
+  const onReviewFormClose = useCallback(() => {
+    setIsReviewFormOpen(false);
+    // Trigger review section refresh after the form is closed and potentially a new review is submitted
+    if (reviewsRefresher.current) {
+      reviewsRefresher.current();
+    }
+  }, []);
+
 
   if (!data) {
     return (
-      <div className="animate-pulse p-4 max-w-7xl mx-auto">
-        <div className="flex flex-col md:flex-row gap-8">
-          <div className="bg-gray-200 rounded-lg w-full md:w-96 h-96 mb-4" />
-          <div className="flex-1 space-y-4">
-            <div className="h-8 bg-gray-200 rounded w-2/3" />
-            <div className="h-4 bg-gray-200 rounded w-1/3" />
-            <div className="h-6 bg-gray-200 rounded w-1/4" />
-            <div className="h-10 bg-gray-200 rounded w-1/2" />
+      <div className="animate-pulse p-4 max-w-7xl mx-auto min-h-screen flex items-center justify-center">
+        <div className="flex flex-col md:flex-row gap-8 w-full">
+          <div className="bg-gray-200 rounded-lg w-full md:w-96 h-96 mb-4 flex-shrink-0" />
+          <div className="flex-1 space-y-6">
+            <div className="h-10 bg-gray-200 rounded w-2/3" />
+            <div className="h-6 bg-gray-200 rounded w-1/3" />
+            <div className="h-8 bg-gray-200 rounded w-1/4" />
+            <div className="h-12 bg-gray-200 rounded w-1/2" />
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-6 border-t border-gray-200">
+              <div className="h-20 bg-gray-200 rounded" />
+              <div className="h-20 bg-gray-200 rounded" />
+              <div className="h-20 bg-gray-200 rounded" />
+              <div className="h-20 bg-gray-200 rounded" />
+            </div>
           </div>
         </div>
       </div>
     );
   }
+  
+  // Conditionally define validSpecs after data is confirmed to be not null
+  const validSpecs = getValidSpecs(data.product_details);
+
 
   const isPurchasable = data.is_active && (!data.direct_sale || data.stock_quantity > 0);
   const displayPrice = parseFloat(data.price).toLocaleString("en-IN", {
@@ -476,17 +488,17 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
   });
 
   // Determine which form component to use based on product type
-  const FormComponent = data.type === 'rental' ? RentalForm : QuoteForm;
-  const formButtonText = data.type === 'rental' ? "Rent Now" : "Get a Quote";
+  const FormComponent = data.type === 'rental' || data.type === 'used' ? RentalForm : QuoteForm;
+  const formButtonText = data.type === 'rental' || data.type === 'used' ? "Rent Now" : "Get a Quote";
 
   return (
-    <div className="px-4 mx-auto p-2 sm:p-4 bg-white">
-      <div className="flex flex-col md:flex-row gap-8">
+    <div className="px-4 mx-auto p-2 sm:p-4 bg-white min-h-screen">
+      <div className="flex flex-col md:flex-row gap-8 animate-fade-in">
         {/* Left Side - Product Images */}
-        <div className="flex flex-row-reverse gap-2 lg:gap-4 w-full md:w-fit">
+        <div className="flex flex-row-reverse gap-2 lg:gap-4 w-full md:w-fit flex-shrink-0">
           {/* Main Product Image */}
           <div
-            className="relative bg-gray-50 rounded-lg overflow-hidden aspect-square w-full max-w-[420px] mx-auto"
+            className="relative bg-gray-50 rounded-lg overflow-hidden aspect-square w-full max-w-[420px] mx-auto transition-transform duration-300 ease-in-out hover:scale-[1.01]"
             onMouseMove={e => {
               if (isZoomed) {
                 const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
@@ -511,26 +523,29 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
               priority
             />
             {/* Top right icons */}
-            <div className="absolute top-3 right-3 flex flex-col gap-2">
+            <div className="absolute top-3 right-3 flex flex-col gap-2 z-10">
               <button
-                className="w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-sm hover:shadow-md transition-shadow"
+                className="w-9 h-9 bg-white rounded-full flex items-center justify-center shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105"
                 onClick={handleWishlist}
                 disabled={!data.is_active} // Wishlist should be available if product is active
+                aria-label="Add to wishlist"
               >
-                <Heart className={`w-4 h-4 ${isWishlisted ? "fill-red-500 text-red-500" : "text-gray-600"}`} />
+                <Heart className={`w-5 h-5 ${isWishlisted ? "fill-red-500 text-red-500" : "text-gray-600"}`} />
               </button>
               <button
-                className="w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-sm hover:shadow-md transition-shadow"
+                className="w-9 h-9 bg-white rounded-full flex items-center justify-center shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105"
                 onClick={handleShare}
+                aria-label="Share product"
               >
-                <Share2 className="w-4 h-4 text-gray-600" />
+                <Share2 className="w-5 h-5 text-gray-600" />
               </button>
               <button
-                className="w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-sm hover:shadow-md transition-shadow"
+                className="w-9 h-9 bg-white rounded-full flex items-center justify-center shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105"
                 onClick={handleCompare}
                 disabled={!data.is_active} // Compare should be available if product is active
+                aria-label="Compare product"
               >
-                <RotateCcw className="w-4 h-4 text-gray-600" />
+                <RotateCcw className="w-5 h-5 text-gray-600" />
               </button>
             </div>
           </div>
@@ -540,8 +555,9 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
               <button
                 key={img.id}
                 onClick={() => setSelectedImage(index)}
-                className={`w-16 h-16 rounded border-2 overflow-hidden ${selectedImage === index ? "border-orange-500" : "border-gray-200"
-                  } hover:border-orange-300 transition-colors`}
+                className={`w-16 h-16 rounded border-2 overflow-hidden ${selectedImage === index ? "border-orange-500 shadow-md" : "border-gray-200"
+                  } hover:border-orange-300 transition-all duration-200 transform hover:scale-105`}
+                aria-label={`View image ${index + 1}`}
               >
                 <Image
                   src={img.image}
@@ -556,23 +572,25 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
         </div>
 
         {/* Right Side - Product Details */}
-        <div className="space-y-6 w-full">
-          <div className="flex flex-col lg:flex-row gap-4">
-            <div className="w-full lg:w-2/3">
+        <div className="space-y-6 w-full py-2">
+          <div className="flex flex-col lg:flex-row gap-6">
+            <div className="w-full lg:w-2/3 space-y-3">
               {/* Product Title */}
-              <h1 className="text-2xl font-semibold text-gray-900 mb-2">{data.name}</h1>
-              <div className="text-base text-gray-600 mb-2">
+              <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-2 leading-tight animate-fade-in-up">
+                {data.name}
+              </h1>
+              <div className="text-base sm:text-lg text-gray-600 mb-2 animate-fade-in-up delay-100">
                 {data.category_name} {data.subcategory_name ? `> ${data.subcategory_name}` : ''}
               </div>
               {/* Rating and Reviews */}
-              <div className="flex items-center gap-4 mb-4 flex-wrap">
+              <div className="flex items-center gap-4 mb-4 flex-wrap animate-fade-in-up delay-200">
                 {data.average_rating !== null && data.average_rating > 0 ? (
                   <div className="flex items-center gap-1">
                     {[1, 2, 3, 4, 5].map((star) => (
                       <Star
                         key={star}
                         className={`w-4 h-4 ${star <= (data.average_rating || 0) ? "fill-orange-400 text-orange-400" : "text-gray-300"
-                          }`}
+                          } transition-colors duration-200`}
                       />
                     ))}
                     <span className="text-sm text-gray-600 ml-1">({data.average_rating.toFixed(1)})</span>
@@ -580,15 +598,16 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
                 ) : (
                   <span className="text-sm text-gray-600">No ratings yet</span>
                 )}
-                <Dialog>
+                <Dialog open={isReviewFormOpen} onOpenChange={setIsReviewFormOpen}>
                   <DialogTrigger asChild>
-                    <span
-                      className="text-sm text-blue-600 hover:underline cursor-pointer"
+                    <button
+                      className="text-sm text-blue-600 hover:underline cursor-pointer transition-colors duration-200"
+                      onClick={() => setIsReviewFormOpen(true)}
                     >
                       Write a Review
-                    </span>
+                    </button>
                   </DialogTrigger>
-                  <DialogContent>
+                  <DialogContent className="w-full max-w-2xl p-6 rounded-lg shadow-lg">
                     <MheWriteAReview
                       productId={data.id}
                     />
@@ -599,19 +618,19 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
                 )}
               </div>
               {/* Price */}
-              <div className="mb-2">
+              <div className="mb-2 animate-fade-in-up delay-300">
                 {data.hide_price ? (
-                  <span className="text-2xl font-bold text-gray-400">₹ *******</span>
+                  <span className="text-2xl sm:text-3xl font-bold text-gray-400">₹ *******</span>
                 ) : (
-                  <span className="text-2xl font-bold text-green-700">₹{displayPrice}</span>
+                  <span className="text-2xl sm:text-3xl font-bold text-green-700">₹{displayPrice}</span>
                 )}
               </div>
-              <div className="text-xs text-gray-500 mb-2">Incl. of all taxes</div>
+              <div className="text-xs text-gray-500 mb-2 animate-fade-in-up delay-400">Incl. of all taxes</div>
             </div>
             {/* Delivery & Actions */}
-            <div className="w-full lg:w-1/3 flex flex-col gap-4">
+            <div className="w-full lg:w-1/3 flex flex-col gap-4 animate-fade-in-right">
               {/* Delivery Info */}
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4 shadow-sm">
                 <div className="space-y-2">
                   {data.stock_quantity > 0 && data.direct_sale ? (
                     <p className="text-sm font-semibold text-green-800">
@@ -623,7 +642,7 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
                     </p>
                   ) : (
                     <p className="text-sm font-semibold text-blue-600">
-                      Available for {data.type === 'rental' ? 'Rental' : 'Quote'}
+                      Available for {data.type === 'rental' || data.type === 'used' ? 'Rental' : 'Quote'}
                     </p>
                   )}
                   {!data.is_active && (
@@ -633,20 +652,20 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
                   )}
                   <p className="font-semibold text-green-800">
                     <span className="font-bold">FREE delivery</span> (Delivery details coming soon.){" "}
-                    <span className="text-blue-600 hover:underline cursor-pointer">Details</span>
+                    <span className="text-blue-600 hover:underline cursor-pointer transition-colors duration-200">Details</span>
                   </p>
                 </div>
               </div>
               {/* Action Buttons */}
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-3">
                 {data.direct_sale && isPurchasable ? (
                   <>
                     {isInCart ? (
-                      <div className="flex items-center justify-between bg-green-50 text-green-700 font-medium py-2 px-3 rounded-md text-base">
+                      <div className="flex items-center justify-between bg-green-50 text-green-700 font-medium py-2 px-3 rounded-md text-base shadow-sm animate-fade-in">
                         <button
                           onClick={() => cartItemId && handleDecreaseQuantity(cartItemId)}
                           disabled={currentCartQuantity <= 1}
-                          className="p-1 rounded hover:bg-green-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="p-1 rounded hover:bg-green-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
                           aria-label="Decrease quantity"
                         >
                           <Minus className="w-5 h-5" />
@@ -656,14 +675,14 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
                         </span>
                         <button
                           onClick={() => cartItemId && handleIncreaseQuantity(cartItemId)}
-                          className="p-1 rounded hover:bg-green-100"
+                          className="p-1 rounded hover:bg-green-100 transition-colors duration-200"
                           aria-label="Increase quantity"
                         >
                           <Plus className="w-5 h-5" />
                         </button>
                         <button
                           onClick={() => cartItemId && handleRemoveFromCart(cartItemId)}
-                          className="p-1 rounded text-red-500 hover:bg-red-50 transition-colors ml-2"
+                          className="p-1 rounded text-red-500 hover:bg-red-50 transition-colors ml-2 duration-200"
                           aria-label="Remove from cart"
                           title="Remove from Cart"
                         >
@@ -673,16 +692,18 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
                     ) : (
                       <button
                         onClick={() => handleAddToCart(data.id)}
-                        className="w-full bg-[#5CA131] hover:bg-green-700 text-white font-semibold py-3 rounded-md text-base transition"
+                        className="w-full bg-[#5CA131] hover:bg-green-700 text-white font-semibold py-3 rounded-md text-base transition-all duration-300 ease-in-out shadow-md hover:shadow-lg animate-scale-in"
                         aria-label="Add to cart"
+                        disabled={!isPurchasable}
                       >
                         <ShoppingCart className="inline-block mr-2 w-5 h-5" /> Add to Cart
                       </button>
                     )}
                     <button
                       onClick={handleBuyNow}
-                      className="w-full bg-yellow-400 hover:bg-yellow-500 text-black font-semibold py-3 rounded-md text-base transition"
+                      className="w-full bg-yellow-400 hover:bg-yellow-500 text-black font-semibold py-3 rounded-md text-base transition-all duration-300 ease-in-out shadow-md hover:shadow-lg animate-scale-in delay-100"
                       aria-label="Buy now"
+                      disabled={!isPurchasable}
                     >
                       Buy Now
                     </button>
@@ -691,21 +712,29 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
                   <Dialog>
                     <DialogTrigger asChild>
                       <button
-                        className="w-full bg-[#5CA131] hover:bg-green-700 text-white font-semibold py-3 rounded-md text-base transition"
+                        className="w-full bg-[#5CA131] hover:bg-green-700 text-white font-semibold py-3 rounded-md text-base transition-all duration-300 ease-in-out shadow-md hover:shadow-lg animate-scale-in"
                         aria-label={formButtonText}
                         disabled={!data.is_active}
                       >
                         {formButtonText}
                       </button>
                     </DialogTrigger>
-                    <DialogContent className="w-full max-w-2xl">
-                      <QuoteForm product={data} />
+                    <DialogContent className="w-full max-w-3xl p-6 rounded-lg shadow-2xl">
+                      {/* Pass appropriate product data to the form component */}
+                      <FormComponent productId={data.id} productDetails={{
+                        image: data.images[0]?.image || "/no-product.png",
+                        title: data.name,
+                        description: data.description,
+                        price: data.price,
+                        stock_quantity: data.stock_quantity // Pass stock quantity
+                      }} />
                     </DialogContent>
                   </Dialog>
                 )}
                 <button
                   onClick={handleCompare}
-                  className="w-full border border-gray-300 text-gray-700 font-semibold py-3 rounded-md text-base hover:bg-gray-50 transition"
+                  className="w-full border border-gray-300 text-gray-700 font-semibold py-3 rounded-md text-base hover:bg-gray-50 transition-all duration-300 ease-in-out shadow-sm hover:shadow-md animate-scale-in delay-200"
+                  aria-label="Compare products"
                 >
                   Compare
                 </button>
@@ -713,33 +742,33 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
             </div>
           </div>
           {/* Features Row */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-6 border-t border-gray-200">
-            <div className="text-center">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-6 border-t border-gray-200 mt-8 animate-fade-in-up delay-500">
+            <div className="text-center p-3 rounded-lg bg-blue-50 hover:bg-blue-100 transition-colors duration-200 transform hover:scale-105">
               <div className="flex justify-center mb-2">
-                <Truck className="w-6 h-6 text-blue-600" />
+                <Truck className="w-7 h-7 text-blue-600" />
               </div>
-              <p className="font-semibold text-xs mb-1">Worldwide Delivery</p>
+              <p className="font-semibold text-sm mb-1">Worldwide Delivery</p>
               <p className="text-xs text-gray-600">We deliver products globally</p>
             </div>
-            <div className="text-center">
+            <div className="text-center p-3 rounded-lg bg-green-50 hover:bg-green-100 transition-colors duration-200 transform hover:scale-105">
               <div className="flex justify-center mb-2">
-                <Headphones className="w-6 h-6 text-blue-600" />
+                <Headphones className="w-7 h-7 text-green-600" />
               </div>
-              <p className="font-semibold text-xs mb-1">Support 24/7</p>
+              <p className="font-semibold text-sm mb-1">Support 24/7</p>
               <p className="text-xs text-gray-600">Reach our experts today!</p>
             </div>
-            <div className="text-center">
+            <div className="text-center p-3 rounded-lg bg-yellow-50 hover:bg-yellow-100 transition-colors duration-200 transform hover:scale-105">
               <div className="flex justify-center mb-2">
-                <CreditCard className="w-6 h-6 text-blue-600" />
+                <CreditCard className="w-7 h-7 text-yellow-600" />
               </div>
-              <p className="font-semibold text-xs mb-1">First Purchase Discount</p>
+              <p className="font-semibold text-sm mb-1">First Purchase Discount</p>
               <p className="text-xs text-gray-600">Up to 15% discount</p>
             </div>
-            <div className="text-center">
+            <div className="text-center p-3 rounded-lg bg-purple-50 hover:bg-purple-100 transition-colors duration-200 transform hover:scale-105">
               <div className="flex justify-center mb-2">
-                <RotateCcw className="w-6 h-6 text-blue-600" />
+                <RotateCcw className="w-7 h-7 text-purple-600" />
               </div>
-              <p className="font-semibold text-xs mb-1">Easy Returns</p>
+              <p className="font-semibold text-sm mb-1">Easy Returns</p>
               <p className="text-xs text-gray-600">Read our return policy</p>
             </div>
           </div>
@@ -747,40 +776,44 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
       </div>
 
       {/* Accordion Section */}
-      <div className="mt-8">
+      <div className="mt-12 space-y-4 animate-fade-in-up delay-600">
         {/* Description */}
-        <div className="border rounded-lg mb-4 overflow-hidden">
+        <div className="border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200">
           <button
-            className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 hover:bg-gray-100 transition"
+            className="w-full flex items-center justify-between px-6 py-4 bg-gray-50 hover:bg-gray-100 transition-colors duration-200"
             onClick={() => setOpenAccordion(openAccordion === "desc" ? null : "desc")}
+            aria-expanded={openAccordion === "desc"}
+            aria-controls="description-content"
           >
-            <span className="font-semibold">Description</span>
-            <ChevronDown className={`w-5 h-5 transition-transform ${openAccordion === "desc" ? "rotate-180" : ""}`} />
+            <span className="font-semibold text-lg text-gray-800">Description</span>
+            <ChevronDown className={`w-6 h-6 text-gray-600 transition-transform duration-300 ${openAccordion === "desc" ? "rotate-180" : ""}`} />
           </button>
           {openAccordion === "desc" && (
-            <div className="px-4 py-3 text-gray-700 text-sm whitespace-pre-line" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(data.description) }} />
+            <div id="description-content" className="px-6 py-4 text-gray-700 text-base leading-relaxed animate-fade-in" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(data.description) }} />
           )}
         </div>
         {/* Specification */}
-        <div className="border rounded-lg mb-4 overflow-hidden">
+        <div className="border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200">
             <button
-              className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 hover:bg-gray-100 transition"
+              className="w-full flex items-center justify-between px-6 py-4 bg-gray-50 hover:bg-gray-100 transition-colors duration-200"
               onClick={() => setOpenAccordion(openAccordion === "spec" ? null : "spec")}
+              aria-expanded={openAccordion === "spec"}
+              aria-controls="specification-content"
             >
-            <span className="font-semibold">Product Specifications</span>
+            <span className="font-semibold text-lg text-gray-800">Product Specifications</span>
               <ChevronDown
-                className={`w-5 h-5 transition-transform duration-200 text-gray-600 ${openAccordion === "spec" ? "rotate-180" : ""
+                className={`w-6 h-6 text-gray-600 transition-transform duration-300 ${openAccordion === "spec" ? "rotate-180" : ""
                   }`}
               />
             </button>
 
             {openAccordion === "spec" && (
-              <div className="p-0">
+              <div id="specification-content" className="p-0 animate-fade-in">
                 {validSpecs.length > 0 ? (
-                  <div className="overflow-hidden">
-                    <table className="w-full">
-                      <thead>
-                        <tr className="bg-gray-50 border-b border-gray-200">
+                  <div className="overflow-x-auto">
+                    <table className="w-full table-auto">
+                      <thead className="bg-gray-100 border-b border-gray-200">
+                        <tr>
                           <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                             Specification
                           </th>
@@ -793,7 +826,7 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
                         {validSpecs.map(([key, value], index) => (
                           <tr
                             key={key}
-                            className={`hover:bg-gray-50 transition-colors duration-150 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-25'
+                            className={`hover:bg-gray-50 transition-colors duration-150 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'
                               }`}
                           >
                             <td className="px-6 py-4 whitespace-nowrap">
@@ -812,7 +845,7 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
                     </table>
                   </div>
                 ) : (
-                  <div className="text-center py-12 px-6">
+                  <div className="text-center py-12 px-6 bg-white">
                     <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
                       <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -825,26 +858,21 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
             )}
         </div>
         {/* Vendor */}
-        <div className="border rounded-lg mb-4 overflow-hidden">
+        <div className="border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200">
           <button
-            className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 hover:bg-gray-100 transition"
+            className="w-full flex items-center justify-between px-6 py-4 bg-gray-50 hover:bg-gray-100 transition-colors duration-200"
             onClick={() => setOpenAccordion(openAccordion === "vendor" ? null : "vendor")}
+            aria-expanded={openAccordion === "vendor"}
+            aria-controls="vendor-content"
           >
-            <span className="font-semibold">Vendor</span>
-            <ChevronDown className={`w-5 h-5 transition-transform ${openAccordion === "vendor" ? "rotate-180" : ""}`} />
+            <span className="font-semibold text-lg text-gray-800">Vendor</span>
+            <ChevronDown className={`w-6 h-6 text-gray-600 transition-transform duration-300 ${openAccordion === "vendor" ? "rotate-180" : ""}`} />
           </button>
           {openAccordion === "vendor" && (
-            <div className="px-4 py-3 text-gray-700 text-sm whitespace-pre-line">{data.user_name || "N/A"}</div>
+            <div id="vendor-content" className="px-6 py-4 text-gray-700 text-base leading-relaxed animate-fade-in">{data.user_name || "N/A"}</div>
           )}
         </div>
       </div>
-      {/* {data.id && ( // Only render review form if product data and ID are available
-        <MheWriteAReview
-          isOpen={isReviewFormOpen}
-          onOpenChange={onReviewFormClose} // Use the specific handler
-          productId={data.id}
-        />
-      )} */}
 
       {/* Render ReviewSection if product data is available, pass the refresher */}
       {data.id && <ReviewSection productId={data.id} registerRefresher={registerReviewsRefresher} />}

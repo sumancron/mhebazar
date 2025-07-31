@@ -9,6 +9,7 @@ import Image from "next/image"
 import { toast } from "sonner"
 import api from "@/lib/api" // Assuming you have your configured API instance
 import { useUser } from "@/context/UserContext"
+import { Loader2 } from "lucide-react"
 
 interface RentalFormProps {
   productId: number
@@ -17,6 +18,7 @@ interface RentalFormProps {
     title: string
     description: string
     price: string | number
+    stock_quantity?: number; // Added stock_quantity for consistency
   }
   onClose?: () => void // Optional callback to close the dialog
 }
@@ -80,16 +82,16 @@ export default function RentalForm({ productId, productDetails, onClose }: Renta
   }
 
   return (
-    <div className="h-auto max-h-[90vh] overflow-y-auto w-full">
-      <div className="flex flex-col w-full items-start gap-6 p-6 relative bg-white">
-        <div className="flex flex-col items-start gap-6 self-stretch w-full">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-8 self-stretch w-full">
+    <div className="h-auto max-h-[90vh] overflow-y-auto custom-scrollbar w-full p-4 sm:p-6 lg:p-8 bg-gray-50 rounded-lg shadow-inner">
+      <div className="flex flex-col w-full items-start gap-6 p-0 relative bg-white rounded-lg shadow-md">
+        <div className="flex flex-col items-start gap-6 self-stretch w-full p-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-8 self-stretch w-full border-b pb-6 mb-6">
             <Image
               src={productDetails.image || "/no-product.png"}
               alt={productDetails.title}
               width={150}
               height={120}
-              className="relative object-cover rounded-md"
+              className="relative object-contain rounded-md shadow-sm transition-transform duration-300 hover:scale-105"
             />
             <div className="flex-col items-start gap-2 pt-0 sm:pt-4 pb-0 px-0 flex-1 flex">
               <h2 className="self-stretch font-bold text-gray-900 text-xl sm:text-2xl tracking-[0] leading-[normal]">
@@ -103,6 +105,11 @@ export default function RentalForm({ productId, productDetails, onClose }: Renta
               {productDetails.price !== "0.00" && (
                 <p className="self-stretch font-semibold text-green-600 text-base tracking-[0] leading-6">
                   Price: ₹{typeof productDetails.price === "number" ? productDetails.price.toLocaleString("en-IN") : productDetails.price}
+                </p>
+              )}
+               {productDetails.stock_quantity !== undefined && (
+                <p className="self-stretch font-normal text-gray-700 text-sm sm:text-base tracking-[0] leading-6">
+                  <span className="font-medium">Qty:</span> {productDetails.stock_quantity}
                 </p>
               )}
             </div>
@@ -119,27 +126,35 @@ export default function RentalForm({ productId, productDetails, onClose }: Renta
                 value={startDate}
                 onChange={e => setStartDate(e.target.value)}
                 required
-                className="h-[52px] text-sm text-gray-700 placeholder:text-gray-500 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 p-3"
+                className="h-[52px] text-sm text-gray-700 placeholder:text-gray-500 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 p-3 transition-all duration-200"
+                aria-label="Rental Start Date"
               />
               <Input
                 type="date"
                 value={endDate}
                 onChange={e => setEndDate(e.target.value)}
                 required
-                className="h-[52px] text-sm text-gray-700 placeholder:text-gray-500 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 p-3"
+                className="h-[52px] text-sm text-gray-700 placeholder:text-gray-500 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 p-3 transition-all duration-200"
+                aria-label="Rental End Date"
               />
               <Input
                 placeholder="Notes (optional)"
                 value={notes}
                 onChange={e => setNotes(e.target.value)}
-                className="h-[52px] text-sm text-gray-700 placeholder:text-gray-500 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 p-3"
+                className="h-[52px] text-sm text-gray-700 placeholder:text-gray-500 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 p-3 transition-all duration-200"
+                aria-label="Rental Notes"
               />
               <Button
                 type="submit"
-                className="w-full h-auto items-center justify-center gap-3 p-4 bg-[#5CA131] rounded-md hover:bg-green-700 text-white font-bold text-base transition-colors"
+                className="w-full h-auto items-center justify-center gap-3 p-4 bg-[#5CA131] rounded-md hover:bg-green-700 text-white font-bold text-base transition-all duration-300 ease-in-out shadow-md hover:shadow-lg"
                 disabled={isSubmitting}
               >
-                {isSubmitting ? "Submitting..." : "Submit Rental Request"}
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                    Submitting...
+                  </>
+                ) : "Submit Rental Request"}
               </Button>
             </form>
           </div>
