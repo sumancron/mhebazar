@@ -12,16 +12,15 @@ const NEXT_PUBLIC_API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "";
 interface ExportProduct {
   id: string | number;
   title: string;
-  subtitle: string;
-  price: number;
+  subtitle: string | null; // Changed to allow null for description
+  price: string | number; // Price can be string "0.00" or number
   currency: string;
   image: string;
-  // Add other properties from your API response that ProductCardContainer might need
-  direct_sale: boolean; // Assuming your API returns this
-  is_active: boolean;    // Assuming your API returns this
-  hide_price: boolean;   // Assuming your API returns this
-  stock_quantity: number; // Assuming your API returns this
-  type: string;          // Assuming your API returns this (e.g., 'new', 'used', 'rental')
+  direct_sale: boolean;
+  is_active: boolean;
+  hide_price: boolean;
+  stock_quantity: number;
+  type: string;
 }
 
 export default function ExportProductsFeatured() {
@@ -31,15 +30,33 @@ export default function ExportProductsFeatured() {
   useEffect(() => {
     const fetchPopularProducts = async () => {
       try {
-        const response = await axios.get(`${NEXT_PUBLIC_API_BASE_URL}/products`);
-        const data = Array.isArray(response.data)
+        // Change API endpoint to new_arrival
+        const response = await axios.get(`${NEXT_PUBLIC_API_BASE_URL}/products/new_arrival/`);
+        
+        // Ensure data is an array, and if it's nested under 'results', extract it
+        const rawData = Array.isArray(response.data)
           ? response.data
           : response.data?.results ?? [];
 
+        // Map API response data to ExportProduct interface
+        const formattedProducts: ExportProduct[] = rawData.map((item: any) => ({
+          id: item.id,
+          title: item.name, // API uses 'name' for product title
+          subtitle: item.description || null, // API uses 'description' for subtitle, allow null
+          price: item.price,
+          currency: "₹", // Assuming Indian Rupee, adjust if needed
+          image: item.images && item.images.length > 0 ? item.images[0].image : "/placeholder-image.jpg", // Use first image or a placeholder
+          direct_sale: item.direct_sale,
+          is_active: item.is_active,
+          hide_price: item.hide_price,
+          stock_quantity: item.stock_quantity,
+          type: item.type,
+        }));
+
         // Limit the products to only 4 as requested
-        setExportProducts(data.slice(0, 4)); 
+        setExportProducts(formattedProducts.slice(0, 4)); 
       } catch (error) {
-        console.error("Failed to fetch most popular products:", error);
+        console.error("Failed to fetch new arrival products:", error);
         setExportProducts([]);
       } finally {
         setLoading(false);
