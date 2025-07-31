@@ -105,8 +105,8 @@ export default function CategoryOrTypePage({
     // 2. Check if it's a valid category or subcategory (e.g., /spare-parts, /pallet-trucks/hand-pallet-truck)
     try {
   const categoryResponse = await api.get<ApiCategory[]>(`/categories/?name=${formattedParamName}`);
-  console.log(`/categories/?name=${formattedParamName}`);
-  console.log("Category Response:", categoryResponse.data);
+  // console.log(`/categories/?name=${formattedParamName}`);
+  // console.log("Category Response:", categoryResponse.data);
 
   const categories = categoryResponse.data;
   if (categories && categories.length > 0) {
