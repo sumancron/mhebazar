@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-// src/components/products/IndividualProduct.tsx
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
@@ -24,14 +23,14 @@ import axios from "axios";
 import { toast } from "sonner";
 import { useUser } from "@/context/UserContext";
 import QuoteForm from "@/components/forms/enquiryForm/quotesForm";
-import RentalForm from "@/components/forms/enquiryForm/rentalForm"; // Import RentalForm
+import RentalForm from "@/components/forms/enquiryForm/rentalForm";
 import {
   Dialog,
   DialogContent,
   DialogTrigger,
 } from "@/components/ui/dialog";
 import MheWriteAReview from "@/components/forms/product/ProductReviewForm";
-import ReviewSection from "./Reviews"; // Import ReviewSection
+import ReviewSection from "./Reviews";
 
 import DOMPurify from 'dompurify';
 
@@ -50,7 +49,7 @@ type ProductData = {
   model: string | null;
   product_details: Record<string, unknown> | null;
   price: string;
-  type: string; // Added type to ProductData
+  type: string;
   is_active: boolean;
   direct_sale: boolean;
   online_payment: boolean;
@@ -67,9 +66,11 @@ type ProductData = {
   images: ProductImage[];
   brochure: string | null;
   average_rating: number | null;
+  category_details?: {
+    cat_image: string | null;
+  }
 };
 
-// Cart Item type from API
 interface CartItemApi {
   id: number;
   product: number;
@@ -78,7 +79,6 @@ interface CartItemApi {
   total_price: number;
 }
 
-// Wishlist Item type from API
 interface WishlistItemApi {
   id: number;
   product: number;
@@ -89,6 +89,60 @@ interface ProductSectionProps {
   productSlug: string;
   productId: number | string | null;
 }
+
+// Custom Image component with an error handler to show a fallback
+const FallbackImage = ({
+  src,
+  alt,
+  width,
+  height,
+  className,
+  fallbackSrc,
+  style,
+  priority,
+}: {
+  src: string;
+  alt: string;
+  width: number;
+  height: number;
+  className: string;
+  fallbackSrc?: string | null;
+  style?: React.CSSProperties;
+  priority?: boolean;
+}) => {
+  const [imgSrc, setImgSrc] = useState(src);
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    setImgSrc(src);
+    setError(false);
+  }, [src]);
+
+  const handleError = () => {
+    if (!error) {
+      if (fallbackSrc) {
+        setImgSrc(fallbackSrc);
+      } else {
+        setImgSrc("/placeholder-image.png");
+      }
+      setError(true);
+    }
+  };
+
+  return (
+    <Image
+      src={imgSrc}
+      alt={alt}
+      width={width}
+      height={height}
+      className={className}
+      style={style}
+      priority={priority}
+      unoptimized={imgSrc.startsWith("/placeholder-image.png") || imgSrc === fallbackSrc}
+      onError={handleError}
+    />
+  );
+};
 
 
 export default function ProductSection({ productId, productSlug }: ProductSectionProps) {
@@ -104,22 +158,8 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
   const [isInCart, setIsInCart] = useState(false);
   const [currentCartQuantity, setCurrentCartQuantity] = useState(0);
   const [cartItemId, setCartItemId] = useState<number | null>(null);
-  // const [isReviewFormOpen, setIsReviewFormOpen] = useState(false);
 
-  // Helper function for SEO-friendly slug
-  const slugify = (text: string): string => {
-    return text
-      .toString()
-      .toLowerCase()
-      .trim()
-      .replace(/\s+/g, '-')       // Replace spaces with -
-      .replace(/[^\w-]+/g, '')     // Remove all non-word chars
-      .replace(/--+/g, '-')        // Replace multiple - with single -
-      .replace(/^-+/, '')          // Trim - from start of text
-      .replace(/-+$/, '');         // Trim - from end of text
-  };
-
-  const formatKey = (key) => {
+  const formatKey = (key: string) => {
     return key
       .replace(/([A-Z])/g, ' $1')
       .replace(/_/g, ' ')
@@ -127,10 +167,8 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
       .trim();
   };
 
-  // Filter out null, undefined, and empty string values
-  const getValidSpecs = (specs) => {
+  const getValidSpecs = (specs: Record<string, unknown> | null) => {
     if (!specs) return [];
-
     return Object.entries(specs).filter(([key, value]) =>
       value !== null &&
       value !== undefined &&
@@ -139,59 +177,19 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
     );
   };
 
-  // const validSpecs = getValidSpecs(data.product_details);
-
-
-  // Function to trigger review section refresh
   const reviewsRefresher = useRef<(() => void) | null>(null);
 
-  // Use a ref to ensure correct values in callbacks
   const latestCartState = useRef({ currentCartQuantity, cartItemId, isInCart });
   useEffect(() => {
     latestCartState.current = { currentCartQuantity, cartItemId, isInCart };
   }, [currentCartQuantity, cartItemId, isInCart]);
 
-
-  // Fetch product data by slug
-  useEffect(() => {
-    async function fetchData() {
-      // Use the unique productId for fetching
-      if (!productId) {
-        router.push('/404');
-        return;
-      }
-      try {
-        // Fetch the single product directly. The response should be one object, not a list.
-        const res = await api.get<ProductData>(`/products/${productId}/`);
-        const foundProduct = res.data; // The result is the product data
-
-        if (foundProduct) {
-          setData(foundProduct);
-          if (foundProduct.images.length > 0) {
-            setSelectedImage(0);
-          }
-        } else {
-          router.push('/404'); // Product not found
-        }
-      } catch (error) {
-        console.error("Failed to fetch product data:", error);
-        router.push('/404'); // Redirect on API error
-      }
-    }
-    fetchData();
-    // 3. Update the dependency array to use productId
-  }, [productId, router]);
-
-
-  // Function to fetch initial status of wishlist and cart for this product
   const fetchInitialStatus = useCallback(async () => {
     if (user && data?.id) {
       try {
-        // Check wishlist status
         const wishlistResponse = await api.get<{ results: WishlistItemApi[] }>(`/wishlist/?product=${data.id}&user=${user.id}`);
         setIsWishlisted(wishlistResponse.data.results.length > 0);
 
-        // Check cart status and quantity
         const cartResponse = await api.get<{ results: CartItemApi[] }>(`/cart/?product=${data.id}&user=${user.id}`);
         if (cartResponse.data.results.length > 0) {
           const itemInCart = cartResponse.data.results[0];
@@ -215,16 +213,45 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
   }, [user, data?.id]);
 
   useEffect(() => {
+    async function fetchData() {
+      if (!productId) {
+        router.push('/404');
+        return;
+      }
+      try {
+        const productRes = await api.get<ProductData>(`/products/${productId}/`);
+        const foundProduct = productRes.data;
+
+        // Fetch category details for the fallback image
+        const categoryRes = await api.get(`/categories/${foundProduct.category}`);
+        const categoryWithImage = { ...foundProduct, category_details: categoryRes.data };
+
+        if (categoryWithImage) {
+          setData(categoryWithImage);
+          if (categoryWithImage.images.length > 0) {
+            setSelectedImage(0);
+          }
+        } else {
+          router.push('/404');
+        }
+      } catch (error) {
+        console.error("Failed to fetch product data:", error);
+        router.push('/404');
+      }
+    }
+    fetchData();
+  }, [productId, router]);
+
+  useEffect(() => {
     fetchInitialStatus();
   }, [fetchInitialStatus]);
-
 
   const handleAddToCart = useCallback(async (productId: number) => {
     if (!user) {
       toast.error("Please log in to add products to your cart.");
+      router.push('/login');
       return;
     }
-
     try {
       if (latestCartState.current.isInCart) {
         toast.info("This product is already in your cart.", {
@@ -280,7 +307,6 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
     }
   }, [user]);
 
-
   const handleIncreaseQuantity = useCallback(async (cartId: number) => {
     if (!user || !cartId) return;
     try {
@@ -297,7 +323,6 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
       }
     }
   }, [user]);
-
 
   const handleDecreaseQuantity = useCallback(async (cartId: number) => {
     if (!user || !cartId) return;
@@ -325,13 +350,12 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
     }
   }, [user, handleRemoveFromCart]);
 
-
   const handleWishlist = useCallback(async () => {
     if (!user || !data?.id) {
       toast.error("Please log in to manage your wishlist.");
+      router.push('/login');
       return;
     }
-
     try {
       if (isWishlisted) {
         const wishlistResponse = await api.get<{ results: WishlistItemApi[] }>(`/wishlist/?product=${data.id}&user=${user.id}`);
@@ -346,7 +370,6 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
         }
       } else {
         const response = await api.post(`/wishlist/`, { product: data.id });
-        console.log("Added to wishlist:", response.data);
         setIsWishlisted(true);
         toast.success("Product added to wishlist!");
       }
@@ -363,7 +386,7 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
         toast.error("An unexpected error occurred while updating wishlist. Please try again.");
       }
     }
-  }, [user, data?.id, isWishlisted]);
+  }, [user, data?.id, isWishlisted, router]);
 
   const handleCompare = useCallback(() => {
     if (!data) return;
@@ -371,12 +394,9 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
     if (typeof window !== 'undefined') {
       const currentCompare: ProductData[] = JSON.parse(localStorage.getItem(COMPARE_KEY) || '[]');
       const existingProduct = currentCompare.find((p: ProductData) => p.id === data.id);
-
       if (!existingProduct) {
         const dataToStore = { ...data };
-        // If price is hidden, remove it from comparison data
         if (data.hide_price) {
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
           const { price: _, ...restOfData } = dataToStore;
           currentCompare.push(restOfData as unknown as ProductData);
         } else {
@@ -400,7 +420,6 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
       toast.error("This product is not available for direct purchase.");
       return;
     }
-
     try {
       if (!latestCartState.current.isInCart) {
         await api.post(`/cart/`, { product: data.id, quantity: 1 });
@@ -420,7 +439,6 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
     if (!data) return;
     const productUrl = window.location.href;
     const productTitle = data.name;
-
     if (navigator.share) {
       navigator.share({
         title: productTitle,
@@ -445,7 +463,6 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
     }
   }, [data]);
 
-  // Callback to allow ReviewSection to register its refresh function
   const registerReviewsRefresher = useCallback((refresher: () => void) => {
     reviewsRefresher.current = refresher;
   }, []);
@@ -473,21 +490,17 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
     maximumFractionDigits: 2,
   });
 
-  // Determine which form component to use based on product type
-  // const FormComponent = data.type === 'rental' ? RentalForm : QuoteForm;
   const formButtonText = data.type === 'rental' || data.type === 'used' ? "Rent Now" : "Get a Quote";
   const validSpecs = getValidSpecs(data.product_details);
 
-  console.log(data);
-
   return (
-    <div className="px-4 mx-auto p-2 sm:p-4 bg-white">
+    <div className="px-4 mx-auto p-2 sm:p-4 bg-white max-w-7xl">
       <div className="flex flex-col md:flex-row gap-8">
         {/* Left Side - Product Images */}
         <div className="flex flex-row-reverse gap-2 lg:gap-4 w-full md:w-fit">
           {/* Main Product Image */}
           <div
-            className="relative bg-gray-50 rounded-lg overflow-hidden aspect-square w-full max-w-[420px] mx-auto"
+            className="relative bg-gray-50 rounded-lg overflow-hidden aspect-square w-full max-w-[420px] mx-auto group"
             onMouseMove={e => {
               if (isZoomed) {
                 const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
@@ -499,7 +512,7 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
             onMouseEnter={() => setIsZoomed(true)}
             onMouseLeave={() => setIsZoomed(false)}
           >
-            <Image
+            <FallbackImage
               src={data.images[selectedImage]?.image || "/no-product.png"}
               alt={data.name}
               className="h-full object-contain transition-transform duration-200 ease-out"
@@ -509,6 +522,7 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
                 transform: isZoomed ? "scale(2)" : "scale(1)",
                 transformOrigin: `${position.x}% ${position.y}%`,
               }}
+              fallbackSrc={data.category_details?.cat_image}
               priority
             />
             {/* Top right icons */}
@@ -516,7 +530,7 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
               <button
                 className="w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-sm hover:shadow-md transition-shadow"
                 onClick={handleWishlist}
-                disabled={!data.is_active} // Wishlist should be available if product is active
+                disabled={!data.is_active}
               >
                 <Heart className={`w-4 h-4 ${isWishlisted ? "fill-red-500 text-red-500" : "text-gray-600"}`} />
               </button>
@@ -529,7 +543,7 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
               <button
                 className="w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-sm hover:shadow-md transition-shadow"
                 onClick={handleCompare}
-                disabled={!data.is_active} // Compare should be available if product is active
+                disabled={!data.is_active}
               >
                 <RotateCcw className="w-4 h-4 text-gray-600" />
               </button>
@@ -674,7 +688,7 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
                     ) : (
                       <button
                         onClick={() => handleAddToCart(data.id)}
-                        className="w-full bg-[#5CA131] hover:bg-green-700 text-white font-semibold py-3 rounded-md text-base transition"
+                        className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-md text-base transition"
                         aria-label="Add to cart"
                       >
                         <ShoppingCart className="inline-block mr-2 w-5 h-5" /> Add to Cart
@@ -692,7 +706,7 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
                   <Dialog>
                     <DialogTrigger asChild>
                       <button
-                        className="w-full bg-[#5CA131] hover:bg-green-700 text-white font-semibold py-3 rounded-md text-base transition"
+                        className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-md text-base transition"
                         aria-label={formButtonText}
                         disabled={!data.is_active}
                       >
@@ -704,7 +718,7 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
                         <RentalForm
                           productId={data.id}
                           productDetails={{
-                            image: data.images[0]?.image || "/no-product.png",
+                            image: data.images[0]?.image || data.category_details?.cat_image || "/no-product.png",
                             title: data.name,
                             description: data.description,
                             price: data.price,
@@ -787,7 +801,6 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
                 }`}
             />
           </button>
-
           {openAccordion === "spec" && (
             <div className="p-0">
               {validSpecs.length > 0 ? (
@@ -852,15 +865,6 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
           )}
         </div>
       </div>
-      {/* {data.id && ( // Only render review form if product data and ID are available
-        <MheWriteAReview
-          isOpen={isReviewFormOpen}
-          onOpenChange={onReviewFormClose} // Use the specific handler
-          productId={data.id}
-        />
-      )} */}
-
-      {/* Render ReviewSection if product data is available, pass the refresher */}
       {data.id && <ReviewSection productId={data.id} registerRefresher={registerReviewsRefresher} />}
     </div>
   );

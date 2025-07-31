@@ -1,4 +1,3 @@
-// src/components/elements/Product.tsx
 "use client";
 
 import React, { useState, useCallback, useEffect, useRef } from "react";
@@ -10,36 +9,35 @@ import axios from "axios";
 import { useUser } from "@/context/UserContext";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import QuoteForm from "../forms/enquiryForm/quotesForm"; // Path to your QuoteForm
-import RentalForm from "../forms/enquiryForm/rentalForm"; // Path to your RentalForm
+import QuoteForm from "../forms/enquiryForm/quotesForm";
+import RentalForm from "../forms/enquiryForm/rentalForm";
 import {
   Dialog,
   DialogContent,
   DialogTrigger,
 } from "@/components/ui/dialog"
-// import { Product } from "@/types";
 import DOMPurify from 'dompurify';
 
 // Helper function for SEO-friendly slug
 const slugify = (text: string): string => {
-  // Ensure text is always a string before calling toString()
-  return (text || '') // Fallback to empty string if text is null/undefined
+  return (text || '')
     .toString()
     .toLowerCase()
     .trim()
-    .replace(/\s+/g, '-')       // Replace spaces with -
-    .replace(/[^\w-]+/g, '')     // Remove all non-word chars
-    .replace(/--+/g, '-')        // Replace multiple - with single -
-    .replace(/^-+/, '')          // Trim - from start of text
-    .replace(/-+$/, '');         // Trim - from end of text
+    .replace(/\s+/g, '-')
+    .replace(/[^\w-]+/g, '')
+    .replace(/--+/g, '-')
+    .replace(/^-+/, '')
+    .replace(/-+$/, '');
 };
 
 // Interface for ProductCard display props
 interface ProductCardDisplayProps {
   id: number;
   image: string;
+  category_image: string | null; // Added category image
   title: string;
-  subtitle: string | null | undefined; // Changed to allow null/undefined
+  subtitle: string | null | undefined;
   price: string | number;
   currency: string;
   directSale: boolean;
@@ -59,12 +57,68 @@ interface ProductCardDisplayProps {
   onDecreaseQuantity: (cartItemId: number) => void;
   onRemoveFromCart: (cartItemId: number) => void;
   productData: Record<string, unknown>;
-  productType: string; // Added productType
+  productType: string;
 }
+
+// Custom Image component with an error handler to show a fallback
+const FallbackImage = ({
+  src,
+  alt,
+  width,
+  height,
+  className,
+  fallbackSrc,
+  sizes,
+  quality,
+}: {
+  src: string;
+  alt: string;
+  width: number;
+  height: number;
+  className: string;
+  fallbackSrc?: string | null;
+  sizes?: string;
+  quality?: number;
+}) => {
+  const [imgSrc, setImgSrc] = useState(src);
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    setImgSrc(src);
+    setError(false);
+  }, [src]);
+
+  const handleError = () => {
+    if (!error) {
+      if (fallbackSrc) {
+        setImgSrc(fallbackSrc);
+      } else {
+        setImgSrc("/placeholder-image.png");
+      }
+      setError(true);
+    }
+  };
+
+  return (
+    <Image
+      src={imgSrc}
+      alt={alt}
+      width={width}
+      height={height}
+      className={className}
+      quality={quality}
+      sizes={sizes}
+      unoptimized={imgSrc.startsWith("/placeholder-image.png") || imgSrc === fallbackSrc}
+      onError={handleError}
+    />
+  );
+};
+
 
 const ProductCard = ({
   id,
   image,
+  category_image,
   title,
   subtitle,
   price,
@@ -86,84 +140,82 @@ const ProductCard = ({
   onDecreaseQuantity,
   onRemoveFromCart,
   productData,
-  productType, // Destructure productType
+  productType,
 }: ProductCardDisplayProps) => {
   const isAvailable = is_active && (!directSale || stock_quantity > 0);
   const isPurchasable = is_active && (!directSale || stock_quantity > 0);
 
-  // Ensure title is a string before passing to slugify
-  const productSlug = slugify(title || ''); // Add fallback to empty string
+  const productSlug = slugify(title || '');
   const productDetailUrl = `/product/${productSlug}/?id=${id}`;
 
-  // Determine which form to show
-  // const FormComponent = productType === 'rental' ? RentalForm : QuoteForm;
   const formButtonText = productType === 'rental' || productType === 'used' ? "Rent Now" : "Get a Quote";
 
   return (
     <div
-      className={`bg-white rounded-2xl shadow-sm border border-[#ecf0f7] overflow-hidden flex flex-col w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-sm xl:max-w-xs 2xl:max-w-sm mx-auto h-auto min-h-[400px] ${!isAvailable && directSale ? "opacity-50 pointer-events-none" : ""
+      className={`bg-white rounded-2xl shadow-md border border-gray-200 hover:shadow-lg transition-all duration-300 overflow-hidden flex flex-col w-full max-w-sm mx-auto h-auto min-h-[400px] ${!isAvailable && directSale ? "opacity-50 pointer-events-none" : ""
         }`}
     >
       {/* Image Container */}
-      <div className="relative w-full h-48 xs:h-52 sm:h-56 md:h-60 lg:h-56 xl:h-52 2xl:h-56 flex-shrink-0">
+      <div className="relative w-full h-48 sm:h-56 flex-shrink-0 bg-gray-100">
         <Link href={productDetailUrl} className="block w-full h-full">
-          <Image
+          <FallbackImage
             src={image}
             alt={title}
             width={320}
             height={224}
-            className="object-fill w-full h-full rounded-t-2xl"
+            className="object-cover w-full h-full rounded-t-2xl"
             quality={85}
             sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, (max-width: 1280px) 25vw, 20vw"
+            fallbackSrc={category_image}
           />
         </Link>
-        {/* Action Icons Top-Left */}
-        <div className="absolute top-2 xs:top-3 left-2 xs:left-3 flex flex-col gap-1.5 xs:gap-2">
+        {/* Action Icons Top-Right */}
+        <div className="absolute top-2 right-2 flex flex-col gap-2">
           <button
             onClick={() => onWishlistClick(id)}
-            className="bg-[#f3faff] hover:bg-[#e6f7ee] p-1.5 xs:p-2 rounded-full border border-[#e0e7ef] shadow transition"
+            className="bg-white p-2 rounded-full border border-gray-200 shadow-sm transition hover:bg-gray-100"
             aria-label="Add to wishlist"
             disabled={!is_active}
           >
-            <Heart className={`w-3.5 h-3.5 xs:w-4 xs:h-4 ${isWishlisted ? "fill-red-500 text-red-500" : "text-gray-600"}`} />
+            <Heart className={`w-4 h-4 ${isWishlisted ? "fill-red-500 text-red-500" : "text-gray-600"}`} />
           </button>
           <button
             onClick={() => onCompareClick(productData)}
-            className="bg-[#f3faff] hover:bg-[#e6f7ee] p-1.5 xs:p-2 rounded-full border border-[#e0e7ef] shadow transition"
+            className="bg-white p-2 rounded-full border border-gray-200 shadow-sm transition hover:bg-gray-100"
             aria-label="Compare"
             disabled={!is_active}
           >
-            <Repeat className="w-3.5 h-3.5 xs:w-4 xs:h-4 text-gray-600" />
+            <Repeat className="w-4 h-4 text-gray-600" />
           </button>
           <button
             onClick={() => onShareClick(window.location.origin + productDetailUrl, title)}
-            className="bg-[#f3faff] hover:bg-[#e6f7ee] p-1.5 xs:p-2 rounded-full border border-[#e0e7ef] shadow transition"
+            className="bg-white p-2 rounded-full border border-gray-200 shadow-sm transition hover:bg-gray-100"
             aria-label="Share"
           >
-            <Share2 className="w-3.5 h-3.5 xs:w-4 xs:h-4 text-gray-600" />
+            <Share2 className="w-4 h-4 text-gray-600" />
           </button>
         </div>
       </div>
 
       {/* Content */}
-      <div className="flex-1 flex flex-col justify-between p-3 xs:p-4">
+      <div className="flex-1 flex flex-col justify-between p-4">
         <div className="flex-1">
           <Link href={productDetailUrl}>
-            <h3 className="text-sm xs:text-base font-semibold text-gray-900 mb-1.5 xs:mb-2 line-clamp-2 hover:text-green-700 transition-colors leading-tight">
+            <h3 className="text-base font-semibold text-gray-900 mb-2 line-clamp-2 hover:text-green-700 transition-colors">
               {title}
             </h3>
           </Link>
-          <p className="text-xs text-gray-500 mb-1.5 xs:mb-2 line-clamp-1">
-            <span dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(subtitle) }} />
+          <p className="text-sm text-gray-500 mb-2 line-clamp-1">
+            <span dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(subtitle || '') }} />
           </p>
           {/* Price */}
-          <div className="mb-2 xs:mb-3">
-            {(hide_price == true || price <= "0") ? (
-              <span className="text-base xs:text-lg font-semibold text-gray-400 tracking-wider">
+          <div className="mb-3">
+            {(hide_price || price <= "0") ? (
+              <span className="text-lg font-semibold text-gray-400 tracking-wider">
                 {currency} *******
               </span>
             ) : (
-              <span className="text-base xs:text-lg font-semibold text-green-600 tracking-wide">
+              <span className="text-lg font-bold text-green-600 tracking-wide">
                 {currency} {typeof price === "number" ? price.toLocaleString("en-IN") : price}
               </span>
             )}
@@ -174,68 +226,64 @@ const ProductCard = ({
         {directSale ? (
           <div className="flex flex-col gap-2 w-full">
             {isInCart ? (
-              <div className="flex items-center bg-green-50 text-green-700 font-medium py-1 px-1 rounded-md text-sm w-full">
+              <div className="flex items-center justify-between bg-green-50 text-green-700 font-medium py-1 px-1 rounded-lg">
                 <button
                   onClick={() => cartItemId && onDecreaseQuantity(cartItemId)}
                   disabled={currentCartQuantity <= 1 || !isPurchasable}
-                  className="h-7 w-7 xs:h-8 xs:w-8 flex items-center justify-center rounded hover:bg-green-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="h-8 w-8 flex items-center justify-center rounded-md hover:bg-green-100 disabled:opacity-50 disabled:cursor-not-allowed"
                   aria-label="Decrease quantity"
                 >
-                  <Minus className="w-3.5 h-3.5 xs:w-4 xs:h-4" />
+                  <Minus className="w-4 h-4" />
                 </button>
-                <span className="text-green-800 font-semibold text-center flex-1 text-sm xs:text-base">
+                <span className="text-green-800 font-semibold text-center flex-1 text-base">
                   {currentCartQuantity}
                 </span>
                 <button
                   onClick={() => cartItemId && onIncreaseQuantity(cartItemId)}
                   disabled={!isPurchasable}
-                  className="h-7 w-7 xs:h-8 xs:w-8 flex items-center justify-center rounded hover:bg-green-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="h-8 w-8 flex items-center justify-center rounded-md hover:bg-green-100 disabled:opacity-50 disabled:cursor-not-allowed"
                   aria-label="Increase quantity"
                 >
-                  <Plus className="w-3.5 h-3.5 xs:w-4 xs:h-4" />
+                  <Plus className="w-4 h-4" />
                 </button>
                 <button
                   onClick={() => cartItemId && onRemoveFromCart(cartItemId)}
-                  className="h-7 w-7 xs:h-8 xs:w-8 flex items-center justify-center rounded text-red-500 hover:bg-red-50 transition-colors ml-1"
+                  className="h-8 w-8 flex items-center justify-center rounded-md text-red-500 hover:bg-red-50 transition-colors ml-1"
                   aria-label="Remove from cart"
                   title="Remove from Cart"
                 >
-                  <Trash2 className="w-3.5 h-3.5 xs:w-4 xs:h-4" />
+                  <Trash2 className="w-4 h-4" />
                 </button>
               </div>
             ) : (
               <button
                 onClick={() => onAddToCartClick(id)}
-                className="flex items-center justify-center gap-1.5 xs:gap-2 rounded-lg bg-[#5ca131] hover:bg-[#4a8a29] py-2 px-3 xs:px-4 text-white font-medium transition-colors duration-200 w-full text-sm xs:text-base"
+                className="flex items-center justify-center gap-2 rounded-lg bg-green-600 hover:bg-green-700 py-3 text-white font-medium transition-colors w-full text-base"
                 aria-label="Add to cart"
                 disabled={!isPurchasable}
               >
-                <ShoppingCart className="w-3.5 h-3.5 xs:w-4 xs:h-4" />
-                <span className="hidden xs:inline">Add</span>
-                <span className="xs:hidden">Add</span>
+                <ShoppingCart className="w-4 h-4" />
+                <span>Add to Cart</span>
               </button>
             )}
 
             <div className="flex gap-2">
               <button
                 onClick={() => onBuyNowClick(id)}
-                className="rounded-lg border border-[#5ca131] text-[#5ca131] hover:bg-[#f3faff] py-2 px-3 xs:px-4 font-medium text-sm xs:text-base leading-6 transition-colors duration-200 flex-1"
+                className="rounded-lg border border-green-600 text-green-600 hover:bg-green-50 py-3 font-medium text-base transition-colors flex-1"
                 aria-label="Buy now"
                 disabled={!isPurchasable}
               >
-                Buy
+                Buy Now
               </button>
-              {/* Moved "Get a Quote" for non-purchasable direct sale products inside the directSale block */}
               {!isPurchasable && (
                 <Dialog>
-                  {/* Fixed: Ensuring DialogTrigger has exactly one child */}
                   <DialogTrigger asChild>
                     <button
-                      className="flex items-center justify-center rounded-lg bg-[#5ca131] hover:bg-[#4a8a29] py-2 px-3 xs:px-4 text-white font-medium transition-colors duration-200 flex-1 text-sm xs:text-base"
+                      className="flex items-center justify-center rounded-lg bg-green-600 hover:bg-green-700 py-3 text-white font-medium transition-colors flex-1 text-base"
                       aria-label="Get a quote"
                     >
-                      <span className="hidden sm:inline">Get a Quote</span>
-                      <span className="sm:hidden">Quote</span>
+                      <span>Get a Quote</span>
                     </button>
                   </DialogTrigger>
                   <DialogContent className="w-[95vw] max-w-2xl mx-auto">
@@ -249,7 +297,7 @@ const ProductCard = ({
           <Dialog>
             <DialogTrigger asChild>
               <button
-                className="flex items-center justify-center rounded-lg bg-[#5ca131] hover:bg-[#4a8a29] py-2 px-3 xs:px-4 text-white font-medium transition-colors duration-200 w-full text-sm xs:text-base"
+                className="flex items-center justify-center rounded-lg bg-green-600 hover:bg-green-700 py-3 text-white font-medium transition-colors w-full text-base"
                 aria-label={formButtonText}
                 disabled={!is_active}
               >
@@ -257,7 +305,7 @@ const ProductCard = ({
               </button>
             </DialogTrigger>
             <DialogContent className="w-[95vw] max-w-2xl mx-auto">
-                {productType === 'rental' || productType === 'used' ? (
+              {productType === 'rental' || productType === 'used' ? (
                 <RentalForm
                   productId={id}
                   productDetails={{
@@ -285,52 +333,51 @@ interface ProductCardContainerProps {
   id: number;
   image: string;
   title: string;
-  subtitle: string | null | undefined; // Changed to allow null/undefined
+  subtitle: string | null | undefined;
   price: string | number;
   currency: string;
   directSale: boolean;
   is_active: boolean;
   hide_price: boolean;
   stock_quantity: number;
-  type: string; // Added type to container props
+  type: string;
+  category_image: string | null; // Added category image to container props
 }
 
 // Full product data interface matching API for internal use in container
 interface ApiProductData {
   id: number;
   category_name?: string;
-  subcategory_name?: string;
+  subcategory_name?: string | null;
   images: { id: number; image: string }[];
   name: string;
   description: string;
   price: string;
   direct_sale: boolean;
-  type: string; // Ensure type is here
+  type: string;
   is_active: boolean;
   hide_price: boolean;
   stock_quantity: number;
   manufacturer?: string;
   average_rating?: number | null;
+  category_image?: string | null; // Added category image
 }
 
-// Cart Item type from API
 interface CartItemApi {
-  id: number; // Cart item ID
-  product: number; // Product ID
-  product_details: ApiProductData; // Full product details are nested
+  id: number;
+  product: number;
+  product_details: ApiProductData;
   quantity: number;
   total_price: number;
 }
 
-// Wishlist Item type from API
 interface WishlistItemApi {
-  id: number; // Wishlist item ID
+  id: number;
   product: number;
   product_details: ApiProductData;
 }
 
 
-// This component acts as a container to manage state and API interactions for each product card
 export const ProductCardContainer = ({
   id,
   image,
@@ -342,44 +389,38 @@ export const ProductCardContainer = ({
   is_active,
   hide_price,
   stock_quantity,
-  type, // Destructure type from props
+  type,
+  category_image, // Destructure category image
 }: ProductCardContainerProps) => {
   const { user } = useUser();
   const router = useRouter();
 
-  // States to track product's status for the current user
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [isInCart, setIsInCart] = useState(false);
   const [currentCartQuantity, setCurrentCartQuantity] = useState(0);
-  const [cartItemId, setCartItemId] = useState<number | null>(null); // To store the actual cart_item_id
+  const [cartItemId, setCartItemId] = useState<number | null>(null);
 
-  // Full product data to pass for comparison (matches ProductCardContainerProps)
   const productFullData: ProductCardContainerProps = {
-    id, image, title, subtitle, price, currency, directSale, is_active, hide_price, stock_quantity, type,
+    id, image, title, subtitle, price, currency, directSale, is_active, hide_price, stock_quantity, type, category_image
   };
 
-  // Function to fetch initial status of wishlist and cart for this product
-  // Use a ref to ensure correct values in callbacks
   const latestCartState = useRef({ currentCartQuantity, cartItemId, isInCart });
   useEffect(() => {
     latestCartState.current = { currentCartQuantity, cartItemId, isInCart };
   }, [currentCartQuantity, cartItemId, isInCart]);
 
-
   const fetchInitialStatus = useCallback(async () => {
     if (user) {
       try {
-        // Check wishlist status
         const wishlistResponse = await api.get<{ results: WishlistItemApi[] }>(`/wishlist/?product=${id}&user=${user.id}`);
         setIsWishlisted(wishlistResponse.data.results.length > 0);
 
-        // Check cart status and quantity
         const cartResponse = await api.get<{ results: CartItemApi[] }>(`/cart/?product=${id}&user=${user.id}`);
         if (cartResponse.data.results.length > 0) {
           const itemInCart = cartResponse.data.results[0];
           setIsInCart(true);
           setCurrentCartQuantity(itemInCart.quantity);
-          setCartItemId(itemInCart.id); // Store cart item ID
+          setCartItemId(itemInCart.id);
         } else {
           setIsInCart(false);
           setCurrentCartQuantity(0);
@@ -387,10 +428,8 @@ export const ProductCardContainer = ({
         }
       } catch (error) {
         console.error("Failed to fetch initial wishlist/cart status:", error);
-        // Do not show toast for background checks
       }
     } else {
-      // If user is not logged in, reset states
       setIsWishlisted(false);
       setIsInCart(false);
       setCurrentCartQuantity(0);
@@ -402,16 +441,14 @@ export const ProductCardContainer = ({
     fetchInitialStatus();
   }, [fetchInitialStatus]);
 
-  // --- API Callbacks for ProductCard ---
-
   const handleAddToCart = useCallback(async (productId: number) => {
     if (!user) {
       toast.error("Please log in to add products to your cart.");
+      router.push('/login');
       return;
     }
-
     try {
-      if (latestCartState.current.isInCart) { // Use ref for latest state
+      if (latestCartState.current.isInCart) {
         toast.info("This product is already in your cart.", {
           action: {
             label: 'View Cart',
@@ -421,9 +458,9 @@ export const ProductCardContainer = ({
         return;
       }
       const response = await api.post(`/cart/`, { product: productId, quantity: 1 });
-      setIsInCart(true); // Optimistically update UI
-      setCurrentCartQuantity(1); // Set quantity to 1 for new item
-      setCartItemId(response.data.id); // Store the newly created cart item ID
+      setIsInCart(true);
+      setCurrentCartQuantity(1);
+      setCartItemId(response.data.id);
       toast.success("Product added to cart!", {
         action: {
           label: 'View Cart',
@@ -440,7 +477,7 @@ export const ProductCardContainer = ({
               onClick: () => router.push('/cart'),
             },
           });
-          fetchInitialStatus(); // Re-fetch to sync state if already in cart
+          fetchInitialStatus();
         } else {
           toast.error(error.response.data?.message || `Failed to add to cart: ${error.response.statusText}`);
         }
@@ -455,7 +492,7 @@ export const ProductCardContainer = ({
     if (!user || !cartId) return;
     try {
       await api.delete(`/cart/${cartId}/`);
-      setIsInCart(false); // Optimistically update
+      setIsInCart(false);
       setCurrentCartQuantity(0);
       setCartItemId(null);
       toast.success("Product removed from cart.");
@@ -465,13 +502,12 @@ export const ProductCardContainer = ({
     }
   }, [user]);
 
-
   const handleIncreaseQuantity = useCallback(async (cartId: number) => {
     if (!user || !cartId) return;
     try {
-      const newQuantity = latestCartState.current.currentCartQuantity + 1; // Use ref for latest state
+      const newQuantity = latestCartState.current.currentCartQuantity + 1;
       await api.patch(`/cart/${cartId}/`, { quantity: newQuantity });
-      setCurrentCartQuantity(newQuantity); // Optimistically update
+      setCurrentCartQuantity(newQuantity);
       toast.success("Quantity increased!");
     } catch (error) {
       console.error("Error increasing quantity:", error);
@@ -483,10 +519,9 @@ export const ProductCardContainer = ({
     }
   }, [user]);
 
-
   const handleDecreaseQuantity = useCallback(async (cartId: number) => {
     if (!user || !cartId) return;
-    if (latestCartState.current.currentCartQuantity <= 1) { // Use ref for latest state
+    if (latestCartState.current.currentCartQuantity <= 1) {
       toast.info("Quantity cannot be less than 1. Use the remove button (trash icon) to take it out of cart.", {
         action: {
           label: 'Remove',
@@ -496,9 +531,9 @@ export const ProductCardContainer = ({
       return;
     }
     try {
-      const newQuantity = latestCartState.current.currentCartQuantity - 1; // Use ref for latest state
+      const newQuantity = latestCartState.current.currentCartQuantity - 1;
       await api.patch(`/cart/${cartId}/`, { quantity: newQuantity });
-      setCurrentCartQuantity(newQuantity); // Optimistically update
+      setCurrentCartQuantity(newQuantity);
       toast.success("Quantity decreased!");
     } catch (error) {
       console.error("Error decreasing quantity:", error);
@@ -510,32 +545,27 @@ export const ProductCardContainer = ({
     }
   }, [user, handleRemoveFromCart]);
 
-
   const handleWishlist = useCallback(async (productId: number) => {
     if (!user) {
       toast.error("Please log in to manage your wishlist.");
+      router.push('/login');
       return;
     }
-
     try {
       if (isWishlisted) {
-        // Product is already in wishlist, so remove it
         const wishlistResponse = await api.get<{ results: WishlistItemApi[] }>(`/wishlist/?product=${productId}&user=${user.id}`);
         if (wishlistResponse.data.results.length > 0) {
           const wishlistItemId = wishlistResponse.data.results[0].id;
           await api.delete(`/wishlist/${wishlistItemId}/`);
-          setIsWishlisted(false); // Optimistically update UI
+          setIsWishlisted(false);
           toast.success("Product removed from wishlist!");
         } else {
-          // Edge case: UI thought it was wishlisted, but API says no. Sync UI.
           setIsWishlisted(false);
           toast.info("Product was not found in your wishlist. Syncing state.");
         }
       } else {
-        // Product is not in wishlist, so add it
         const response = await api.post(`/wishlist/`, { product: productId });
-        console.log("Added to wishlist:", response.data);
-        setIsWishlisted(true); // Optimistically update UI
+        setIsWishlisted(true);
         toast.success("Product added to wishlist!");
       }
     } catch (error: unknown) {
@@ -543,7 +573,7 @@ export const ProductCardContainer = ({
       if (axios.isAxiosError(error) && error.response) {
         if (error.response.status === 400 && error.response.data?.non_field_errors?.[0] === "The fields user, product must make a unique set.") {
           toast.info("Product is already in your wishlist.");
-          setIsWishlisted(true); // Ensure UI reflects actual wishlist state
+          setIsWishlisted(true);
         } else {
           toast.error(error.response.data?.message || `Failed to add to wishlist: ${error.response.statusText}`);
         }
@@ -551,22 +581,20 @@ export const ProductCardContainer = ({
         toast.error("An unexpected error occurred while updating wishlist. Please try again.");
       }
     }
-  }, [user, isWishlisted]);
+  }, [user, isWishlisted, router]);
 
   const handleCompare = useCallback((data: Record<string, unknown>) => {
     const COMPARE_KEY = 'mhe_compare_products';
     if (typeof window !== 'undefined') {
       const currentCompare: ProductCardContainerProps[] = JSON.parse(localStorage.getItem(COMPARE_KEY) || '[]');
       const existingProduct = currentCompare.find((p: ProductCardContainerProps) => p.id === id);
-
       if (!existingProduct) {
         const dataToStore = { ...data };
         if (hide_price) {
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          const { price: _, ...restOfData } = dataToStore; // Extract price, ignore it, keep rest
-          currentCompare.push(restOfData as unknown as ProductCardContainerProps); // Cast to expected type
+          const { price: _, ...restOfData } = dataToStore;
+          currentCompare.push(restOfData as unknown as ProductCardContainerProps);
         } else {
-          currentCompare.push(dataToStore as unknown as ProductCardContainerProps); // Cast to expected type
+          currentCompare.push(dataToStore as unknown as ProductCardContainerProps);
         }
         localStorage.setItem(COMPARE_KEY, JSON.stringify(currentCompare));
         toast.success("Product added to comparison!");
@@ -579,20 +607,17 @@ export const ProductCardContainer = ({
   const handleBuyNow = useCallback(async (productId: number) => {
     if (!user) {
       toast.error("Please log in to proceed with purchase.");
-      router.push('/login'); // Redirect to login
+      router.push('/login');
       return;
     }
     if (!directSale || stock_quantity === 0 || !is_active) {
       toast.error("This product is not available for direct purchase.");
       return;
     }
-
     try {
-      // First, ensure the item is in the cart
-      if (!latestCartState.current.isInCart) { // Use ref for latest state
+      if (!latestCartState.current.isInCart) {
         await api.post(`/cart/`, { product: productId, quantity: 1 });
       }
-      // Then, redirect to the cart page
       router.push('/cart');
     } catch (error: unknown) {
       console.error("Error during buy now process:", error);
@@ -620,7 +645,6 @@ export const ProductCardContainer = ({
         }
       });
     } else {
-      // Fallback for browsers that do not support the Web Share API
       navigator.clipboard.writeText(url).then(() => {
         toast.success('Product link copied to clipboard!');
       }).catch((err) => {
@@ -630,11 +654,11 @@ export const ProductCardContainer = ({
     }
   }, []);
 
-
   return (
     <ProductCard
       id={id}
       image={image}
+      category_image={category_image}
       title={title}
       subtitle={subtitle}
       price={price}
@@ -656,7 +680,7 @@ export const ProductCardContainer = ({
       onDecreaseQuantity={handleDecreaseQuantity}
       onRemoveFromCart={handleRemoveFromCart}
       productData={{ ...productFullData }}
-      productType={type} // Pass the product type
+      productType={type}
     />
   );
 };
