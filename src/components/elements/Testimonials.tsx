@@ -744,8 +744,8 @@ export default function ReviewCarousel() {
                                 Read More
                               </button>
                             </DialogTrigger>
-                            <DialogContent className="bg-white max-w-2xl">
-                              <div className="mb-4">
+                            <DialogContent className="bg-white w-full max-w-2xl ">
+                              <div className="mb-4 ">
                                 <svg width="32" height="24" viewBox="0 0 32 24" fill="none" className="text-gray-400 mb-4">
                                   <path d="M0 12.8V24h11.2V12.8H5.6c0-3.11 2.53-5.6 5.6-5.6V0C4.98 0 0 4.98 0 12.8zM20.8 12.8V24H32V12.8h-5.6c0-3.11 2.53-5.6 5.6-5.6V0c-6.22 0-11.2 4.98-11.2 12.8z" fill="currentColor" />
                                 </svg>

@@ -208,7 +208,7 @@ const ComparePage = () => {
 
   return (
     <>
-      <div className="w-full px-4 sm:px-8 pt-6">
+      <div className="w-full px-4 sm:px-6 lg:px-8 pt-6">
         <Breadcrumb
           items={[
             { label: "Home", href: "/" },
@@ -217,14 +217,14 @@ const ComparePage = () => {
         />
       </div>
 
-      <div className="w-full px-4 sm:px-8 mt-4 mb-6">
-        <h2 className="text-2xl font-bold text-gray-900 tracking-tight">Compare Products</h2>
+      <div className="w-full px-4 sm:px-6 lg:px-8 mt-4 mb-6">
+        <h2 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight">Compare Products</h2>
       </div>
 
-      <div className="w-full px-4 sm:px-8 mb-10 overflow-x-auto">
-        <div className="flex flex-nowrap gap-6 pb-2 justify-center md:justify-start">
+      <div className="w-full px-4 sm:px-6 lg:px-8 mb-10 overflow-x-auto">
+        <div className="flex flex-nowrap gap-3 sm:gap-4 lg:gap-6 pb-2 justify-start min-w-max">
           {displayProducts.map((product) => (
-            <div key={product.id} className="flex-shrink-0 relative">
+            <div key={product.id} className="flex-shrink-0 relative w-64 sm:w-72 lg:w-80">
               <ProductCardContainer
                 id={product.id}
                 image={product.image}
@@ -250,15 +250,15 @@ const ComparePage = () => {
           {displayProducts.length < maxColumns && (
             <div
               onClick={() => setShowModal(true)}
-              className="flex-shrink-0 w-80 h-96 bg-white border-2 border-dashed border-gray-300 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:border-green-500 transition-all duration-200 p-4"
+              className="flex-shrink-0 w-64 sm:w-72 lg:w-80 h-80 sm:h-96 bg-white border-2 border-dashed border-gray-300 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:border-green-500 transition-all duration-200 p-4"
               tabIndex={0}
               role="button"
               aria-label="Add Product to Compare"
             >
-              <Plus className="w-12 h-12 text-green-500 mb-3" />
-              <span className="text-green-600 font-semibold text-lg text-center">Add Product</span>
+              <Plus className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 text-green-500 mb-3" />
+              <span className="text-green-600 font-semibold text-base sm:text-lg text-center">Add Product</span>
               {selectedCategory && (
-                <span className="text-gray-500 text-sm mt-1 text-center">(Only &quot;{selectedCategory}&quot; products)</span>
+                <span className="text-gray-500 text-xs sm:text-sm mt-1 text-center px-2">(Only &quot;{selectedCategory}&quot; products)</span>
               )}
             </div>
           )}
@@ -266,130 +266,135 @@ const ComparePage = () => {
       </div>
 
       {products.length > 0 && (
-        <div className="w-full px-4 sm:px-8 mb-10">
-          <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-x-auto">
-            <table className="min-w-full text-sm divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="py-4 px-4 text-left font-semibold text-gray-700 w-44 rounded-tl-xl sticky left-0 bg-gray-50 z-10">
-                    {/* Empty for row labels */}
-                  </th>
-                  {Array.from({ length: maxColumns }).map((_, idx) => (
-                    <th
-                      key={idx}
-                      className={`py-4 px-4 text-center font-semibold text-gray-700 min-w-[280px] ${
-                        idx === maxColumns - 1 ? "rounded-tr-xl" : ""
-                      }`}
-                    >
-                      {displayProducts[idx]?.title ? (
-                        <span className="block truncate text-gray-900 font-semibold text-base px-2">
-                          {displayProducts[idx].title}
-                        </span>
-                      ) : (
-                        <span className="text-gray-400">---</span>
-                      )}
+        <div className="w-full px-4 sm:px-6 lg:px-8 mb-10">
+          <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-xs sm:text-sm divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="py-3 sm:py-4 px-2 sm:px-4 text-left font-semibold text-gray-700 w-32 sm:w-44 rounded-tl-xl sticky left-0 bg-gray-50 z-10 border-r border-gray-200">
+                      {/* Empty for row labels */}
                     </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {allTableFields.map((field) => ( // Use allTableFields here
-                  <tr key={field.key} className="border-t last:border-b">
-                    <td className="py-4 px-4 font-medium text-gray-700 sticky left-0 bg-gray-50 z-10 whitespace-nowrap">
-                      {field.label}
-                    </td>
-                    {Array.from({ length: maxColumns }).map((_, idx) => {
-                      const product = displayProducts[idx];
-                      if (!product)
+                    {Array.from({ length: maxColumns }).map((_, idx) => (
+                      <th
+                        key={idx}
+                        className={`py-3 sm:py-4 px-2 sm:px-4 text-center font-semibold text-gray-700 min-w-[200px] sm:min-w-[240px] lg:min-w-[280px] ${idx === maxColumns - 1 ? "rounded-tr-xl" : ""
+                          }`}
+                      >
+                        {displayProducts[idx]?.title ? (
+                          <span className="block text-gray-900 font-semibold text-xs sm:text-sm lg:text-base px-1 sm:px-2 leading-tight truncate">
+                            {displayProducts[idx].title}
+                          </span>
+                        ) : (
+                          <span className="text-gray-400">---</span>
+                        )}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {allTableFields.map((field) => ( // Use allTableFields here
+                    <tr key={field.key} className="border-t last:border-b">
+                      <td className="py-3 sm:py-4 px-2 sm:px-4 font-medium text-gray-700 sticky left-0 bg-gray-50 z-10 whitespace-nowrap text-xs sm:text-sm border-r border-gray-200">
+                        <span className="block leading-tight">{field.label}</span>
+                      </td>
+                      {Array.from({ length: maxColumns }).map((_, idx) => {
+                        const product = displayProducts[idx];
+                        if (!product)
+                          return (
+                            <td
+                              key={idx}
+                              className="py-3 sm:py-4 px-2 sm:px-4 text-center text-gray-400"
+                            >
+                              ----
+                            </td>
+                          );
+
+                        let value: unknown;
+                        if (field.key.startsWith('product_details.')) {
+                          const detailKey = field.key.split('.')[1];
+                          value = product.product_details?.[detailKey];
+                        } else {
+                          value = product[field.key as keyof CompareProduct];
+                        }
+
+                        if (field.isCurrency)
+                          return (
+                            <td
+                              key={idx}
+                              className="py-3 sm:py-4 px-2 sm:px-4 text-center font-semibold text-green-600"
+                            >
+                              <span className="block leading-tight text-xs sm:text-sm">
+                                {product.hide_price ? (
+                                  <>
+                                    {product.currency} *******
+                                  </>
+                                ) : (
+                                  <>
+                                    {product.currency} {typeof product.price === "number" ? product.price.toLocaleString("en-IN") : product.price}
+                                  </>
+                                )}
+                              </span>
+                            </td>
+                          );
+                        if (field.isRating)
+                          return (
+                            <td key={idx} className="py-3 sm:py-4 px-2 sm:px-4 text-center">
+                              <span className="inline-flex flex-col sm:flex-row items-center gap-1">
+                                <span className="text-xs sm:text-sm">
+                                  {product.ratings > 0 ? product.ratings.toFixed(1) : 'N/A'}
+                                </span>
+                                {product.ratings > 0 && (
+                                  <span className="text-yellow-400 flex">
+                                    {Array.from({ length: 5 }).map((_, i) => (
+                                      <svg
+                                        key={i}
+                                        className={`inline w-3 h-3 sm:w-4 sm:h-4 ${i < Math.round(product.ratings)
+                                            ? "fill-yellow-400"
+                                            : "fill-gray-200"
+                                          }`}
+                                        viewBox="0 0 20 20"
+                                      >
+                                        <polygon points="9.9,1.1 12.3,6.7 18.4,7.5 13.7,11.8 15,17.8 9.9,14.7 4.8,17.8 6.1,11.8 1.4,7.5 7.5,6.7" />
+                                      </svg>
+                                    ))}
+                                  </span>
+                                )}
+                                {product.ratingsCount > 0 && (
+                                  <span className="text-gray-500 text-xs">
+                                    ({product.ratingsCount})
+                                  </span>
+                                )}
+                              </span>
+                            </td>
+                          );
                         return (
                           <td
                             key={idx}
-                            className="py-4 px-4 text-center text-gray-400"
+                            className="py-3 sm:py-4 px-2 sm:px-4 text-center text-gray-700"
                           >
-                            ----
-                          </td>
-                        );
-
-                      let value: unknown;
-                      if (field.key.startsWith('product_details.')) {
-                        const detailKey = field.key.split('.')[1];
-                        value = product.product_details?.[detailKey];
-                      } else {
-                        value = product[field.key as keyof CompareProduct];
-                      }
-
-                      if (field.isCurrency)
-                        return (
-                          <td
-                            key={idx}
-                            className="py-4 px-4 text-center font-semibold text-green-600"
-                          >
-                            {product.hide_price ? (
-                                <>
-                                  {product.currency} *******
-                                </>
-                              ) : (
-                                <>
-                                  {product.currency} {typeof product.price === "number" ? product.price.toLocaleString("en-IN") : product.price}
-                                </>
-                              )
-                            }
-                          </td>
-                        );
-                      if (field.isRating)
-                        return (
-                          <td key={idx} className="py-4 px-4 text-center">
-                            <span className="inline-flex items-center gap-1">
-                              {product.ratings > 0 ? product.ratings.toFixed(1) : 'N/A'}
-                              {product.ratings > 0 && (
-                                <span className="text-yellow-400 ml-1">
-                                  {Array.from({ length: 5 }).map((_, i) => (
-                                    <svg
-                                      key={i}
-                                      className={`inline w-4 h-4 ${
-                                        i < Math.round(product.ratings)
-                                          ? "fill-yellow-400"
-                                          : "fill-gray-200"
-                                      }`}
-                                      viewBox="0 0 20 20"
-                                    >
-                                      <polygon points="9.9,1.1 12.3,6.7 18.4,7.5 13.7,11.8 15,17.8 9.9,14.7 4.8,17.8 6.1,11.8 1.4,7.5 7.5,6.7" />
-                                    </svg>
-                                  ))}
-                                </span>
-                              )}
-                              {product.ratingsCount > 0 && (
-                                <span className="text-gray-500 text-xs ml-1">
-                                  ({product.ratingsCount})
-                                </span>
-                              )}
+                            <span className="block leading-tight text-xs sm:text-sm break-words">
+                              {value ? String(value) : "----"}
                             </span>
                           </td>
                         );
-                      return (
-                        <td
-                          key={idx}
-                          className="py-4 px-4 text-center text-gray-700"
-                        >
-                          {value ? String(value) : "----"}
-                        </td>
-                      );
-                    })}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                      })}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}
       {products.length === 0 && (
-        <div className="text-center text-gray-500 py-10">
-          <p className="text-lg mb-4">No products selected for comparison yet.</p>
+        <div className="text-center text-gray-500 py-10 px-4">
+          <p className="text-base sm:text-lg mb-4">No products selected for comparison yet.</p>
           <button
             onClick={() => setShowModal(true)}
-            className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-[#5CA131] hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+            className="inline-flex items-center px-4 sm:px-6 py-2 sm:py-3 border border-transparent text-sm sm:text-base font-medium rounded-md shadow-sm text-white bg-[#5CA131] hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
           >
-            <Plus className="-ml-1 mr-2 h-5 w-5" aria-hidden="true" />
+            <Plus className="-ml-1 mr-2 h-4 w-4 sm:h-5 sm:w-5" aria-hidden="true" />
             Add First Product
           </button>
         </div>
@@ -398,9 +403,9 @@ const ComparePage = () => {
       {/* Add Product Modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg p-6 relative border border-gray-200 transform scale-100 opacity-100 animate-fade-in-up">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-xs sm:max-w-md lg:max-w-lg p-4 sm:p-6 relative border border-gray-200 transform scale-100 opacity-100 animate-fade-in-up max-h-[90vh] flex flex-col">
             <button
-              className="absolute top-3 right-3 text-gray-400 hover:text-gray-700 text-3xl focus:outline-none"
+              className="absolute top-2 sm:top-3 right-2 sm:right-3 text-gray-400 hover:text-gray-700 text-2xl sm:text-3xl focus:outline-none z-10"
               onClick={() => {
                 setShowModal(false);
                 setSearch("");
@@ -411,11 +416,11 @@ const ComparePage = () => {
             >
               &times;
             </button>
-            <h3 className="text-2xl font-bold mb-4 text-gray-900 text-center">
+            <h3 className="text-lg sm:text-xl lg:text-2xl font-bold mb-3 sm:mb-4 text-gray-900 text-center pr-8">
               Add Product to Compare
             </h3>
             {selectedCategory && (
-              <p className="text-sm text-gray-600 mb-4 text-center">
+              <p className="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4 text-center px-2">
                 Only products from the &quot;<span className="font-semibold">{selectedCategory}</span>&quot; category can be added.
               </p>
             )}
@@ -424,25 +429,25 @@ const ComparePage = () => {
               placeholder="Search products..."
               value={search}
               onChange={handleSearch}
-              className="w-full border border-gray-300 rounded-md px-4 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-green-500 text-base"
+              className="w-full border border-gray-300 rounded-md px-3 sm:px-4 py-2 mb-3 sm:mb-4 focus:outline-none focus:ring-2 focus:ring-green-500 text-sm sm:text-base"
               aria-label="Search products"
             />
-            <div className="max-h-80 overflow-y-auto custom-scrollbar pr-2">
+            <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 pr-1 sm:pr-2 min-h-0">
               {loadingSearch ? (
-                <div className="text-center py-8 text-gray-500">Loading products...</div>
+                <div className="text-center py-8 text-gray-500 text-sm sm:text-base">Loading products...</div>
               ) : searchResults.length === 0 && search.length > 1 ? (
-                <div className="text-gray-400 text-center py-8">
+                <div className="text-gray-400 text-center py-8 text-sm sm:text-base">
                   No products found matching your search.
                 </div>
               ) : searchResults.length === 0 && search.length <= 1 ? (
-                <div className="text-gray-400 text-center py-8">
+                <div className="text-gray-400 text-center py-8 text-sm sm:text-base">
                   Start typing to search for products.
                 </div>
               ) : (
                 searchResults.map((product) => (
                   <div
                     key={product.id}
-                    className={`flex items-center gap-4 p-3 rounded-lg cursor-pointer transition-colors duration-200 my-2
+                    className={`flex items-center gap-2 sm:gap-3 lg:gap-4 p-2 sm:p-3 rounded-lg cursor-pointer transition-colors duration-200 my-2
                       ${product.category_name !== selectedCategory && selectedCategory !== null
                         ? "bg-gray-100 opacity-60 cursor-not-allowed"
                         : "hover:bg-green-50"
@@ -458,27 +463,27 @@ const ComparePage = () => {
                     role="button"
                     aria-label={`Add ${product.name}`}
                   >
-                    <div className="w-16 h-16 relative flex-shrink-0 border border-gray-200 rounded-md overflow-hidden">
+                    <div className="w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 relative flex-shrink-0 border border-gray-200 rounded-md overflow-hidden">
                       <Image
                         src={product.images[0]?.image || "/images/placeholder.jpg"}
                         alt={product.name}
                         fill
                         className="object-contain"
-                        sizes="64px"
+                        sizes="(max-width: 640px) 48px, (max-width: 1024px) 56px, 64px"
                       />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="font-medium text-gray-900 text-base truncate">
+                      <div className="font-medium text-gray-900 text-sm sm:text-base truncate">
                         {product.name}
                       </div>
-                      <div className="text-sm text-gray-500 truncate">
+                      <div className="text-xs sm:text-sm text-gray-500 truncate">
                         {product.subcategory_name || product.description || 'N/A'}
                       </div>
                       {product.category_name && (
-                        <div className="text-xs text-gray-400 mt-1">Category: {product.category_name}</div>
+                        <div className="text-xs text-gray-400 mt-1 truncate">Category: {product.category_name}</div>
                       )}
                     </div>
-                    <span className="text-green-600 font-semibold flex-shrink-0 text-base">
+                    <span className="text-green-600 font-semibold flex-shrink-0 text-xs sm:text-sm lg:text-base">
                       {product.hide_price ? "₹ *******" : `₹ ${product.price}`}
                     </span>
                   </div>

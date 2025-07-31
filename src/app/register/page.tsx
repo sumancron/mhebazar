@@ -47,7 +47,7 @@ const handleSubmit = async (e: React.FormEvent) => {
       {
         headers: {
           "Content-Type": "application/json",
-          "X-API-KEY": API_KEY,
+          // "X-API-KEY": API_KEY,
         },
       }
     );

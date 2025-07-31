@@ -139,7 +139,7 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
     );
   };
 
-  const validSpecs = getValidSpecs(data.product_details);
+  // const validSpecs = getValidSpecs(data.product_details);
 
 
   // Function to trigger review section refresh
@@ -445,8 +445,6 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
     }
   }, [data]);
 
-  console.log("Product data:", data);
-
   // Callback to allow ReviewSection to register its refresh function
   const registerReviewsRefresher = useCallback((refresher: () => void) => {
     reviewsRefresher.current = refresher;
@@ -478,6 +476,9 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
   // Determine which form component to use based on product type
   const FormComponent = data.type === 'rental' ? RentalForm : QuoteForm;
   const formButtonText = data.type === 'rental' ? "Rent Now" : "Get a Quote";
+  const validSpecs = getValidSpecs(data.product_details);
+
+  console.log(data);
 
   return (
     <div className="px-4 mx-auto p-2 sm:p-4 bg-white">
@@ -588,7 +589,7 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
                       Write a Review
                     </span>
                   </DialogTrigger>
-                  <DialogContent>
+                  <DialogContent className="w-full max-w-2xl">
                     <MheWriteAReview
                       productId={data.id}
                     />
@@ -600,7 +601,7 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
               </div>
               {/* Price */}
               <div className="mb-2">
-                {data.hide_price ? (
+                {(data.hide_price || Number(data.price) <= 0) ? (
                   <span className="text-2xl font-bold text-gray-400">₹ *******</span>
                 ) : (
                   <span className="text-2xl font-bold text-green-700">₹{displayPrice}</span>

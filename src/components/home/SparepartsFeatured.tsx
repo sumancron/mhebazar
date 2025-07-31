@@ -67,39 +67,41 @@ export default function SparePartsFeatured() {
         </div>
       ) : spareParts.length > 0 ? (
         // Replaced the grid with the Carousel component
-        <Carousel
-          opts={{
-            align: "start",
-            loop: true,
-          }}
-          className="w-full"
-        >
-          <CarouselContent className="-ml-4">
-            {spareParts.map((spare) => (
-              <CarouselItem
-                key={spare.id}
-                className="pl-4 sm:basis-1/2 md:basis-1/3 lg:basis-1/4"
-              >
+        <div className="relative px-4 sm:px-6">
+          <Carousel
+            opts={{
+              align: "start",
+              loop: true,
+            }}
+            className="w-full"
+          >
+            <CarouselContent className="-ml-4">
+              {spareParts.map((spare) => (
+                <CarouselItem
+                  key={spare.id}
+                  className="pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/5"
+                >
                   {/* <div className="bg-white rounded-2xl shadow-[0_4px_16px_0_rgba(0,0,0,0.04)] hover:shadow-lg transition p-4 flex flex-col h-full"> */}
-                    <ProductCard
-                      id={Number(spare.id)}
-                      image={spare.images[0].image}
-                      title={spare.name}
-                      subtitle={spare.subtitle}
-                      price={spare.price}
-                      currency={spare.currency}
-                      directSale={spare.direct_sale}
-                      is_active={spare.is_active}
-                      hide_price={spare.hide_price}
-                      stock_quantity={spare.stock_quantity}
-                    />
+                  <ProductCard
+                    id={Number(spare.id)}
+                    image={spare.images[0].image}
+                    title={spare.name}
+                    subtitle={spare.subtitle}
+                    price={spare.price}
+                    currency={spare.currency}
+                    directSale={spare.direct_sale}
+                    is_active={spare.is_active}
+                    hide_price={spare.hide_price}
+                    stock_quantity={spare.stock_quantity}
+                  />
                   {/* </div> */}
-              </CarouselItem>
-            ))}
-          </CarouselContent>
-          <CarouselPrevious className="hidden sm:flex" />
-          <CarouselNext className="hidden sm:flex" />
-        </Carousel>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious className="flex -left-4 sm:-left-6" />
+            <CarouselNext className="flex -right-4 sm:-right-6" />
+          </Carousel>
+        </div>
       ) : (
         // No products available message
         <div className="col-span-full flex flex-col items-center justify-center py-16 bg-white rounded-2xl shadow-[0_4px_16px_0_rgba(0,0,0,0.04)]">

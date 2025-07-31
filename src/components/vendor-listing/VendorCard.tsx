@@ -34,10 +34,9 @@ export default function VendorCard({ vendor }: Props) {
     : `/vendor-listing/${vendor.brand}`;
 
   return (
-    <div className="relative border border-gray-200 rounded-2xl p-5 flex flex-col items-center shadow-sm hover:shadow-md hover:scale-[1.02] transition-all duration-200 bg-white w-full max-w-xs min-w-[240px]">
+    <div className="relative border border-gray-200 rounded-2xl p-5 flex flex-col items-center shadow-sm hover:shadow-md hover:scale-[1.02] transition-all duration-200 bg-white w-full max-w-xs min-w-[240px] h-full">
       
-     
-
+    
       {/* Logo / Placeholder */}
       <div className="relative w-24 h-20 mb-4 rounded-xl border border-gray-100 bg-gray-50 flex items-center justify-center overflow-hidden">
         <Image
