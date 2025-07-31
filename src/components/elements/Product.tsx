@@ -106,7 +106,7 @@ const ProductCard = ({
         }`}
     >
       {/* Image Container */}
-      <div className="relative w-full h-56 flex-shrink-0">
+      <div className="relative w-full h-48 xs:h-52 sm:h-56 md:h-60 lg:h-56 xl:h-52 2xl:h-56 flex-shrink-0">
         <Link href={productDetailUrl} className="block w-full h-full">
           <Image
             src={image || "/no-product.png"} // Ensure a fallback for src
@@ -115,6 +115,7 @@ const ProductCard = ({
             height={224}
             className="object-fill w-full h-full rounded-t-2xl transition-transform duration-300 hover:scale-105"
             quality={85}
+            sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, (max-width: 1280px) 25vw, 20vw"
           />
         </Link>
         {/* Action Icons Top-Left */}
@@ -125,7 +126,7 @@ const ProductCard = ({
             aria-label="Add to wishlist"
             disabled={!is_active}
           >
-            <Heart className={`w-4 h-4 ${isWishlisted ? "fill-red-500 text-red-500" : "text-gray-600"}`} />
+            <Heart className={`w-3.5 h-3.5 xs:w-4 xs:h-4 ${isWishlisted ? "fill-red-500 text-red-500" : "text-gray-600"}`} />
           </button>
           <button
             onClick={() => onCompareClick(productData)}
@@ -133,21 +134,21 @@ const ProductCard = ({
             aria-label="Compare"
             disabled={!is_active}
           >
-            <Repeat className="w-4 h-4 text-gray-600" />
+            <Repeat className="w-3.5 h-3.5 xs:w-4 xs:h-4 text-gray-600" />
           </button>
           <button
             onClick={() => onShareClick(window.location.origin + productDetailUrl, title)}
             className="bg-[#f3faff] hover:bg-[#e6f7ee] p-2 rounded-full border border-[#e0e7ef] shadow transition-all duration-200 transform hover:scale-110"
             aria-label="Share"
           >
-            <Share2 className="w-4 h-4 text-gray-600" />
+            <Share2 className="w-3.5 h-3.5 xs:w-4 xs:h-4 text-gray-600" />
           </button>
         </div>
       </div>
 
       {/* Content */}
-      <div className="flex-1 flex flex-col justify-between p-4">
-        <div>
+      <div className="flex-1 flex flex-col justify-between p-3 xs:p-4">
+        <div className="flex-1">
           <Link href={productDetailUrl}>
             <h3 className="text-base font-semibold text-gray-900 mb-2 line-clamp-2 hover:text-green-700 transition-colors duration-200">
               {title}
@@ -161,7 +162,7 @@ const ProductCard = ({
                 {currency} *******
               </span>
             ) : (
-              <span className="text-lg font-semibold text-green-600 tracking-wide">
+              <span className="text-base xs:text-lg font-semibold text-green-600 tracking-wide">
                 {currency} {typeof price === "number" ? price.toLocaleString("en-IN") : price}
               </span>
             )}
@@ -170,7 +171,7 @@ const ProductCard = ({
 
         {/* Action Buttons */}
         {directSale ? (
-          <div className="flex flex-col sm:flex-row gap-2 w-full">
+          <div className="flex flex-col gap-2 w-full">
             {isInCart ? (
               <div className="flex items-center bg-green-50 text-green-700 font-medium py-1 px-1 rounded-md text-sm flex-1 shadow-sm animate-fade-in">
                 <button
@@ -179,9 +180,9 @@ const ProductCard = ({
                   className="h-8 w-8 flex items-center justify-center rounded hover:bg-green-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
                   aria-label="Decrease quantity"
                 >
-                  <Minus className="w-4 h-4" />
+                  <Minus className="w-3.5 h-3.5 xs:w-4 xs:h-4" />
                 </button>
-                <span className="text-green-800 font-semibold text-center flex-1">
+                <span className="text-green-800 font-semibold text-center flex-1 text-sm xs:text-base">
                   {currentCartQuantity}
                 </span>
                 <button
@@ -190,7 +191,7 @@ const ProductCard = ({
                   className="h-8 w-8 flex items-center justify-center rounded hover:bg-green-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
                   aria-label="Increase quantity"
                 >
-                  <Plus className="w-4 h-4" />
+                  <Plus className="w-3.5 h-3.5 xs:w-4 xs:h-4" />
                 </button>
                 <button
                   onClick={() => cartItemId && onRemoveFromCart(cartItemId)}
@@ -198,7 +199,7 @@ const ProductCard = ({
                   aria-label="Remove from cart"
                   title="Remove from Cart"
                 >
-                  <Trash2 className="w-4 h-4" />
+                  <Trash2 className="w-3.5 h-3.5 xs:w-4 xs:h-4" />
                 </button>
               </div>
             ) : (
@@ -208,7 +209,9 @@ const ProductCard = ({
                 aria-label="Add to cart"
                 disabled={!isPurchasable}
               >
-                <ShoppingCart className="w-4 h-4" /> Add
+                <ShoppingCart className="w-3.5 h-3.5 xs:w-4 xs:h-4" />
+                <span className="hidden xs:inline">Add</span>
+                <span className="xs:hidden">Add</span>
               </button>
             )}
 

@@ -22,7 +22,7 @@ export async function generateMetadata({ params }: { params: { product: string }
   };
 }
 
-export default function IndividualProductPage({
+export default async function IndividualProductPage({ 
   params,
   searchParams,
 }: {

@@ -1,16 +1,23 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { ShoppingCart, Download, FileText, Bell, AlertCircle, CheckCircle, Clock } from "lucide-react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-// import AddProductForm from "@/components/forms/product/AddProduct";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 import React from "react";
 import api from "@/lib/api";
-
 import {
   Sheet,
   SheetContent,
@@ -127,7 +134,6 @@ function getStatusIcon(isActive: boolean) {
 
 // --- MAIN COMPONENT ---
 export default function DashboardStats() {
-  // const [open, setOpen] = useState(false);
   const [stats, setStats] = useState<VendorStats | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [application, setApplication] = useState<VendorApplication | null>(null);
@@ -135,6 +141,25 @@ export default function DashboardStats() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showAllNotifications, setShowAllNotifications] = useState(false);
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const productsPerPage = 10;
+
+  // Calculate pagination
+  const { paginatedProducts, totalPages } = useMemo(() => {
+    const startIndex = (currentPage - 1) * productsPerPage;
+    const endIndex = startIndex + productsPerPage;
+    const paginatedProducts = products.slice(startIndex, endIndex);
+    const totalPages = Math.ceil(products.length / productsPerPage);
+
+    return { paginatedProducts, totalPages };
+  }, [products, currentPage, productsPerPage]);
+
+  // Reset to first page when products change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [products.length]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -181,6 +206,16 @@ export default function DashboardStats() {
   const approved_products = products.filter(p => p.is_active).length;
   const pending_products = products.filter(p => !p.is_active).length;
 
+  // Handle page change
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    // Scroll to top of products section when page changes
+    const productsSection = document.getElementById('products-section');
+    if (productsSection) {
+      productsSection.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -204,8 +239,6 @@ export default function DashboardStats() {
 
   return (
     <>
-      {/* <AddProductForm open={open} onClose={() => setOpen(false)} /> */}
-
       <div className="space-y-8 px-2 sm:px-6 py-6 max-w-7xl mx-auto">
         {/* Vendor Status Alert */}
         {application && stats?.vendor_info.status !== 'Approved' && (
@@ -274,7 +307,7 @@ export default function DashboardStats() {
               </div>
             </div>
           </Card>
-          {/* Other stat cards remain the same */}
+
           <Card className="p-6 bg-gradient-to-r from-blue-50 to-blue-100 border-0 shadow-none">
             <div className="flex items-center justify-between">
               <div>
@@ -296,6 +329,7 @@ export default function DashboardStats() {
               </div>
             </div>
           </Card>
+
           <Card className="p-6 bg-gradient-to-r from-yellow-50 to-yellow-100 border-0 shadow-none">
             <div className="flex items-center justify-between">
               <div>
@@ -315,17 +349,21 @@ export default function DashboardStats() {
         </div>
 
         {/* Product List */}
-        <div className="grid grid-cols-1">
+        <div className="grid grid-cols-1" id="products-section">
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
                 Your Products ({products.length})
+                {products.length > productsPerPage && (
+                  <span className="text-sm font-normal text-gray-500 ml-2">
+                    Showing {Math.min((currentPage - 1) * productsPerPage + 1, products.length)}-{Math.min(currentPage * productsPerPage, products.length)} of {products.length}
+                  </span>
+                )}
               </h2>
               {application?.is_approved && (
                 <Sheet>
-                  <SheetTrigger>
+                  <SheetTrigger asChild>
                     <Button
-                      // onClick={() => setOpen(true)}
                       variant="default"
                       className="bg-[#5CA131] hover:bg-green-700 text-white font-semibold px-4 py-2 rounded flex items-center gap-2"
                     >
@@ -354,7 +392,7 @@ export default function DashboardStats() {
                 <h3 className="font-semibold text-gray-900 mb-2">No Products Yet</h3>
                 <p className="text-gray-600 mb-4">Start by adding your first product to begin selling.</p>
                 <Sheet>
-                  <SheetTrigger>
+                  <SheetTrigger asChild>
                     <Button className="bg-[#5CA131] hover:bg-green-700">
                       Add Your First Product
                     </Button>
@@ -366,7 +404,7 @@ export default function DashboardStats() {
               </Card>
             ) : (
               <div className="space-y-4">
-                {products.map((product) => (
+                {paginatedProducts.map((product) => (
                   <div
                     key={product.id}
                     className="flex flex-col sm:flex-row items-center justify-between p-4 bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow transition"
@@ -413,15 +451,91 @@ export default function DashboardStats() {
                     </div>
                   </div>
                 ))}
+
+                {/* Pagination */}
+                {totalPages > 1 && (
+                  <div className="flex justify-center mt-8">
+                    <Pagination>
+                      <PaginationContent>
+                        <PaginationItem>
+                          <PaginationPrevious
+                            href="#"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              if (currentPage > 1) {
+                                handlePageChange(currentPage - 1);
+                              }
+                            }}
+                            className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                          />
+                        </PaginationItem>
+
+                        {/* Page Numbers */}
+                        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                          // Show first page, last page, current page, and pages around current page
+                          if (
+                            page === 1 ||
+                            page === totalPages ||
+                            (page >= currentPage - 1 && page <= currentPage + 1)
+                          ) {
+                            return (
+                              <PaginationItem key={page}>
+                                <PaginationLink
+                                  href="#"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    handlePageChange(page);
+                                  }}
+                                  isActive={currentPage === page}
+                                  className="cursor-pointer"
+                                >
+                                  {page}
+                                </PaginationLink>
+                              </PaginationItem>
+                            );
+                          }
+
+                          // Show ellipsis
+                          if (
+                            (page === currentPage - 2 && currentPage > 3) ||
+                            (page === currentPage + 2 && currentPage < totalPages - 2)
+                          ) {
+                            return (
+                              <PaginationItem key={page}>
+                                <PaginationEllipsis />
+                              </PaginationItem>
+                            );
+                          }
+
+                          return null;
+                        })}
+
+                        <PaginationItem>
+                          <PaginationNext
+                            href="#"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              if (currentPage < totalPages) {
+                                handlePageChange(currentPage + 1);
+                              }
+                            }}
+                            className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                          />
+                        </PaginationItem>
+                      </PaginationContent>
+                    </Pagination>
+                  </div>
+                )}
+
                 <Link href="/vendor/product-list">
                   <Button variant="outline" className="w-full font-semibold text-base text-green-600 border-green-600 hover:bg-green-50 hover:text-green-600 py-6">
                     View All Products
-                  </Button></Link>
+                  </Button>
+                </Link>
               </div>
             )}
           </div>
         </div>
-        {/* The rest of your JSX remains unchanged */}
       </div>
     </>
   );

@@ -224,6 +224,8 @@ export default function VendorPage({ params }: { params: { vendor: string } }) {
 
   const bannerImageUrls = userProfile?.user_banner?.map(b => b.image) || [];
 
+  console.log(userProfile);
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 py-8">

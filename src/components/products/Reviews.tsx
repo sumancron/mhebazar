@@ -253,7 +253,7 @@ export default function ReviewSection({ productId, registerRefresher }: ReviewSe
                       </span>
                     </Button>
                   </DialogTrigger>
-                  <DialogContent>
+                  <DialogContent className="w-full max-w-2xl">
                     <MheWriteAReview
                       productId={productId}
                     />

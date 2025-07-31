@@ -100,8 +100,10 @@ function ClientSideVendorsPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {paginated.map((vendor) => (
-            <VendorCard key={vendor.id} vendor={vendor} />
+            {paginated.map((vendor) => (
+            <div className=" w-80 h-72 sm:w-72 sm:h-64 mx-auto" key={vendor.id}>
+                 <VendorCard vendor={vendor} />
+            </div>
           ))}
         </div>
       )}
