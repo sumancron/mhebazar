@@ -258,7 +258,7 @@ const ProductCard = ({
             ) : (
               <button
                 onClick={() => onAddToCartClick(id)}
-                className="flex items-center justify-center gap-2 rounded-lg bg-green-600 hover:bg-green-700 py-3 text-white font-medium transition-colors w-full text-base"
+                className="flex items-center justify-center gap-2 rounded-lg bg-[#5CA131] hover:bg-green-700 py-3 text-white font-medium transition-colors w-full text-base"
                 aria-label="Add to cart"
                 disabled={!isPurchasable}
               >
@@ -280,7 +280,7 @@ const ProductCard = ({
                 <Dialog>
                   <DialogTrigger asChild>
                     <button
-                      className="flex items-center justify-center rounded-lg bg-green-600 hover:bg-green-700 py-3 text-white font-medium transition-colors flex-1 text-base"
+                      className="flex items-center justify-center rounded-lg bg-[#5CA131] hover:bg-green-700 py-3 text-white font-medium transition-colors flex-1 text-base"
                       aria-label="Get a quote"
                     >
                       <span>Get a Quote</span>
@@ -297,7 +297,7 @@ const ProductCard = ({
           <Dialog>
             <DialogTrigger asChild>
               <button
-                className="flex items-center justify-center rounded-lg bg-green-600 hover:bg-green-700 py-3 text-white font-medium transition-colors w-full text-base"
+                className="flex items-center justify-center rounded-lg bg-[#5CA131] hover:bg-green-700 py-3 text-white font-medium transition-colors w-full text-base"
                 aria-label={formButtonText}
                 disabled={!is_active}
               >

@@ -430,7 +430,7 @@ export default function ProductList() {
                     <PaginationLink
                       onClick={() => setCurrentPage(index + 1)}
                       isActive={currentPage === index + 1}
-                      className={`${currentPage === index + 1 ? "bg-green-600 text-white" : "hover:bg-green-50"} transition-colors duration-200`}
+                      className={`${currentPage === index + 1 ? "bg-[#5CA131] text-white" : "hover:bg-green-50"} transition-colors duration-200`}
                     >
                       {index + 1}
                     </PaginationLink>

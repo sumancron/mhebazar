@@ -688,7 +688,7 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
                     ) : (
                       <button
                         onClick={() => handleAddToCart(data.id)}
-                        className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-md text-base transition"
+                        className="w-full bg-[#5CA131] hover:bg-green-700 text-white font-semibold py-3 rounded-md text-base transition"
                         aria-label="Add to cart"
                       >
                         <ShoppingCart className="inline-block mr-2 w-5 h-5" /> Add to Cart
@@ -706,7 +706,7 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
                   <Dialog>
                     <DialogTrigger asChild>
                       <button
-                        className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-md text-base transition"
+                        className="w-full bg-[#5CA131] hover:bg-green-700 text-white font-semibold py-3 rounded-md text-base transition"
                         aria-label={formButtonText}
                         disabled={!data.is_active}
                       >
