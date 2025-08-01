@@ -46,7 +46,6 @@ interface ApiResponse<T> {
 }
 
 // Validation context return type
-// CHANGED: Added id and subId to carry the numeric IDs
 interface RouteContext {
   type: 'category' | 'subcategory' | 'type' | 'invalid';
   name: string | null;
@@ -111,7 +110,6 @@ export default function CategoryOrTypePage({
 
     // 2. Check if it's a valid category or subcategory
     try {
-      // Use `slug` for querying the API if your backend supports it, otherwise use the formatted name.
       // Assuming the backend filter is by name for this lookup.
       const categoryResponse = await api.get<ApiCategory[]>(`/categories/?name=${formattedParamName}`);
       const categories = categoryResponse.data;
@@ -128,14 +126,12 @@ export default function CategoryOrTypePage({
           if (subcategory) {
             setActiveSubcategoryName(subcategory.name);
             setSelectedFilters(new Set<string>([category.name, subcategory.name]));
-            // CHANGED: Return the found subcategory ID
             return { type: 'subcategory', name: category.name, subName: subcategory.name, id: category.id, subId: subcategory.id };
           } else {
             return { type: 'invalid', name: null, subName: null, id: null, subId: null };
           }
         } else {
           setSelectedFilters(new Set<string>([category.name]));
-          // CHANGED: Return the found category ID
           return { type: 'category', name: category.name, subName: null, id: category.id, subId: null };
         }
       }
@@ -151,7 +147,6 @@ export default function CategoryOrTypePage({
     contextType: 'category' | 'subcategory' | 'type',
     contextName: string,
     contextSubName: string | null,
-    // CHANGED: Accept categoryId and subcategoryId
     categoryId: number | null,
     subcategoryId: number | null,
     page: number,
@@ -167,15 +162,11 @@ export default function CategoryOrTypePage({
     try {
       const queryParams = new URLSearchParams();
 
-      // CHANGED: Use ID for filtering instead of name
       if (contextType === 'subcategory' && subcategoryId) {
-        // If a subcategory ID is available, it's the most specific filter.
         queryParams.append("subcategory", subcategoryId.toString());
       } else if (contextType === 'category' && categoryId) {
-        // Otherwise, filter by the parent category ID.
         queryParams.append("category", categoryId.toString());
       } else if (contextType === 'type') {
-        // For product type, filter by the type name (e.g., 'new', 'used').
         queryParams.append("type", contextName.toLowerCase());
       }
 
@@ -183,8 +174,10 @@ export default function CategoryOrTypePage({
 
       if (minPriceFilter !== '') queryParams.append("min_price", minPriceFilter.toString());
       if (maxPriceFilter !== '') queryParams.append("max_price", maxPriceFilter.toString());
-      if (manufacturerFilter) queryParams.append("manufacturer", manufacturerFilter);
-      if (ratingFilter !== null) queryParams.append("min_average_rating", ratingFilter.toString());
+      if (ratingFilter !== null) queryParams.append("average_rating", ratingFilter.toString());
+
+      // --- CORRECTED: Use the 'search' parameter for manufacturer lookup ---
+      if (manufacturerFilter) queryParams.append("search", manufacturerFilter);
 
       if (sortByFilter && sortByFilter !== 'relevance') {
         let sortParam = '';
@@ -221,7 +214,6 @@ export default function CategoryOrTypePage({
           type: p.type,
         }));
 
-        console.log(response.data.count)
         setProducts(transformedProducts);
         setTotalProducts(response.data.count);
         setTotalPages(Math.ceil(response.data.count / 20)); // Assuming 20 items per page
@@ -245,8 +237,9 @@ export default function CategoryOrTypePage({
   useEffect(() => {
     const minP = searchParams.get('min_price');
     const maxP = searchParams.get('max_price');
-    const manufacturer = searchParams.get('manufacturer');
-    const rating = searchParams.get('min_average_rating');
+    // --- CORRECTED: Read 'search' param for manufacturer ---
+    const manufacturer = searchParams.get('search');
+    const rating = searchParams.get('average_rating');
     const sort = searchParams.get('sort_by');
     const page = searchParams.get('page');
 
@@ -269,7 +262,6 @@ export default function CategoryOrTypePage({
           context.type as 'category' | 'subcategory' | 'type',
           context.name,
           context.subName,
-          // CHANGED: Pass the IDs to the fetch function
           context.id,
           context.subId,
           currentPage,
@@ -298,7 +290,7 @@ export default function CategoryOrTypePage({
     sortBy,
   ]);
 
-  // Handle filter changes (no changes needed here, as it navigates which triggers the main useEffect)
+  // Handle filter changes
   const handleFilterChange = useCallback((
     filterValue: string | number,
     filterType: "category" | "subcategory" | "type" | "price_range" | "manufacturer" | "rating" | "sort_by",
@@ -311,8 +303,8 @@ export default function CategoryOrTypePage({
       let newPath = "";
       const formattedFilterSlug = String(filterValue).toLowerCase().replace(/\s+/g, '-');
 
-      // Reset all filters on navigation
-      ['min_price', 'max_price', 'manufacturer', 'min_average_rating', 'sort_by'].forEach(p => newSearchParams.delete(p));
+      // --- CORRECTED: Delete 'search' when navigating ---
+      ['min_price', 'max_price', 'search', 'average_rating', 'sort_by'].forEach(p => newSearchParams.delete(p));
       newSearchParams.set('page', '1');
 
       setMinPrice('');
@@ -338,9 +330,10 @@ export default function CategoryOrTypePage({
         min === '' ? newSearchParams.delete('min_price') : newSearchParams.set('min_price', String(min));
         max === '' ? newSearchParams.delete('max_price') : newSearchParams.set('max_price', String(max));
       } else if (filterType === "manufacturer") {
-        newValue ? newSearchParams.set('manufacturer', String(newValue)) : newSearchParams.delete('manufacturer');
+        // --- CORRECTED: Set the 'search' parameter for manufacturer ---
+        newValue ? newSearchParams.set('search', String(newValue)) : newSearchParams.delete('search');
       } else if (filterType === "rating") {
-        newValue ? newSearchParams.set('min_average_rating', String(newValue)) : newSearchParams.delete('min_average_rating');
+        newValue ? newSearchParams.set('average_rating', String(newValue)) : newSearchParams.delete('average_rating');
       } else if (filterType === "sort_by" && typeof filterValue === 'string') {
         filterValue === 'relevance' ? newSearchParams.delete('sort_by') : newSearchParams.set('sort_by', filterValue);
       }

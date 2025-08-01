@@ -90,7 +90,6 @@ export default function SubCategoryPage({
   const validateRouteAndGetIds = useCallback(async (
     catSlug: string,
     subcatSlug: string
-    // CHANGED: The return type now includes categoryId.
   ): Promise<{ category: string | null; subcategory: string | null; categoryId: number | null, subcategoryId: number | null }> => {
     const formattedCatName = formatNameFromSlug(catSlug);
     const formattedSubcatName = formatNameFromSlug(subcatSlug);
@@ -119,7 +118,6 @@ export default function SubCategoryPage({
       setValidSubcategoryName(subcategory.name);
       setSelectedFilters(new Set<string>([category.name, subcategory.name]));
 
-      // CHANGED: Return both the category ID and subcategory ID.
       return {
         category: category.name,
         subcategory: subcategory.name,
@@ -137,7 +135,6 @@ export default function SubCategoryPage({
 
   // Fetch products based on validated category and subcategory IDs and filters
   const fetchProductsData = useCallback(async (
-    // CHANGED: Accept categoryId.
     categoryId: number,
     subcategoryId: number,
     page: number,
@@ -152,15 +149,16 @@ export default function SubCategoryPage({
 
     try {
       const queryParams = new URLSearchParams();
-      // CHANGED: Use 'category' and 'subcategory' keys with their respective IDs.
       queryParams.append("category", categoryId.toString());
       queryParams.append("subcategory", subcategoryId.toString());
       queryParams.append("page", page.toString());
 
       if (minPriceFilter !== '') queryParams.append("min_price", minPriceFilter.toString());
       if (maxPriceFilter !== '') queryParams.append("max_price", maxPriceFilter.toString());
-      if (manufacturerFilter) queryParams.append("manufacturer", manufacturerFilter);
-      if (ratingFilter !== null) queryParams.append("min_average_rating", ratingFilter.toString());
+      if (ratingFilter !== null) queryParams.append("average_rating", ratingFilter.toString());
+
+      // --- CORRECTED: Use the 'search' parameter for manufacturer lookup ---
+      if (manufacturerFilter) queryParams.append("search", manufacturerFilter);
 
       if (sortByFilter && sortByFilter !== 'relevance') {
         let sortParam = '';
@@ -172,7 +170,6 @@ export default function SubCategoryPage({
 
       const response = await api.get<ApiResponse<ApiProduct>>(`/products/?${queryParams.toString()}`);
 
-      // Data transformation remains the same
       const transformedProducts: Product[] = response.data.results.map((p: ApiProduct) => ({
         id: p.id.toString(),
         image: p.images.length > 0 ? p.images[0].image : "/placeholder-product.jpg",
@@ -197,8 +194,7 @@ export default function SubCategoryPage({
 
       setProducts(transformedProducts);
       setTotalProducts(response.data.count);
-      setTotalPages(Math.ceil(response.data.count / 20)); // Assuming 20 items per page
-      console.log("[Subcategory Page] Products fetched successfully.");
+      setTotalPages(Math.ceil(response.data.count / 20));
 
     } catch (err: unknown) {
       console.error("[Subcategory Page] Failed to fetch products:", err);
@@ -213,8 +209,9 @@ export default function SubCategoryPage({
   useEffect(() => {
     const minP = searchParams.get('min_price');
     const maxP = searchParams.get('max_price');
-    const manufacturer = searchParams.get('manufacturer');
-    const rating = searchParams.get('min_average_rating');
+    // --- CORRECTED: Read 'search' param for manufacturer ---
+    const manufacturer = searchParams.get('search');
+    const rating = searchParams.get('average_rating');
     const sort = searchParams.get('sort_by');
     const page = searchParams.get('page');
 
@@ -230,14 +227,12 @@ export default function SubCategoryPage({
   useEffect(() => {
     const loadData = async () => {
       setIsLoading(true);
-      // CHANGED: Destructure categoryId and use the new function name.
       const { category, subcategory, categoryId, subcategoryId } = await validateRouteAndGetIds(
         urlCategorySlug,
         urlSubcategorySlug
       );
 
       if (category && subcategory && categoryId !== null && subcategoryId !== null) {
-        // CHANGED: Pass IDs to fetchProductsData.
         await fetchProductsData(
           categoryId,
           subcategoryId,
@@ -249,7 +244,6 @@ export default function SubCategoryPage({
           sortBy
         );
       } else {
-        // If validation fails, stop loading and the component will render the error message.
         setIsLoading(false);
       }
     };
@@ -267,9 +261,6 @@ export default function SubCategoryPage({
     sortBy,
   ]);
 
-  // The rest of your component (filter handlers, JSX, etc.) can remain the same.
-  // ... (handleFilterChange, breadcrumbItems, handlePageChange, JSX rendering)
-
   const handleFilterChange = useCallback((
     filterValue: string | number,
     filterType: "category" | "subcategory" | "type" | "price_range" | "manufacturer" | "rating" | "sort_by",
@@ -282,11 +273,11 @@ export default function SubCategoryPage({
       let newPath = "";
       const formattedFilterSlug = slugify(String(filterValue));
 
-      // When changing category or subcategory, reset all other filters
       newSearchParams.delete('min_price');
       newSearchParams.delete('max_price');
-      newSearchParams.delete('manufacturer');
-      newSearchParams.delete('min_average_rating');
+      // --- CORRECTED: Delete 'search' when navigating ---
+      newSearchParams.delete('search');
+      newSearchParams.delete('average_rating');
       newSearchParams.delete('sort_by');
       newSearchParams.set('page', '1');
 
@@ -295,26 +286,25 @@ export default function SubCategoryPage({
       } else if (filterType === "subcategory") {
         newPath = `/${urlCategorySlug}/${formattedFilterSlug}`;
       } else if (filterType === "type") {
-        // This component is for subcategories, but if you have a global filter that can switch to types:
         newPath = `/${formattedFilterSlug}`;
       }
 
       router.push(`${newPath}?${newSearchParams.toString()}`);
     } else {
-      // Handle other filter changes that don't change the page's main path
       if (filterType === "price_range" && typeof newValue === 'object' && newValue !== null) {
         const { min, max } = newValue as { min: number | '', max: number | '' };
         min === '' ? newSearchParams.delete('min_price') : newSearchParams.set('min_price', String(min));
         max === '' ? newSearchParams.delete('max_price') : newSearchParams.set('max_price', String(max));
       } else if (filterType === "manufacturer") {
-        newValue ? newSearchParams.set('manufacturer', String(newValue)) : newSearchParams.delete('manufacturer');
+        // --- CORRECTED: Set the 'search' parameter for manufacturer ---
+        newValue ? newSearchParams.set('search', String(newValue)) : newSearchParams.delete('search');
       } else if (filterType === "rating") {
-        newValue ? newSearchParams.set('min_average_rating', String(newValue)) : newSearchParams.delete('min_average_rating');
+        newValue ? newSearchParams.set('average_rating', String(newValue)) : newSearchParams.delete('average_rating');
       } else if (filterType === "sort_by" && typeof filterValue === 'string') {
         filterValue === 'relevance' ? newSearchParams.delete('sort_by') : newSearchParams.set('sort_by', filterValue);
       }
 
-      newSearchParams.set('page', '1'); // Reset to first page on any filter change
+      newSearchParams.set('page', '1');
       router.push(`${currentPath}?${newSearchParams.toString()}`);
     }
   }, [urlCategorySlug, urlSubcategorySlug, router, searchParams]);
@@ -379,7 +369,6 @@ export default function SubCategoryPage({
         minPrice={minPrice}
         maxPrice={maxPrice}
         selectedManufacturer={selectedManufacturer}
-        selectedRating={selectedRating}
         sortBy={sortBy}
         onSortChange={handleSortChange}
       />

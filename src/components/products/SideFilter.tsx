@@ -5,7 +5,7 @@ import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, ChevronRight, Search } from "lucide-react";
 import Image from "next/image";
-import api from "@/lib/api"; // Import the API client
+import api from "@/lib/api";
 
 // Define interfaces for API response
 interface ApiSubcategory {
@@ -40,7 +40,6 @@ interface SideFilterProps {
 }
 
 const SideFilter = ({
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   selectedFilters,
   onFilterChange,
   selectedCategoryName,
@@ -63,22 +62,27 @@ const SideFilter = ({
   const [ratingExpanded, setRatingExpanded] = useState<boolean>(true);
   const [productTypeExpanded, setProductTypeExpanded] = useState<boolean>(true);
 
+  // Local state for price inputs to avoid re-fetches on every keystroke
+  const [localMinPrice, setLocalMinPrice] = useState<number | ''>(minPrice);
+  const [localMaxPrice, setLocalMaxPrice] = useState<number | ''>(maxPrice);
+
+  // Sync local price state with props when they change (e.g., from URL params)
+  useEffect(() => {
+    setLocalMinPrice(minPrice);
+    setLocalMaxPrice(maxPrice);
+  }, [minPrice, maxPrice]);
+
+
   // Fetch categories and their subcategories from the API
   const fetchCategories = useCallback(async () => {
     setIsLoadingCategories(true);
     setErrorCategories(null);
     try {
-      // Adjusted to expect an array directly, not an object with 'results'
-      const response = await api.get<ApiCategory[]>("/categories/"); //
-      setCategories(response.data); //
-      console.log("[SideFilter] Categories fetched successfully.");
+      const response = await api.get<ApiCategory[]>("/categories/");
+      setCategories(response.data);
     } catch (err: unknown) {
       console.error("[SideFilter] Failed to fetch categories:", err);
-      if (err instanceof Error) {
-        setErrorCategories(`Failed to load categories: ${err.message}.`);
-      } else {
-        setErrorCategories("Failed to load categories. Please try again later.");
-      }
+      setErrorCategories("Failed to load categories. Please try again later.");
     } finally {
       setIsLoadingCategories(false);
     }
@@ -87,9 +91,8 @@ const SideFilter = ({
   // Fetch unique manufacturers
   const fetchManufacturers = useCallback(async () => {
     try {
-      // This API endpoint still returns a 'results' array based on the provided example.
-      const response = await api.get<{ results: { manufacturer: string }[] }>("/products/unique-manufacturers/"); //
-      const uniqueManufacturers = Array.from(new Set(response.data.results.map(item => item.manufacturer))); //
+      const response = await api.get<{ results: { manufacturer: string }[] }>("/products/unique-manufacturers/");
+      const uniqueManufacturers = Array.from(new Set(response.data.results.map(item => item.manufacturer)));
       setManufacturers(uniqueManufacturers.filter(Boolean) as string[]);
     } catch (err) {
       console.error("[SideFilter] Failed to fetch manufacturers:", err);
@@ -101,20 +104,18 @@ const SideFilter = ({
     fetchManufacturers();
   }, [fetchCategories, fetchManufacturers]);
 
-  // Expand the category if a subcategory within it is currently selected, or if the category itself is selected
+  // Expand the category if a subcategory within it is currently selected
   useEffect(() => {
     if (categories.length > 0) {
       const currentCategory = categories.find(cat =>
         (selectedCategoryName && cat.name.toLowerCase() === selectedCategoryName.toLowerCase()) ||
         (selectedSubcategoryName && cat.subcategories.some(sub => sub.name.toLowerCase() === selectedSubcategoryName.toLowerCase()))
       );
-      if (currentCategory && expandedCategory !== currentCategory.id) {
+      if (currentCategory) {
         setExpandedCategory(currentCategory.id);
-      } else if (!selectedCategoryName && !selectedSubcategoryName) {
-        setExpandedCategory(null);
       }
     }
-  }, [selectedCategoryName, selectedSubcategoryName, categories, expandedCategory]);
+  }, [selectedCategoryName, selectedSubcategoryName, categories]);
 
   // Filter categories by search input
   const filteredCategories = categories.filter((cat) =>
@@ -126,12 +127,14 @@ const SideFilter = ({
     type.toLowerCase().includes(search.toLowerCase())
   );
 
-  const handlePriceChange = useCallback((type: 'min' | 'max', value: string) => {
-    const numValue = value === '' ? '' : Number(value);
-    const newMinPrice = type === 'min' ? numValue : minPrice;
-    const newMaxPrice = type === 'max' ? numValue : maxPrice;
-    onFilterChange('price_range', 'price_range', { min: newMinPrice, max: newMaxPrice });
-  }, [minPrice, maxPrice, onFilterChange]);
+  // Handler for the Apply button
+  const handleApplyPriceFilter = useCallback(() => {
+    onFilterChange('price_range', 'price_range', {
+      min: localMinPrice,
+      max: localMaxPrice
+    });
+  }, [localMinPrice, localMaxPrice, onFilterChange]);
+
 
   const handleManufacturerChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value === 'all' ? null : e.target.value;
@@ -145,9 +148,10 @@ const SideFilter = ({
 
   // Helper to determine if a filter is active for highlighting
   const isFilterActive = (value: string): boolean => {
-    if (selectedCategoryName && value.toLowerCase() === selectedCategoryName.toLowerCase()) return true;
-    if (selectedSubcategoryName && value.toLowerCase() === selectedSubcategoryName.toLowerCase()) return true;
-    if (selectedTypeName && value.toLowerCase() === selectedTypeName.toLowerCase()) return true;
+    const lowerValue = value.toLowerCase();
+    if (selectedCategoryName && lowerValue === selectedCategoryName.toLowerCase()) return true;
+    if (selectedSubcategoryName && lowerValue === selectedSubcategoryName.toLowerCase()) return true;
+    if (selectedTypeName && lowerValue === selectedTypeName.toLowerCase()) return true;
     return false;
   };
 
@@ -212,130 +216,81 @@ const SideFilter = ({
         {/* Categories Section */}
         <h2 className="text-base font-semibold mb-2 text-gray-800">Categories</h2>
         <div className="space-y-1 mb-4">
-          {filteredCategories.length === 0 && !search && (
-            <div className="text-gray-400 text-xs px-2 py-2">No categories available.</div>
-          )}
-          {filteredCategories.length === 0 && search && (
-            <div className="text-gray-400 text-xs px-2 py-2">No matching categories found.</div>
-          )}
           {filteredCategories.map((category: ApiCategory) => (
             <div key={category.id} className="border-b border-gray-100 last:border-b-0">
               <button
                 onClick={() => {
-                  // Only toggle expansion if there are subcategories
                   if (category.subcategories.length > 0) {
                     setExpandedCategory(
                       expandedCategory === category.id ? null : category.id
                     );
                   }
-                  // Always apply category filter when category button is clicked,
-                  // regardless of whether it has subcategories or not.
                   onFilterChange(category.name, "category");
                 }}
-                className={`w-full flex items-center justify-between px-2 py-2 rounded-md transition-colors duration-200 ${
-                  isFilterActive(category.name)
+                className={`w-full flex items-center justify-between px-2 py-2 rounded-md transition-colors duration-200 ${isFilterActive(category.name)
                     ? "bg-green-50 text-green-700 font-medium"
                     : "hover:bg-gray-50 text-gray-700"
-                }`}
+                  }`}
                 aria-expanded={expandedCategory === category.id}
-                aria-controls={`cat-panel-${category.id}`}
               >
                 <span className="text-sm">{category.name}</span>
-                {category.subcategories.length > 0 ? (
+                {category.subcategories.length > 0 && (
                   expandedCategory === category.id ? (
                     <ChevronDown className="w-4 h-4 text-green-600" />
                   ) : (
                     <ChevronRight className="w-4 h-4 text-gray-500" />
                   )
-                ) : null}
+                )}
               </button>
               <AnimatePresence>
-                {expandedCategory === category.id &&
-                  category.subcategories.length > 0 && (
-                    <motion.div
-                      id={`cat-panel-${category.id}`}
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: "auto" }}
-                      exit={{ opacity: 0, height: 0 }}
-                      transition={{ duration: 0.2 }}
-                      className="overflow-hidden"
-                    >
-                      <div className="ml-4 mt-1 space-y-1">
-                        {category.subcategories.map((subcategory: ApiSubcategory) => (
-                          <motion.button
-                            key={subcategory.id}
-                            initial={{ x: -10, opacity: 0 }}
-                            animate={{ x: 0, opacity: 1 }}
-                            transition={{ delay: subcategory.id * 0.02 }}
-                            className={`w-full text-left p-2 text-xs rounded-md transition-colors duration-200 ${
-                              isFilterActive(subcategory.name)
-                                ? "bg-blue-50 text-blue-700 font-medium"
-                                : "text-gray-600 hover:bg-green-50"
+                {expandedCategory === category.id && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="ml-4 mt-1 space-y-1">
+                      {category.subcategories.map((subcategory: ApiSubcategory, index: number) => (
+                        <motion.button
+                          key={subcategory.id}
+                          initial={{ x: -10, opacity: 0 }}
+                          animate={{ x: 0, opacity: 1 }}
+                          transition={{ delay: index * 0.02 }}
+                          className={`w-full text-left p-2 text-xs rounded-md transition-colors duration-200 ${isFilterActive(subcategory.name)
+                              ? "bg-blue-50 text-blue-700 font-medium"
+                              : "text-gray-600 hover:bg-green-50"
                             }`}
-                            onClick={() => onFilterChange(subcategory.name, "subcategory")}
-                          >
-                            {subcategory.name}
-                          </motion.button>
-                        ))}
-                      </div>
-                    </motion.div>
-                  )}
+                          onClick={() => onFilterChange(subcategory.name, "subcategory")}
+                        >
+                          {subcategory.name}
+                        </motion.button>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
               </AnimatePresence>
             </div>
           ))}
         </div>
 
-
         {/* Product Types Section */}
         <h2 className="text-base font-semibold mb-2 text-gray-800">Product Types</h2>
         <div className="space-y-1 mb-4">
-          <button
-            onClick={() => setProductTypeExpanded(!productTypeExpanded)}
-            className="w-full flex items-center justify-between px-2 py-2 rounded-md transition-colors duration-200 hover:bg-gray-50 text-gray-700"
-            aria-expanded={productTypeExpanded}
-            aria-controls="product-type-panel"
-          >
-            <span className="text-sm">Product Types</span>
-            {productTypeExpanded ? (
-              <ChevronDown className="w-4 h-4 text-gray-500" />
-            ) : (
-              <ChevronRight className="w-4 h-4 text-gray-500" />
-            )}
-          </button>
-          <AnimatePresence>
-            {productTypeExpanded && (
-              <motion.div
-                id="product-type-panel"
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.2 }}
-                className="overflow-hidden ml-2"
-              >
-                {filteredProductTypes.length === 0 && !search && (
-                  <div className="text-gray-400 text-xs px-2 py-2">No product types available.</div>
-                )}
-                {filteredProductTypes.length === 0 && search && (
-                  <div className="text-gray-400 text-xs px-2 py-2">No matching product types found.</div>
-                )}
-                {filteredProductTypes.map((type: string, index: number) => (
-                  <button
-                    key={index}
-                    onClick={() => onFilterChange(type, "type")}
-                    className={`w-full text-left px-2 py-2 rounded-md transition-colors duration-200 ${
-                      isFilterActive(type)
-                        ? "bg-purple-50 text-purple-700 font-medium"
-                        : "hover:bg-gray-50 text-gray-700"
-                    }`}
-                  >
-                    <span className="text-sm">{type.charAt(0).toUpperCase() + type.slice(1)}</span>
-                  </button>
-                ))}
-              </motion.div>
-            )}
-          </AnimatePresence>
+          {filteredProductTypes.map((type: string, index: number) => (
+            <button
+              key={index}
+              onClick={() => onFilterChange(type, "type")}
+              className={`w-full text-left px-2 py-2 rounded-md transition-colors duration-200 ${isFilterActive(type)
+                  ? "bg-purple-50 text-purple-700 font-medium"
+                  : "hover:bg-gray-50 text-gray-700"
+                }`}
+            >
+              <span className="text-sm">{type.charAt(0).toUpperCase() + type.slice(1)}</span>
+            </button>
+          ))}
         </div>
-
 
         {/* Price Range Filter */}
         <h2 className="text-base font-semibold mb-2 text-gray-800">Price Range</h2>
@@ -344,42 +299,44 @@ const SideFilter = ({
             onClick={() => setPriceRangeExpanded(!priceRangeExpanded)}
             className="w-full flex items-center justify-between px-2 py-2 rounded-md transition-colors duration-200 hover:bg-gray-50 text-gray-700"
             aria-expanded={priceRangeExpanded}
-            aria-controls="price-range-panel"
           >
             <span className="text-sm">Filter by Price</span>
-            {priceRangeExpanded ? (
-              <ChevronDown className="w-4 h-4 text-gray-500" />
-            ) : (
-              <ChevronRight className="w-4 h-4 text-gray-500" />
-            )}
+            {priceRangeExpanded ? <ChevronDown className="w-4 h-4 text-gray-500" /> : <ChevronRight className="w-4 h-4 text-gray-500" />}
           </button>
           <AnimatePresence>
             {priceRangeExpanded && (
               <motion.div
-                id="price-range-panel"
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: "auto" }}
                 exit={{ opacity: 0, height: 0 }}
                 transition={{ duration: 0.2 }}
-                className="overflow-hidden ml-2 flex gap-2 items-center"
+                className="overflow-hidden ml-2 space-y-2 pt-2"
               >
-                <input
-                  type="number"
-                  placeholder="Min Price"
-                  className="w-1/2 border border-gray-200 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-green-500"
-                  value={minPrice === '' ? '' : minPrice}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => handlePriceChange('min', e.target.value)}
-                  aria-label="Minimum price"
-                />
-                <span className="text-gray-500">-</span>
-                <input
-                  type="number"
-                  placeholder="Max Price"
-                  className="w-1/2 border border-gray-200 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-green-500"
-                  value={maxPrice === '' ? '' : maxPrice}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => handlePriceChange('max', e.target.value)}
-                  aria-label="Maximum price"
-                />
+                <div className="flex gap-2 items-center">
+                  <input
+                    type="number"
+                    placeholder="Min"
+                    className="w-1/2 border border-gray-200 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-green-500"
+                    value={localMinPrice}
+                    onChange={(e) => setLocalMinPrice(e.target.value === '' ? '' : Number(e.target.value))}
+                    aria-label="Minimum price"
+                  />
+                  <span className="text-gray-500">-</span>
+                  <input
+                    type="number"
+                    placeholder="Max"
+                    className="w-1/2 border border-gray-200 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-green-500"
+                    value={localMaxPrice}
+                    onChange={(e) => setLocalMaxPrice(e.target.value === '' ? '' : Number(e.target.value))}
+                    aria-label="Maximum price"
+                  />
+                </div>
+                <button
+                  onClick={handleApplyPriceFilter}
+                  className="w-full text-sm bg-green-600 text-white py-1.5 rounded-md hover:bg-green-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                >
+                  Apply
+                </button>
               </motion.div>
             )}
           </AnimatePresence>
@@ -388,91 +345,36 @@ const SideFilter = ({
         {/* Manufacturer Filter */}
         <h2 className="text-base font-semibold mb-2 text-gray-800">Manufacturer</h2>
         <div className="space-y-1 mb-4">
-          <button
-            onClick={() => setManufacturerExpanded(!manufacturerExpanded)}
-            className="w-full flex items-center justify-between px-2 py-2 rounded-md transition-colors duration-200 hover:bg-gray-50 text-gray-700"
-            aria-expanded={manufacturerExpanded}
-            aria-controls="manufacturer-panel"
+          <select
+            className="w-full border border-gray-200 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-green-500 bg-white"
+            value={selectedManufacturer || 'all'}
+            onChange={handleManufacturerChange}
+            aria-label="Select manufacturer"
           >
-            <span className="text-sm">Filter by Manufacturer</span>
-            {manufacturerExpanded ? (
-              <ChevronDown className="w-4 h-4 text-gray-500" />
-            ) : (
-              <ChevronRight className="w-4 h-4 text-gray-500" />
-            )}
-          </button>
-          <AnimatePresence>
-            {manufacturerExpanded && (
-              <motion.div
-                id="manufacturer-panel"
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.2 }}
-                className="overflow-hidden ml-2"
-              >
-                <select
-                  className="w-full border border-gray-200 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-green-500 bg-white"
-                  value={selectedManufacturer || 'all'}
-                  onChange={handleManufacturerChange}
-                  aria-label="Select manufacturer"
-                >
-                  <option value="all">All Manufacturers</option>
-                  {manufacturers.map((manufacturer, index) => (
-                    <option key={index} value={manufacturer}>
-                      {manufacturer}
-                    </option>
-                  ))}
-                </select>
-                {manufacturers.length === 0 && (
-                  <div className="text-gray-400 text-xs px-2 py-2">No manufacturers available.</div>
-                )}
-              </motion.div>
-            )}
-          </AnimatePresence>
+            <option value="all">All Manufacturers</option>
+            {manufacturers.map((manufacturer, index) => (
+              <option key={index} value={manufacturer}>
+                {manufacturer}
+              </option>
+            ))}
+          </select>
         </div>
 
         {/* Rating Filter */}
         <h2 className="text-base font-semibold mb-2 text-gray-800">Rating</h2>
         <div className="space-y-1 mb-4">
-          <button
-            onClick={() => setRatingExpanded(!ratingExpanded)}
-            className="w-full flex items-center justify-between px-2 py-2 rounded-md transition-colors duration-200 hover:bg-gray-50 text-gray-700"
-            aria-expanded={ratingExpanded}
-            aria-controls="rating-panel"
+          <select
+            className="w-full border border-gray-200 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-green-500 bg-white"
+            value={selectedRating || '0'}
+            onChange={handleRatingChange}
+            aria-label="Select minimum rating"
           >
-            <span className="text-sm">Filter by Rating</span>
-            {ratingExpanded ? (
-              <ChevronDown className="w-4 h-4 text-gray-500" />
-            ) : (
-              <ChevronRight className="w-4 h-4 text-gray-500" />
-            )}
-          </button>
-          <AnimatePresence>
-            {ratingExpanded && (
-              <motion.div
-                id="rating-panel"
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.2 }}
-                className="overflow-hidden ml-2"
-              >
-                <select
-                  className="w-full border border-gray-200 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-green-500 bg-white"
-                  value={selectedRating || '0'}
-                  onChange={handleRatingChange}
-                  aria-label="Select minimum rating"
-                >
-                  <option value="0">All Ratings</option>
-                  <option value="4">4 Stars & Up</option>
-                  <option value="3">3 Stars & Up</option>
-                  <option value="2">2 Stars & Up</option>
-                  <option value="1">1 Star & Up</option>
-                </select>
-              </motion.div>
-            )}
-          </AnimatePresence>
+            <option value="0">All Ratings</option>
+            <option value="4">4 Stars & Up</option>
+            <option value="3">3 Stars & Up</option>
+            <option value="2">2 Stars & Up</option>
+            <option value="1">1 Star & Up</option>
+          </select>
         </div>
 
       </div>
