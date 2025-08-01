@@ -39,15 +39,15 @@ interface TopSearchedDisplayItem {
 // --- Fallback Data (for initial render/API failure) ---
 // Adjust these paths if your fallback images are in /public/
 const FALLBACK_NEW_ARRIVALS: NewArrivalDisplayItem[] = [
-  { id: 'fallback-na-1', image: "/home/new-1.png", title: "New MHE 1", alt: "New MHE 1", slug: "#" },
-  { id: 'fallback-na-2', image: "/home/new-2.png", title: "New MHE 2", alt: "New MHE 2", slug: "#" },
-  { id: 'fallback-na-3', image: "/home/new-3.png", title: "New MHE 3", alt: "New MHE 3", slug: "#" },
+  { id: 'fallback-na-1', image: "/home/new-1.png", title: "New MHE 1", alt: "New MHE 1", slug: "cleaning-equipment" },
+  { id: 'fallback-na-2', image: "/home/new-2.png", title: "New MHE 2", alt: "New MHE 2", slug: "forklift" },
+  { id: 'fallback-na-3', image: "/home/new-3.png", title: "New MHE 3", alt: "New MHE 3", slug: "charger" },
 ];
 
 const FALLBACK_TOP_SEARCHED: TopSearchedDisplayItem[] = [
-  { id: 'fallback-ts-1', image: "/home/search-1.png", label: "Forklift Attachments", alt: "Forklift Attachments", slug: "#" },
-  { id: 'fallback-ts-2', image: "/home/search-2.png", label: "Manual Platform Trolly", alt: "Manual Platform Trolly", slug: "#" },
-  { id: 'fallback-ts-3', image: "/home/search-3.png", label: "Electric Pallet Truck (BOPT)", alt: "Electric Pallet Truck (BOPT)", slug: "#" },
+  { id: 'fallback-ts-1', image: "/home/search-1.png", label: "Forklift Attachments", alt: "Forklift Attachments", slug: "forklift" },
+  { id: 'fallback-ts-2', image: "/home/search-2.png", label: "Manual Platform Trolly", alt: "Manual Platform Trolly", slug: "platform-truck" },
+  { id: 'fallback-ts-3', image: "/home/search-3.png", label: "Electric Pallet Truck (BOPT)", alt: "Electric Pallet Truck (BOPT)", slug: "pallet-truck" },
 ];
 
 
@@ -71,7 +71,7 @@ function TopSearchedItem({ item }: TopSearchedItemProps): JSX.Element {
   };
 
   return (
-    <Link href={`/products/${slug}`} className="flex items-center gap-3 sm:gap-4 bg-gray-50 p-3 sm:p-4 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer border border-gray-100 group">
+    <Link href={`/${slug}`} className="flex items-center gap-3 sm:gap-4 bg-gray-50 p-3 sm:p-4 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer border border-gray-100 group">
       <div className="relative w-12 h-12 sm:w-16 sm:h-16 rounded-lg overflow-hidden bg-white border border-gray-200 flex-shrink-0 flex items-center justify-center">
         {image && !showInitials ? (
           <Image
@@ -259,7 +259,7 @@ export default function NewArrivalsAndTopSearches() {
           <div className="flex gap-4 overflow-x-auto bg-white rounded-xl shadow-sm border border-gray-100 p-6">
             {newArrivals.map((item, i) => (
               <Link
-                href={`/products/${item.slug}`} // Link to product detail page
+                href={`/${item.slug}`} // Link to product detail page
                 key={item.id || i}
                 className="relative w-24 h-24 sm:w-32 sm:h-32 flex-shrink-0 rounded-lg overflow-hidden bg-gray-50 border border-gray-100 hover:shadow-md transition-shadow cursor-pointer group flex items-center justify-center">
                 {item.image ? (

@@ -24,6 +24,7 @@ import { toast } from "sonner";
 import { useUser } from "@/context/UserContext";
 import QuoteForm from "@/components/forms/enquiryForm/quotesForm";
 import RentalForm from "@/components/forms/enquiryForm/rentalForm";
+import SparePartsFeatured from "@/components/home/SparePartsFeatured";
 import {
   Dialog,
   DialogContent,
@@ -33,6 +34,8 @@ import MheWriteAReview from "@/components/forms/product/ProductReviewForm";
 import ReviewSection from "./Reviews";
 
 import DOMPurify from 'dompurify';
+import SparePartsFeatured from "../home/SparepartsFeatured";
+import RelatedProducts from "../cart/RelatedProducts";
 
 type ProductImage = {
   id: number;
@@ -866,6 +869,11 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
         </div>
       </div>
       {data.id && <ReviewSection productId={data.id} registerRefresher={registerReviewsRefresher} />}
+
+      <div className="mt-8">
+        <SparePartsFeatured />
+      </div>
+
     </div>
   );
 }
