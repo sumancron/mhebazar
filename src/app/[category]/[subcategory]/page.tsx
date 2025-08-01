@@ -197,7 +197,7 @@ export default function SubCategoryPage({
 
       setProducts(transformedProducts);
       setTotalProducts(response.data.count);
-      setTotalPages(Math.ceil(response.data.count / 10)); // Assuming 10 items per page
+      setTotalPages(Math.ceil(response.data.count / 20)); // Assuming 20 items per page
       console.log("[Subcategory Page] Products fetched successfully.");
 
     } catch (err: unknown) {

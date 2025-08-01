@@ -221,9 +221,10 @@ export default function CategoryOrTypePage({
           type: p.type,
         }));
 
+        console.log(response.data.count)
         setProducts(transformedProducts);
         setTotalProducts(response.data.count);
-        setTotalPages(Math.ceil(response.data.count / 10)); // Assuming 10 items per page
+        setTotalPages(Math.ceil(response.data.count / 20)); // Assuming 20 items per page
       } else {
         setNoProductsFoundMessage(`Failed to load products. Unexpected API response structure.`);
         setProducts([]);

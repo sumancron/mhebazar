@@ -17,6 +17,16 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination"
+
 // Types
 export interface Product {
   type: string;
@@ -379,35 +389,101 @@ export default function ProductListing({
             <ProductGrid products={products} viewMode={currentView} noProductsMessage={noProductsMessage} />
 
             {totalPages > 1 && (
-              <div className="mt-8 sm:mt-12 flex flex-wrap justify-center gap-2 sm:gap-3">
-                <button
-                  onClick={() => onPageChange(currentPage - 1)}
-                  disabled={currentPage === 1}
-                  className="px-4 py-2.5 sm:px-5 sm:py-3 text-sm sm:text-base font-semibold text-gray-600 bg-white border-2 border-gray-200 rounded-lg hover:bg-gray-50 hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm transition-all duration-200"
-                >
-                  Previous
-                </button>
+              <div className="mt-8 sm:mt-12 flex justify-center">
+                <Pagination>
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious
+                        onClick={() => currentPage > 1 && onPageChange(currentPage - 1)}
+                        className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer hover:bg-green-50"}
+                      />
+                    </PaginationItem>
 
-                {Array.from({ length: totalPages }, (_, i: number) => i + 1).map((page: number) => (
-                  <button
-                    key={page}
-                    onClick={() => onPageChange(page)}
-                    className={`px-4 py-2.5 sm:px-5 sm:py-3 text-sm sm:text-base font-semibold rounded-lg focus:outline-none focus:ring-2 focus:ring-green-300 shadow-sm transition-all duration-200 ${currentPage === page
-                        ? "text-white bg-gradient-to-r from-green-500 to-green-600 border-2 border-green-500 hover:from-green-600 hover:to-green-700 shadow-md transform -translate-y-0.5"
-                        : "text-gray-600 bg-white border-2 border-gray-200 hover:bg-gray-50 hover:border-gray-300"
-                      }`}
-                  >
-                    {page}
-                  </button>
-                ))}
+                    {(() => {
+                      const items = [];
+                      const delta = 2;
 
-                <button
-                  onClick={() => onPageChange(currentPage + 1)}
-                  disabled={currentPage === totalPages}
-                  className="px-4 py-2.5 sm:px-5 sm:py-3 text-sm sm:text-base font-semibold text-gray-600 bg-white border-2 border-gray-200 rounded-lg hover:bg-gray-50 hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm transition-all duration-200"
-                >
-                  Next
-                </button>
+                      // Always show first page
+                      items.push(
+                        <PaginationItem key={1}>
+                          <PaginationLink
+                            onClick={() => onPageChange(1)}
+                            isActive={currentPage === 1}
+                            className={currentPage === 1
+                              ? "bg-green-500 text-white hover:bg-green-600"
+                              : "cursor-pointer hover:bg-green-50"}
+                          >
+                            1
+                          </PaginationLink>
+                        </PaginationItem>
+                      );
+
+                      // Add ellipsis if there's a gap after page 1
+                      if (currentPage - delta > 2) {
+                        items.push(
+                          <PaginationItem key="ellipsis-start">
+                            <PaginationEllipsis />
+                          </PaginationItem>
+                        );
+                      }
+
+                      // Add pages around current page
+                      const start = Math.max(2, currentPage - delta);
+                      const end = Math.min(totalPages - 1, currentPage + delta);
+
+                      for (let i = start; i <= end; i++) {
+                        items.push(
+                          <PaginationItem key={i}>
+                            <PaginationLink
+                              onClick={() => onPageChange(i)}
+                              isActive={currentPage === i}
+                              className={currentPage === i
+                                ? "bg-green-500 text-white hover:bg-green-600"
+                                : "cursor-pointer hover:bg-green-50"}
+                            >
+                              {i}
+                            </PaginationLink>
+                          </PaginationItem>
+                        );
+                      }
+
+                      // Add ellipsis if there's a gap before last page
+                      if (currentPage + delta < totalPages - 1) {
+                        items.push(
+                          <PaginationItem key="ellipsis-end">
+                            <PaginationEllipsis />
+                          </PaginationItem>
+                        );
+                      }
+
+                      // Always show last page (if more than 1 page total)
+                      if (totalPages > 1) {
+                        items.push(
+                          <PaginationItem key={totalPages}>
+                            <PaginationLink
+                              onClick={() => onPageChange(totalPages)}
+                              isActive={currentPage === totalPages}
+                              className={currentPage === totalPages
+                                ? "bg-green-500 text-white hover:bg-green-600"
+                                : "cursor-pointer hover:bg-green-50"}
+                            >
+                              {totalPages}
+                            </PaginationLink>
+                          </PaginationItem>
+                        );
+                      }
+
+                      return items;
+                    })()}
+
+                    <PaginationItem>
+                      <PaginationNext
+                        onClick={() => currentPage < totalPages && onPageChange(currentPage + 1)}
+                        className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer hover:bg-green-50"}
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
               </div>
             )}
           </div>
