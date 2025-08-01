@@ -48,30 +48,6 @@ export default function Loading() {
             <div className="w-2 h-2 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full" />
           </motion.div>
         </div>
-
-        {/* Loading Text */}
-        <motion.div
-          className="text-center"
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.2, duration: 0.5 }}
-        >
-          <h2 className="text-xl font-semibold text-gray-800 mb-2">Loading</h2>
-          <div className="flex space-x-1">
-            {[0, 1, 2].map((index) => (
-              <motion.div
-                key={index}
-                className="w-2 h-2 bg-blue-500 rounded-full"
-                animate={{ y: [0, -8, 0] }}
-                transition={{
-                  duration: 0.8,
-                  repeat: Infinity,
-                  delay: index * 0.1
-                }}
-              />
-            ))}
-          </div>
-        </motion.div>
       </div>
     </motion.div>
   );
