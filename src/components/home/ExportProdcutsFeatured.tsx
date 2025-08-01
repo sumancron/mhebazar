@@ -31,7 +31,7 @@ export default function ExportProductsFeatured() {
     const fetchPopularProducts = async () => {
       try {
         // Change API endpoint to new_arrival
-        const response = await axios.get(`${NEXT_PUBLIC_API_BASE_URL}/products/new_arrival/`);
+        const response = await axios.get(`${NEXT_PUBLIC_API_BASE_URL}/products/?category=&subcategory=&type=used&user=`);
         
         // Ensure data is an array, and if it's nested under 'results', extract it
         const rawData = Array.isArray(response.data)
