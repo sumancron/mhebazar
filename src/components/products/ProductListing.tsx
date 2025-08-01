@@ -231,7 +231,7 @@ export default function ProductListing({
         {!window.location.pathname.startsWith("/vendor-listing/") && (
           <>
             {/* Desktop Sidebar */}
-            <div className="hidden lg:block flex-shrink-0 w-72 pr-4">
+            <div className="hidden lg:block flex-shrink-0 w-72">
               <SideFilter
                 selectedFilters={selectedFilters}
                 onFilterChange={onFilterChange}
