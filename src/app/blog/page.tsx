@@ -141,18 +141,27 @@ const BlogListPage: React.FC = () => {
 
           {/* Search Bar */}
           <form onSubmit={handleSearch} className="max-w-2xl mx-auto mt-8">
-            <div className="relative">
-              <Search className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-              <Input
-                type="text"
-                placeholder="Search blogs..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 pr-24 py-3 text-lg"
-              />
-              <Button 
-                type="submit" 
-                className="absolute right-2 top-2"
+            <div className="flex items-center">
+              {/* Add a relative wrapper for the input and icon */}
+              <div className="relative w-full">
+                {/* Position the icon absolutely */}
+                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                  <Search className="h-5 w-5 text-gray-400" />
+                </div>
+                <Input
+                  type="text"
+                  // Fix: The placeholder must be a string
+                  placeholder="Search blogs..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  // The left padding (pl-10) makes room for the icon
+                  className="w-full pl-10 pr-24 py-3 text-lg"
+                />
+              </div>
+              <Button
+                type="submit"
+                // You may need to add a margin to the button, e.g., className="ml-2"
+                className=""
                 disabled={loading}
               >
                 {loading ? (
