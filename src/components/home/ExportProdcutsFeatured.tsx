@@ -1,7 +1,9 @@
+// page.tsx (Updated ExportProductsFeatured section)
 "use client";
 
 import React, { useEffect, useState } from "react";
-import ProductCard from "@/components/elements/Product";
+// Import ProductCardContainer from Product.tsx, as it's the default export
+import ProductCardContainer from "@/components/elements/Product"; 
 import Image from "next/image";
 import axios from "axios";
 
@@ -10,10 +12,15 @@ const NEXT_PUBLIC_API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "";
 interface ExportProduct {
   id: string | number;
   title: string;
-  subtitle: string;
-  price: number;
+  subtitle: string | null; // Changed to allow null for description
+  price: string | number; // Price can be string "0.00" or number
   currency: string;
   image: string;
+  direct_sale: boolean;
+  is_active: boolean;
+  hide_price: boolean;
+  stock_quantity: number;
+  type: string;
 }
 
 export default function ExportProductsFeatured() {
@@ -23,14 +30,33 @@ export default function ExportProductsFeatured() {
   useEffect(() => {
     const fetchPopularProducts = async () => {
       try {
-        const response = await axios.get(`${NEXT_PUBLIC_API_BASE_URL}/products/most_popular/`);
-        const data = Array.isArray(response.data)
+        // Change API endpoint to new_arrival
+        const response = await axios.get(`${NEXT_PUBLIC_API_BASE_URL}/products/new_arrival/`);
+        
+        // Ensure data is an array, and if it's nested under 'results', extract it
+        const rawData = Array.isArray(response.data)
           ? response.data
           : response.data?.results ?? [];
 
-        setExportProducts(data);
+        // Map API response data to ExportProduct interface
+        const formattedProducts: ExportProduct[] = rawData.map((item: any) => ({
+          id: item.id,
+          title: item.name, // API uses 'name' for product title
+          subtitle: item.description || null, // API uses 'description' for subtitle, allow null
+          price: item.price,
+          currency: "₹", // Assuming Indian Rupee, adjust if needed
+          image: item.images && item.images.length > 0 ? item.images[0].image : "/placeholder-image.jpg", // Use first image or a placeholder
+          direct_sale: item.direct_sale,
+          is_active: item.is_active,
+          hide_price: item.hide_price,
+          stock_quantity: item.stock_quantity,
+          type: item.type,
+        }));
+
+        // Limit the products to only 4 as requested
+        setExportProducts(formattedProducts.slice(0, 4)); 
       } catch (error) {
-        console.error("Failed to fetch most popular products:", error);
+        console.error("Failed to fetch new arrival products:", error);
         setExportProducts([]);
       } finally {
         setLoading(false);
@@ -57,13 +83,19 @@ export default function ExportProductsFeatured() {
                 key={export_product.id}
                 className="bg-white rounded-2xl shadow-[0_4px_16px_0_rgba(0,0,0,0.04)] hover:shadow-lg transition p-4 flex flex-col"
               >
-                <ProductCard
+                {/* Use ProductCardContainer here, passing all necessary props */}
+                <ProductCardContainer
                   id={Number(export_product.id)}
                   image={export_product.image}
                   title={export_product.title}
                   subtitle={export_product.subtitle}
                   price={export_product.price}
                   currency={export_product.currency}
+                  directSale={export_product.direct_sale}
+                  is_active={export_product.is_active}
+                  hide_price={export_product.hide_price}
+                  stock_quantity={export_product.stock_quantity}
+                  type={export_product.type}
                 />
               </div>
             ))

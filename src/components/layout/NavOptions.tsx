@@ -1,11 +1,10 @@
-// NavOptions.tsx
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronRight } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import api from "@/lib/api";
 import { useRouter } from "next/navigation";
 
@@ -13,11 +12,12 @@ import { useRouter } from "next/navigation";
 interface Product {
   id: number;
   category_name: string;
-  subcategory_name: string;
-  images: string[];
+  subcategory_name: string | null;
+  images: { id: number; image: string }[];
   name: string;
-  subcategory: number; // Subcategory ID
+  subcategory: number | null; // Subcategory ID
   category: number; // Category ID
+  category_image?: string; // Add this for the fallback
 }
 
 interface SubCategory {
@@ -32,10 +32,9 @@ interface Category {
   id: number;
   subcategories: SubCategory[];
   name: string;
+  cat_image: string | null; // Added cat_image to the Category interface
 }
 
-// Updated interfaces to reflect the actual API response (direct array for categories)
-// ProductsResponse still has 'results' as per your provided product API
 interface ProductsResponse {
   count: number;
   next: string | null;
@@ -43,11 +42,50 @@ interface ProductsResponse {
   results: Product[];
 }
 
-// Define your API_BASE_URL here
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
-// Helper function to create slugs
 const createSlug = (name: string) => name.toLowerCase().replace(/\s+/g, "-");
+
+// Custom Image component with an error handler to show a fallback
+const FallbackImage = ({
+  src,
+  alt,
+  width,
+  height,
+  className,
+  fallbackSrc,
+}: {
+  src: string;
+  alt: string;
+  width: number;
+  height: number;
+  className: string;
+  fallbackSrc?: string | null;
+}) => {
+  const [imgSrc, setImgSrc] = useState(src);
+
+  useEffect(() => {
+    setImgSrc(src); // Reset image source when parent src changes
+  }, [src]);
+
+  return (
+    <Image
+      src={imgSrc || fallbackSrc || "/placeholder-image.png"}
+      alt={alt}
+      width={width}
+      height={height}
+      className={className}
+      unoptimized
+      onError={() => {
+        if (imgSrc !== fallbackSrc) {
+          setImgSrc(fallbackSrc || "/placeholder-image.png");
+        } else if (imgSrc !== "/placeholder-image.png") {
+          setImgSrc("/placeholder-image.png");
+        }
+      }}
+    />
+  );
+};
 
 export default function CategoryMenu({
   isOpen,
@@ -67,17 +105,16 @@ export default function CategoryMenu({
     const fetchData = async () => {
       try {
         const [categoriesResponse, productsResponse] = await Promise.all([
-          api.get<Category[]>("/categories/"), // Expecting direct array for categories
+          api.get<Category[]>("/categories/"),
           api.get<ProductsResponse>("/products/"),
         ]);
-        // Directly set categories as the response is an array
-        setCategories(categoriesResponse.data); //
-        setProducts(productsResponse.data.results); //
+        setCategories(categoriesResponse.data);
+        setProducts(productsResponse.data.results);
 
-        if (categoriesResponse.data.length > 0) { //
+        if (categoriesResponse.data.length > 0) {
           const defaultCategory =
-            categoriesResponse.data.find((cat) => cat.name === "Battery") || //
-            categoriesResponse.data[0]; //
+            categoriesResponse.data.find((cat) => cat.name === "Battery") ||
+            categoriesResponse.data[0];
           setHoveredCategory(defaultCategory);
         }
       } catch (error) {
@@ -93,7 +130,6 @@ export default function CategoryMenu({
     }
   }, [isOpen]);
 
-  // Memoize product counts for performance
   const { subcategoryProductCounts, categoryTotalProductCounts } = useMemo(() => {
     const subCounts = new Map<number, number>();
     const catCounts = new Map<number, number>();
@@ -112,7 +148,6 @@ export default function CategoryMenu({
     };
   }, [products]);
 
-  // Use efficient map lookups for product counts
   const getProductCountForSubcategory = (subcategoryId: number) => {
     return subcategoryProductCounts.get(subcategoryId) || 0;
   };
@@ -145,18 +180,18 @@ export default function CategoryMenu({
         product.images.length > 0
     );
     if (productWithImage && productWithImage.images[0]) {
-      return productWithImage.images[0].startsWith("http")
-        ? productWithImage.images[0]
-        : `${API_BASE_URL}${productWithImage.images[0]}`;
+      return productWithImage.images[0].image.startsWith("http")
+        ? productWithImage.images[0].image
+        : `${API_BASE_URL}${productWithImage.images[0].image}`;
     }
     return null;
   };
 
-  const getInitials = (name: string) => {
+  const getInitials = useCallback((name: string) => {
     return name.split(" ").map((n) => n[0]).join("").toUpperCase().substring(0, 2);
-  };
+  }, []);
 
-  const handleCategoryNameClick = (category: Category) => {
+  const handleCategoryNameClick = useCallback((category: Category) => {
     if (category.subcategories.length > 0) {
       setSelectedCategory(category.id === selectedCategory?.id ? null : category);
       setHoveredCategory(category);
@@ -164,7 +199,7 @@ export default function CategoryMenu({
       router.push(`/${createSlug(category.name)}`);
       onClose();
     }
-  };
+  }, [selectedCategory, onClose, router]);
 
   return (
     <AnimatePresence>
@@ -174,17 +209,17 @@ export default function CategoryMenu({
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -10 }}
           transition={{ duration: 0.2, ease: "easeOut" }}
-          className="absolute left-0 top-full z-50 mt-2 bg-white border border-gray-200 rounded-lg shadow-xl overflow-hidden"
+          className="absolute left-0 top-full z-50 mt-2 bg-white border border-gray-200 rounded-lg shadow-xl overflow-hidden md:min-w-[800px]"
         >
-          <div className="flex min-w-[800px]">
-            {/* Left Categories Column 1 */}
-            <div className="w-64 bg-gray-50 border-r border-gray-200 flex-shrink-0">
-              <div className="p-2 h-[400px] overflow-y-auto custom-scrollbar">
+          <div className="flex flex-col md:flex-row">
+            {/* Left Categories Column 1 (Scrollable on small screens) */}
+            <div className="w-full md:w-64 bg-gray-50 md:border-r border-gray-200 flex-shrink-0">
+              <div className="p-2 h-[200px] md:h-[400px] overflow-y-auto custom-scrollbar">
                 {categoriesCol1.map((category) => (
                   <div
                     key={category.id}
                     className={`flex items-center justify-between px-3 py-2 text-sm cursor-pointer rounded transition-colors ${selectedCategory?.id === category.id
-                        ? "bg-white text-orange-600 font-medium"
+                        ? "bg-white text-orange-600 font-medium shadow-sm"
                         : hoveredCategory?.id === category.id
                           ? "bg-gray-100 text-orange-600"
                           : "text-gray-700 hover:bg-white hover:text-orange-600"
@@ -220,14 +255,14 @@ export default function CategoryMenu({
               </div>
             </div>
 
-            {/* Middle Categories Column 2 */}
-            <div className="w-64 bg-gray-50 border-r border-gray-200 flex-shrink-0">
+            {/* Middle Categories Column 2 (Hidden on small screens) */}
+            <div className="hidden md:block md:w-64 bg-gray-50 border-r border-gray-200 flex-shrink-0">
               <div className="p-2 h-[400px] overflow-y-auto custom-scrollbar">
                 {categoriesCol2.map((category) => (
                   <div
                     key={category.id}
                     className={`flex items-center justify-between px-3 py-2 text-sm cursor-pointer rounded transition-colors ${selectedCategory?.id === category.id
-                        ? "bg-white text-orange-600 font-medium"
+                        ? "bg-white text-orange-600 font-medium shadow-sm"
                         : hoveredCategory?.id === category.id
                           ? "bg-gray-100 text-orange-600"
                           : "text-gray-700 hover:bg-white hover:text-orange-600"
@@ -264,8 +299,8 @@ export default function CategoryMenu({
             </div>
 
             {/* Right Content Column */}
-            <div className="w-80 bg-white p-4 flex-shrink-0">
-              <div className="h-[400px] overflow-y-auto space-y-4 custom-scrollbar">
+            <div className="w-full md:w-80 bg-white p-4 flex-shrink-0">
+              <div className="h-[200px] md:h-[400px] overflow-y-auto space-y-4 custom-scrollbar">
                 {!displaySourceCategory && (
                   <p className="text-gray-500 text-sm p-3 text-center">
                     Hover over a category to see more.
@@ -278,20 +313,27 @@ export default function CategoryMenu({
                       key={subCategory.id}
                       href={`/${createSlug(displaySourceCategory.name)}/${createSlug(subCategory.name)}`}
                       passHref
-                      className="flex items-center gap-4 p-3 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors border border-gray-100"
+                      className="flex items-center gap-4 p-3 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors border border-gray-100 group"
                       onClick={onClose}
                     >
                       <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0">
                         {getSubCategoryImage(subCategory) ? (
-                          <Image
+                          <FallbackImage
                             src={getSubCategoryImage(subCategory) as string}
                             alt={subCategory.name}
                             width={64}
                             height={64}
-                            className="w-full h-full object-cover"
+                            className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-105"
+                            fallbackSrc={displaySourceCategory.cat_image}
+                          />
+                        ) : displaySourceCategory.cat_image ? (
+                          <Image
+                            src={displaySourceCategory.cat_image}
+                            alt={displaySourceCategory.name}
+                            width={64}
+                            height={64}
+                            className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-105"
                             unoptimized
-                            // onLoadingComplete deprecated, use onLoad
-                            onLoad={() => { }}
                           />
                         ) : (
                           <span className="text-gray-500 text-xs font-semibold">
@@ -300,7 +342,7 @@ export default function CategoryMenu({
                         )}
                       </div>
                       <div className="flex-1">
-                        <h4 className="font-medium text-gray-900 text-sm mb-1">
+                        <h4 className="font-medium text-gray-900 text-sm mb-1 group-hover:text-orange-600 transition-colors">
                           {subCategory.name}
                         </h4>
                         <div className="inline-flex items-center justify-center bg-orange-100 text-orange-700 rounded-full px-2 py-1 text-xs font-medium min-w-[24px]">

@@ -288,7 +288,7 @@ export default function NewArrivalsAndTopSearches() {
 
         {errors.newArrivals && (
           <div className="mt-2 text-xs text-amber-600 bg-amber-50 px-2 py-1 rounded">
-            {errors.newArrivals}
+            {/* {errors.newArrivals} */}
           </div>
         )}
       </div>
@@ -322,7 +322,7 @@ export default function NewArrivalsAndTopSearches() {
 
         {errors.topSearched && (
           <div className="mt-2 text-xs text-amber-600 bg-amber-50 px-2 py-1 rounded">
-            {errors.topSearched}
+            {/* {errors.topSearched} */}
           </div>
         )}
       </div>

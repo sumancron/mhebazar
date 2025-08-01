@@ -167,7 +167,7 @@ export default function MostPopular() {
         </Carousel>
 
         {error && (
-          <p className="mt-2 text-xs text-amber-600 bg-amber-50 px-2 py-1 rounded">{error}</p>
+          <p className="mt-2 text-xs text-amber-600 bg-amber-50 px-2 py-1 rounded"></p>
         )}
       </div>
     </section>
