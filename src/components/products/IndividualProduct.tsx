@@ -35,7 +35,6 @@ import ReviewSection from "./Reviews";
 
 import DOMPurify from 'dompurify';
 import SparePartsFeatured from "../home/SparepartsFeatured";
-import RelatedProducts from "../cart/RelatedProducts";
 
 type ProductImage = {
   id: number;
@@ -870,10 +869,7 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
       </div>
       {data.id && <ReviewSection productId={data.id} registerRefresher={registerReviewsRefresher} />}
 
-      <div className="mt-8">
-        <SparePartsFeatured />
-      </div>
-
+      
     </div>
   );
 }
