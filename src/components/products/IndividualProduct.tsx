@@ -24,7 +24,7 @@ import { toast } from "sonner";
 import { useUser } from "@/context/UserContext";
 import QuoteForm from "@/components/forms/enquiryForm/quotesForm";
 import RentalForm from "@/components/forms/enquiryForm/rentalForm";
-import SparePartsFeatured from "@/components/home/SparePartsFeatured";
+// import SparePartsFeatured from "@/components/home/SparePartsFeatured";
 import {
   Dialog,
   DialogContent,

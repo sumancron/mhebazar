@@ -13,6 +13,10 @@ const formatNameFromSlug = (slug: string): string => {
   return slug.replace(/-/g, ' ').split(' ').map((word: string) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
 };
 
+// Helper function to create a URL-friendly slug
+const slugify = (str: string): string =>
+  str.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+
 // Define API data structures
 interface ApiSubcategory {
   id: number;
@@ -62,9 +66,6 @@ export default function SubCategoryPage({
   const urlCategorySlug: string = params.category;
   const urlSubcategorySlug: string = params.subcategory;
 
-  const formattedCategoryName: string = formatNameFromSlug(urlCategorySlug);
-  const formattedSubcategoryName: string = formatNameFromSlug(urlSubcategorySlug);
-
   const [products, setProducts] = useState<Product[]>([]);
   const [totalProducts, setTotalProducts] = useState<number>(0);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -79,161 +80,134 @@ export default function SubCategoryPage({
   const [maxPrice, setMaxPrice] = useState<number | ''>('');
   const [selectedManufacturer, setSelectedManufacturer] = useState<string | null>(null);
   const [selectedRating, setSelectedRating] = useState<number | null>(null);
-  const [sortBy, setSortBy] = useState<string>('relevance'); // Default sort
+  const [sortBy, setSortBy] = useState<string>('relevance');
 
   const [validCategoryName, setValidCategoryName] = useState<string | null>(null);
   const [validSubcategoryName, setValidSubcategoryName] = useState<string | null>(null);
   const [isRouteValid, setIsRouteValid] = useState<boolean>(true);
 
-  const slugify = (str: string): string =>
-  str.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
-
-
   // Validate category and subcategory existence and hierarchy
- const validateRouteAndGetNames = useCallback(async (
-  catSlug: string,
-  subcatSlug: string
-): Promise<{ category: string | null; subcategory: string | null; subcategoryId: number | null }> => {
+  const validateRouteAndGetIds = useCallback(async (
+    catSlug: string,
+    subcatSlug: string
+    // CHANGED: The return type now includes categoryId.
+  ): Promise<{ category: string | null; subcategory: string | null; categoryId: number | null, subcategoryId: number | null }> => {
+    const formattedCatName = formatNameFromSlug(catSlug);
+    const formattedSubcatName = formatNameFromSlug(subcatSlug);
 
-  setIsRouteValid(true);
-  setValidCategoryName(null);
-  setValidSubcategoryName(null);
-  setErrorMessage(null);
+    try {
+      const categoryResponse = await api.get<ApiCategory[]>(`/categories/?name=${formattedCatName}`);
+      const category = categoryResponse.data[0];
 
-  const formattedCatName = formatNameFromSlug(catSlug);
-  const formattedSubcatName = formatNameFromSlug(subcatSlug);
+      if (!category) {
+        setIsRouteValid(false);
+        setErrorMessage(`Category "${formattedCatName}" not found.`);
+        return { category: null, subcategory: null, categoryId: null, subcategoryId: null };
+      }
 
-  try {
-    const categoryResponse = await api.get<ApiCategory[]>(`/categories/?name=${formattedCatName}`);
-    const category = categoryResponse.data[0];
-    console.log("[Subcategory Page] Category fetched:", category);
-    console.log("Subcategories:", JSON.stringify(category?.subcategories ?? [], null, 2));
+      const subcategory = category.subcategories.find((sub: ApiSubcategory) =>
+        slugify(sub.name) === slugify(formattedSubcatName)
+      );
 
-    if (!category) {
-      setIsRouteValid(false);
-      setErrorMessage(`Category "${formattedCatName}" not found.`);
+      if (!subcategory) {
+        setIsRouteValid(false);
+        setErrorMessage(`Subcategory "${formattedSubcatName}" not found under category "${formattedCatName}".`);
+        return { category: null, subcategory: null, categoryId: null, subcategoryId: null };
+      }
+
+      setValidCategoryName(category.name);
+      setValidSubcategoryName(subcategory.name);
+      setSelectedFilters(new Set<string>([category.name, subcategory.name]));
+
+      // CHANGED: Return both the category ID and subcategory ID.
       return {
-        category: null,
-        subcategory: null,
-        subcategoryId: null,
+        category: category.name,
+        subcategory: subcategory.name,
+        categoryId: category.id,
+        subcategoryId: subcategory.id,
       };
-    }
 
-    const formattedSubcatSlug = slugify(formattedSubcatName);
-    const subcategory = category.subcategories.find((sub: ApiSubcategory) =>
-      slugify(sub.name) === formattedSubcatSlug
-    );
-
-    if (!subcategory) {
+    } catch (err: unknown) {
+      console.error("[Subcategory Page] Error validating route:", err);
       setIsRouteValid(false);
-      setErrorMessage(`Subcategory "${formattedSubcatName}" not found under category "${formattedCatName}".`);
-      return {
-        category: null,
-        subcategory: null,
-        subcategoryId: null,
-      };
+      setErrorMessage("An error occurred while validating the path.");
+      return { category: null, subcategory: null, categoryId: null, subcategoryId: null };
     }
+  }, []);
 
-    // All good — update state and return everything
-    setValidCategoryName(formattedCatName);
-    setValidSubcategoryName(formattedSubcatName);
-    setSelectedFilters(new Set<string>([formattedCatName, formattedSubcatName]));
-
-    return {
-      category: formattedCatName,
-      subcategory: formattedSubcatName,
-      subcategoryId: subcategory.id,
-    };
-
-  } catch (err: unknown) {
-    console.error("[Subcategory Page] Error validating route:", err);
-    setIsRouteValid(false);
-    if (err instanceof Error) {
-      setErrorMessage(`An error occurred while validating the path: ${err.message}. Please try again.`);
-    } else {
-      setErrorMessage("An unexpected error occurred while validating the path. Please try again.");
-    }
-    return {
-      category: null,
-      subcategory: null,
-      subcategoryId: null,
-    };
-  }
-}, []);
-
-
-  // Fetch products based on validated category and subcategory and filters
+  // Fetch products based on validated category and subcategory IDs and filters
   const fetchProductsData = useCallback(async (
-  categoryName: string,
-  subcategoryName: string,
-  subcategoryId: number,
-  page: number,
-  minPriceFilter: number | '',
-  maxPriceFilter: number | '',
-  manufacturerFilter: string | null,
-  ratingFilter: number | null,
-  sortByFilter: string
-) => {
-  setIsLoading(true);
-  setNoProductsFoundMessage(null);
-  setProducts([]);
-  setTotalProducts(0);
-  setTotalPages(1);
+    // CHANGED: Accept categoryId.
+    categoryId: number,
+    subcategoryId: number,
+    page: number,
+    minPriceFilter: number | '',
+    maxPriceFilter: number | '',
+    manufacturerFilter: string | null,
+    ratingFilter: number | null,
+    sortByFilter: string
+  ) => {
+    setIsLoading(true);
+    setNoProductsFoundMessage(null);
 
-  try {
-    const queryParams = new URLSearchParams();
-    queryParams.append("category_name", categoryName);
-    queryParams.append("subcategory_id", subcategoryId.toString()); // ✅ use ID here
-    queryParams.append("page", page.toString());
+    try {
+      const queryParams = new URLSearchParams();
+      // CHANGED: Use 'category' and 'subcategory' keys with their respective IDs.
+      queryParams.append("category", categoryId.toString());
+      queryParams.append("subcategory", subcategoryId.toString());
+      queryParams.append("page", page.toString());
 
-    if (minPriceFilter !== '') queryParams.append("min_price", minPriceFilter.toString());
-    if (maxPriceFilter !== '') queryParams.append("max_price", maxPriceFilter.toString());
-    if (manufacturerFilter) queryParams.append("manufacturer", manufacturerFilter);
-    if (ratingFilter !== null) queryParams.append("min_average_rating", ratingFilter.toString());
+      if (minPriceFilter !== '') queryParams.append("min_price", minPriceFilter.toString());
+      if (maxPriceFilter !== '') queryParams.append("max_price", maxPriceFilter.toString());
+      if (manufacturerFilter) queryParams.append("manufacturer", manufacturerFilter);
+      if (ratingFilter !== null) queryParams.append("min_average_rating", ratingFilter.toString());
 
-    if (sortByFilter && sortByFilter !== 'relevance') {
-      let sortParam = '';
-      if (sortByFilter === 'price_asc') sortParam = 'price';
-      else if (sortByFilter === 'price_desc') sortParam = '-price';
-      else if (sortByFilter === 'newest') sortParam = '-created_at';
-      if (sortParam) queryParams.append("ordering", sortParam);
+      if (sortByFilter && sortByFilter !== 'relevance') {
+        let sortParam = '';
+        if (sortByFilter === 'price_asc') sortParam = 'price';
+        else if (sortByFilter === 'price_desc') sortParam = '-price';
+        else if (sortByFilter === 'newest') sortParam = '-created_at';
+        if (sortParam) queryParams.append("ordering", sortParam);
+      }
+
+      const response = await api.get<ApiResponse<ApiProduct>>(`/products/?${queryParams.toString()}`);
+
+      // Data transformation remains the same
+      const transformedProducts: Product[] = response.data.results.map((p: ApiProduct) => ({
+        id: p.id.toString(),
+        image: p.images.length > 0 ? p.images[0].image : "/placeholder-product.jpg",
+        title: p.name,
+        subtitle: p.description,
+        price: parseFloat(p.price),
+        currency: "₹",
+        category_name: p.category_name,
+        subcategory_name: p.subcategory_name,
+        direct_sale: p.direct_sale,
+        is_active: p.is_active,
+        hide_price: p.hide_price,
+        stock_quantity: p.stock_quantity,
+        manufacturer: p.manufacturer,
+        average_rating: p.average_rating,
+        type: p.type,
+      }));
+
+      if (transformedProducts.length === 0) {
+        setNoProductsFoundMessage(`No products found with the selected filters.`);
+      }
+
+      setProducts(transformedProducts);
+      setTotalProducts(response.data.count);
+      setTotalPages(Math.ceil(response.data.count / 10)); // Assuming 10 items per page
+      console.log("[Subcategory Page] Products fetched successfully.");
+
+    } catch (err: unknown) {
+      console.error("[Subcategory Page] Failed to fetch products:", err);
+      setErrorMessage("Failed to load products. An API error occurred.");
+      setProducts([]);
+    } finally {
+      setIsLoading(false);
     }
-
-    const response = await api.get<ApiResponse<ApiProduct>>(`/products/?${queryParams.toString()}`);
-
-    if (response.data.results.length === 0) {
-      setNoProductsFoundMessage(`No products found for "${subcategoryName}" under "${categoryName}" with the selected filters.`);
-    }
-
-    const transformedProducts: Product[] = response.data.results.map((p: ApiProduct) => ({
-      id: p.id.toString(),
-      image: p.images.length > 0 ? p.images[0].image : "/placeholder-product.jpg",
-      title: p.name,
-      subtitle: p.description,
-      price: parseFloat(p.price),
-      currency: "₹",
-      category_name: p.category_name,
-      subcategory_name: p.subcategory_name,
-      direct_sale: p.direct_sale,
-      is_active: p.is_active,
-      hide_price: p.hide_price,
-      stock_quantity: p.stock_quantity,
-      manufacturer: p.manufacturer,
-      average_rating: p.average_rating,
-    }));
-
-    setProducts(transformedProducts);
-    setTotalProducts(response.data.count);
-    setTotalPages(Math.ceil(response.data.count / 10));
-    console.log("[Subcategory Page] Products fetched successfully.");
-  } catch (err: unknown) {
-    console.error("[Subcategory Page] Failed to fetch products:", err);
-    setErrorMessage("Failed to load products. An API error occurred.");
-    setProducts([]);
-  } finally {
-    setIsLoading(false);
-  }
-}, []);
+  }, []);
 
   // Effect to apply filters from URL search params on initial load
   useEffect(() => {
@@ -252,144 +226,122 @@ export default function SubCategoryPage({
     if (page) setCurrentPage(Number(page));
   }, [searchParams]);
 
-
   // Main effect to validate route and fetch data
-useEffect(() => {
-  const loadData = async () => {
-    setIsLoading(true);
-    const { category, subcategory, subcategoryId } = await validateRouteAndGetNames(
-      urlCategorySlug,
-      urlSubcategorySlug
-    );
-    if (category && subcategory && subcategoryId !== null) {
-      await fetchProductsData(
-        category,
-        subcategory,
-        subcategoryId, // ✅ pass this
-        currentPage,
-        minPrice,
-        maxPrice,
-        selectedManufacturer,
-        selectedRating,
-        sortBy
+  useEffect(() => {
+    const loadData = async () => {
+      setIsLoading(true);
+      // CHANGED: Destructure categoryId and use the new function name.
+      const { category, subcategory, categoryId, subcategoryId } = await validateRouteAndGetIds(
+        urlCategorySlug,
+        urlSubcategorySlug
       );
-    } else {
-      setIsLoading(false);
-      setProducts([]);
-      setTotalProducts(0);
-      setTotalPages(1);
-    }
-  };
-  loadData();
-}, [
-  urlCategorySlug,
-  urlSubcategorySlug,
-  currentPage,
-  validateRouteAndGetNames,
-  fetchProductsData,
-  minPrice,
-  maxPrice,
-  selectedManufacturer,
-  selectedRating,
-  sortBy,
-]);
 
+      if (category && subcategory && categoryId !== null && subcategoryId !== null) {
+        // CHANGED: Pass IDs to fetchProductsData.
+        await fetchProductsData(
+          categoryId,
+          subcategoryId,
+          currentPage,
+          minPrice,
+          maxPrice,
+          selectedManufacturer,
+          selectedRating,
+          sortBy
+        );
+      } else {
+        // If validation fails, stop loading and the component will render the error message.
+        setIsLoading(false);
+      }
+    };
+    loadData();
+  }, [
+    urlCategorySlug,
+    urlSubcategorySlug,
+    currentPage,
+    validateRouteAndGetIds,
+    fetchProductsData,
+    minPrice,
+    maxPrice,
+    selectedManufacturer,
+    selectedRating,
+    sortBy,
+  ]);
 
-  // Handle filter changes (this will trigger navigation)
+  // The rest of your component (filter handlers, JSX, etc.) can remain the same.
+  // ... (handleFilterChange, breadcrumbItems, handlePageChange, JSX rendering)
+
   const handleFilterChange = useCallback((
     filterValue: string | number,
     filterType: "category" | "subcategory" | "type" | "price_range" | "manufacturer" | "rating" | "sort_by",
-    newValue?: string | number | { min: number | ""; max: number | ""; } | null | undefined // For direct value updates
+    newValue?: string | number | { min: number | ""; max: number | ""; } | null | undefined
   ) => {
     const currentPath = `/${urlCategorySlug}/${urlSubcategorySlug}`;
     const newSearchParams = new URLSearchParams(searchParams.toString());
 
     if (filterType === "category" || filterType === "subcategory" || filterType === "type") {
       let newPath = "";
-      const formattedFilterSlug = String(filterValue).toLowerCase().replace(/\s+/g, '-');
+      const formattedFilterSlug = slugify(String(filterValue));
+
+      // When changing category or subcategory, reset all other filters
+      newSearchParams.delete('min_price');
+      newSearchParams.delete('max_price');
+      newSearchParams.delete('manufacturer');
+      newSearchParams.delete('min_average_rating');
+      newSearchParams.delete('sort_by');
+      newSearchParams.set('page', '1');
 
       if (filterType === "category") {
-          if (validCategoryName?.toLowerCase().replace(/\s+/g, '-') === formattedFilterSlug) {
-              newPath = `/`;
-          } else {
-              newPath = `/${formattedFilterSlug}`;
-          }
+        newPath = `/${formattedFilterSlug}`;
       } else if (filterType === "subcategory") {
-          if (validSubcategoryName?.toLowerCase().replace(/\s+/g, '-') === formattedFilterSlug) {
-              newPath = `/${urlCategorySlug}`;
-          } else {
-              newPath = `/${urlCategorySlug}/${formattedFilterSlug}`;
-          }
+        newPath = `/${urlCategorySlug}/${formattedFilterSlug}`;
       } else if (filterType === "type") {
-          newPath = `/${formattedFilterSlug}`;
+        // This component is for subcategories, but if you have a global filter that can switch to types:
+        newPath = `/${formattedFilterSlug}`;
       }
-      
-      router.push(newPath);
-      setCurrentPage(1);
-      setMinPrice('');
-      setMaxPrice('');
-      setSelectedManufacturer(null);
-      setSelectedRating(null);
-      setSortBy('relevance');
 
+      router.push(`${newPath}?${newSearchParams.toString()}`);
     } else {
-        if (filterType === "price_range") {
-            if (typeof newValue === 'object' && newValue !== null && 'min' in newValue && 'max' in newValue) {
-                const { min, max } = newValue as { min: number | '', max: number | '' };
-                min === '' ? newSearchParams.delete('min_price') : newSearchParams.set('min_price', String(min));
-                max === '' ? newSearchParams.delete('max_price') : newSearchParams.set('max_price', String(max));
-                setMinPrice(min);
-                setMaxPrice(max);
-            }
-        } else if (filterType === "manufacturer") {
-            newValue ? newSearchParams.set('manufacturer', String(newValue)) : newSearchParams.delete('manufacturer');
-            setSelectedManufacturer(newValue ? String(newValue) : null);
-        } else if (filterType === "rating") {
-            newValue ? newSearchParams.set('min_average_rating', String(newValue)) : newSearchParams.delete('min_average_rating');
-            setSelectedRating(newValue ? Number(newValue) : null);
-        } else if (filterType === "sort_by") {
-            if (typeof filterValue === 'string') {
-              filterValue === 'relevance' ? newSearchParams.delete('sort_by') : newSearchParams.set('sort_by', filterValue);
-              setSortBy(filterValue);
-            }
-        }
-        
-        newSearchParams.set('page', '1');
-        setCurrentPage(1);
+      // Handle other filter changes that don't change the page's main path
+      if (filterType === "price_range" && typeof newValue === 'object' && newValue !== null) {
+        const { min, max } = newValue as { min: number | '', max: number | '' };
+        min === '' ? newSearchParams.delete('min_price') : newSearchParams.set('min_price', String(min));
+        max === '' ? newSearchParams.delete('max_price') : newSearchParams.set('max_price', String(max));
+      } else if (filterType === "manufacturer") {
+        newValue ? newSearchParams.set('manufacturer', String(newValue)) : newSearchParams.delete('manufacturer');
+      } else if (filterType === "rating") {
+        newValue ? newSearchParams.set('min_average_rating', String(newValue)) : newSearchParams.delete('min_average_rating');
+      } else if (filterType === "sort_by" && typeof filterValue === 'string') {
+        filterValue === 'relevance' ? newSearchParams.delete('sort_by') : newSearchParams.set('sort_by', filterValue);
+      }
 
-        router.push(`${currentPath}?${newSearchParams.toString()}`);
+      newSearchParams.set('page', '1'); // Reset to first page on any filter change
+      router.push(`${currentPath}?${newSearchParams.toString()}`);
     }
-  }, [urlCategorySlug, urlSubcategorySlug, searchParams, router, validCategoryName, validSubcategoryName]);
+  }, [urlCategorySlug, urlSubcategorySlug, router, searchParams]);
 
-
-  // Construct breadcrumb items
   const breadcrumbItems = [
     { label: "Home", href: "/" },
   ];
   if (validCategoryName) {
-    breadcrumbItems.push({ label: validCategoryName, href: `/${urlCategorySlug}` });
+    breadcrumbItems.push({ label: validCategoryName, href: `/${slugify(validCategoryName)}` });
   }
   if (validSubcategoryName) {
-    breadcrumbItems.push({ label: validSubcategoryName, href: `/${urlCategorySlug}/${urlSubcategorySlug}` });
+    breadcrumbItems.push({ label: validSubcategoryName, href: `/${slugify(validCategoryName)}/${slugify(validSubcategoryName)}` });
   }
 
   const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-    const currentUrl = new URL(window.location.href);
-    currentUrl.searchParams.set('page', page.toString());
-    router.push(currentUrl.toString());
+    const newSearchParams = new URLSearchParams(searchParams.toString());
+    newSearchParams.set('page', page.toString());
+    router.push(`/${urlCategorySlug}/${urlSubcategorySlug}?${newSearchParams.toString()}`);
   };
 
   const handleSortChange = (value: string) => {
-    setSortBy(value);
-    setCurrentPage(1); // Reset page on sort change
-    const currentUrl = new URL(window.location.href);
-    value === 'relevance' ? currentUrl.searchParams.delete('sort_by') : currentUrl.searchParams.set('sort_by', value);
-    currentUrl.searchParams.set('page', '1');
-    router.push(currentUrl.toString());
+    const newSearchParams = new URLSearchParams(searchParams.toString());
+    newSearchParams.set('page', '1');
+    value === 'relevance' ? newSearchParams.delete('sort_by') : newSearchParams.set('sort_by', value);
+    router.push(`/${urlCategorySlug}/${urlSubcategorySlug}?${newSearchParams.toString()}`);
   };
 
-  // Show loading state
   if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-[calc(100vh-100px)]">
@@ -399,23 +351,15 @@ useEffect(() => {
     );
   }
 
-  // Show Page Not Found if route is invalid (category/subcategory hierarchy doesn't exist)
   if (!isRouteValid) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-100px)] bg-gray-50 p-4 text-center">
+      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-100px)] text-center">
         <h2 className="text-2xl font-bold text-red-600 mb-4">Page Not Found</h2>
-        <p className="text-gray-700 text-lg mb-6">{errorMessage || `The path "${formattedCategoryName} / ${formattedSubcategoryName}" is invalid.`}</p>
-        <button
-          onClick={() => router.push('/')}
-          className="px-6 py-3 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
-        >
-          Go to Home
-        </button>
+        <p className="text-gray-700 text-lg">{errorMessage}</p>
       </div>
     );
   }
 
-  // Render the UI even if no products, but pass the noProductsFoundMessage
   return (
     <>
       <Breadcrumb items={breadcrumbItems} />

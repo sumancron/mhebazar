@@ -1,4 +1,3 @@
-// src/app/[category]/page.tsx
 /* eslint-disable @typescript-eslint/no-unused-expressions */
 // src/app/[category]/page.tsx
 "use client";
@@ -8,7 +7,7 @@ import { useRouter, useSearchParams, notFound } from "next/navigation";
 import ProductListing, { Product } from "@/components/products/ProductListing";
 import Breadcrumb from "@/components/elements/Breadcrumb";
 import api from "@/lib/api";
-import { AxiosError } from "axios"; // Import AxiosError
+import { AxiosError } from "axios";
 
 // Helper function to format slugs to display names
 const formatNameFromSlug = (slug: string): string => {
@@ -36,7 +35,7 @@ interface ApiProduct {
 interface ApiCategory {
   id: number;
   name: string;
-  subcategories: { id: number; name: string }[]; // Subcategories are nested within the category object
+  subcategories: { id: number; name: string }[];
 }
 
 interface ApiResponse<T> {
@@ -46,7 +45,17 @@ interface ApiResponse<T> {
   results: T[];
 }
 
-// Product types as defined in your backend
+// Validation context return type
+// CHANGED: Added id and subId to carry the numeric IDs
+interface RouteContext {
+  type: 'category' | 'subcategory' | 'type' | 'invalid';
+  name: string | null;
+  subName: string | null;
+  id: number | null;
+  subId: number | null;
+}
+
+
 const PRODUCT_TYPE_CHOICES = ["new", "used", "rental", "attachments"];
 
 export default function CategoryOrTypePage({
@@ -59,11 +68,10 @@ export default function CategoryOrTypePage({
 
   const urlParamSlug: string = params.category;
   const subcategoryParamSlug: string | undefined = params.subcategory;
-  
+
   const [products, setProducts] = useState<Product[]>([]);
   const [totalProducts, setTotalProducts] = useState<number>(0);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [noProductsFoundMessage, setNoProductsFoundMessage] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -75,14 +83,14 @@ export default function CategoryOrTypePage({
   const [maxPrice, setMaxPrice] = useState<number | ''>('');
   const [selectedManufacturer, setSelectedManufacturer] = useState<string | null>(null);
   const [selectedRating, setSelectedRating] = useState<number | null>(null);
-  const [sortBy, setSortBy] = useState<string>('relevance'); // Default sort
+  const [sortBy, setSortBy] = useState<string>('relevance');
 
   const [activeCategoryName, setActiveCategoryName] = useState<string | null>(null);
   const [activeSubcategoryName, setActiveSubcategoryName] = useState<string | null>(null);
   const [activeTypeName, setActiveTypeName] = useState<string | null>(null);
 
   // Validate the URL parameter against categories and product types
-  const validateRouteContext = useCallback(async (paramSlug: string, subParamSlug?: string) => {
+  const validateRouteContext = useCallback(async (paramSlug: string, subParamSlug?: string): Promise<RouteContext> => {
     setActiveCategoryName(null);
     setActiveSubcategoryName(null);
     setActiveTypeName(null);
@@ -91,55 +99,51 @@ export default function CategoryOrTypePage({
     const formattedParamName = formatNameFromSlug(paramSlug);
     const formattedSubParamName = subParamSlug ? formatNameFromSlug(subParamSlug) : null;
 
-    // 1. Check if it's a product type (e.g., /new, /used)
+    // 1. Check if it's a product type
     if (PRODUCT_TYPE_CHOICES.includes(paramSlug)) {
-      if (subParamSlug) { 
-        // If a subcategory slug is present with a type slug, it's an invalid route combination
-        return { type: 'invalid', name: null, subName: null };
+      if (subParamSlug) {
+        return { type: 'invalid', name: null, subName: null, id: null, subId: null };
       }
       setActiveTypeName(formattedParamName);
       setSelectedFilters(new Set<string>([formattedParamName]));
-      return { type: 'type', name: formattedParamName, subName: null };
+      return { type: 'type', name: formattedParamName, subName: null, id: null, subId: null };
     }
 
-    // 2. Check if it's a valid category or subcategory (e.g., /spare-parts, /pallet-trucks/hand-pallet-truck)
+    // 2. Check if it's a valid category or subcategory
     try {
-  const categoryResponse = await api.get<ApiCategory[]>(`/categories/?name=${formattedParamName}`);
-  // console.log(`/categories/?name=${formattedParamName}`);
-  // console.log("Category Response:", categoryResponse.data);
+      // Use `slug` for querying the API if your backend supports it, otherwise use the formatted name.
+      // Assuming the backend filter is by name for this lookup.
+      const categoryResponse = await api.get<ApiCategory[]>(`/categories/?name=${formattedParamName}`);
+      const categories = categoryResponse.data;
 
-  const categories = categoryResponse.data;
-  if (categories && categories.length > 0) {
-    const category = categories[0];
-    setActiveCategoryName(category.name);
+      if (categories && categories.length > 0) {
+        const category = categories[0];
+        setActiveCategoryName(category.name);
 
-    if (formattedSubParamName) {
-      const subcategory = category.subcategories.find(
-        sub => sub.name.toLowerCase() === formattedSubParamName.toLowerCase()
-      );
+        if (formattedSubParamName) {
+          const subcategory = category.subcategories.find(
+            sub => sub.name.toLowerCase() === formattedSubParamName.toLowerCase()
+          );
 
-      if (subcategory) {
-        setActiveSubcategoryName(subcategory.name);
-        setSelectedFilters(new Set<string>([category.name, subcategory.name]));
-        return { type: 'subcategory', name: category.name, subName: subcategory.name };
-      } else {
-        return { type: 'invalid', name: null, subName: null };
+          if (subcategory) {
+            setActiveSubcategoryName(subcategory.name);
+            setSelectedFilters(new Set<string>([category.name, subcategory.name]));
+            // CHANGED: Return the found subcategory ID
+            return { type: 'subcategory', name: category.name, subName: subcategory.name, id: category.id, subId: subcategory.id };
+          } else {
+            return { type: 'invalid', name: null, subName: null, id: null, subId: null };
+          }
+        } else {
+          setSelectedFilters(new Set<string>([category.name]));
+          // CHANGED: Return the found category ID
+          return { type: 'category', name: category.name, subName: null, id: category.id, subId: null };
+        }
       }
-    } else {
-      setSelectedFilters(new Set<string>([category.name]));
-      return { type: 'category', name: category.name, subName: null };
+    } catch (err) {
+      console.error("[Category/Type Page] Failed to check category existence:", err);
     }
-  }
-} catch (err: unknown) {
-  if (err instanceof AxiosError) {
-    console.error("[Category/Type Page] Failed to check category existence (AxiosError):", err.message);
-  } else {
-    console.error("[Category/Type Page] Failed to check category existence:", err);
-  }
-}
 
-return { type: 'invalid', name: null, subName: null };
-
+    return { type: 'invalid', name: null, subName: null, id: null, subId: null };
   }, []);
 
   // Fetch products based on the determined context and filters
@@ -147,6 +151,9 @@ return { type: 'invalid', name: null, subName: null };
     contextType: 'category' | 'subcategory' | 'type',
     contextName: string,
     contextSubName: string | null,
+    // CHANGED: Accept categoryId and subcategoryId
+    categoryId: number | null,
+    subcategoryId: number | null,
     page: number,
     minPriceFilter: number | '',
     maxPriceFilter: number | '',
@@ -156,56 +163,41 @@ return { type: 'invalid', name: null, subName: null };
   ) => {
     setIsLoading(true);
     setNoProductsFoundMessage(null);
-    setProducts([]);
-    setTotalProducts(0);
-    setTotalPages(1);
 
     try {
       const queryParams = new URLSearchParams();
-      if (contextType === 'category') {
-        // For a category page, query products by category_name
-        queryParams.append("category_name", contextName);
-      } else if (contextType === 'subcategory') {
-        // For a subcategory page, query products by both category_name and subcategory_name
-        queryParams.append("category_name", contextName);
-        queryParams.append("subcategory_name", contextSubName || ''); // subName will always be present for 'subcategory' type
+
+      // CHANGED: Use ID for filtering instead of name
+      if (contextType === 'subcategory' && subcategoryId) {
+        // If a subcategory ID is available, it's the most specific filter.
+        queryParams.append("subcategory", subcategoryId.toString());
+      } else if (contextType === 'category' && categoryId) {
+        // Otherwise, filter by the parent category ID.
+        queryParams.append("category", categoryId.toString());
       } else if (contextType === 'type') {
-        // For a product type page, query products by type (e.g., 'new', 'used')
+        // For product type, filter by the type name (e.g., 'new', 'used').
         queryParams.append("type", contextName.toLowerCase());
       }
+
       queryParams.append("page", page.toString());
 
-      if (minPriceFilter !== '') {
-        queryParams.append("min_price", minPriceFilter.toString());
-      }
-      if (maxPriceFilter !== '') {
-        queryParams.append("max_price", maxPriceFilter.toString());
-      }
-      if (manufacturerFilter) {
-        queryParams.append("manufacturer", manufacturerFilter);
-      }
-      if (ratingFilter !== null) {
-        queryParams.append("min_average_rating", ratingFilter.toString());
-      }
+      if (minPriceFilter !== '') queryParams.append("min_price", minPriceFilter.toString());
+      if (maxPriceFilter !== '') queryParams.append("max_price", maxPriceFilter.toString());
+      if (manufacturerFilter) queryParams.append("manufacturer", manufacturerFilter);
+      if (ratingFilter !== null) queryParams.append("min_average_rating", ratingFilter.toString());
+
       if (sortByFilter && sortByFilter !== 'relevance') {
         let sortParam = '';
-        if (sortByFilter === 'price_asc') {
-          sortParam = 'price';
-        } else if (sortByFilter === 'price_desc') {
-          sortParam = '-price';
-        } else if (sortByFilter === 'newest') {
-          sortParam = '-created_at';
-        }
-        if (sortParam) {
-          queryParams.append("ordering", sortParam);
-        }
+        if (sortByFilter === 'price_asc') sortParam = 'price';
+        else if (sortByFilter === 'price_desc') sortParam = '-price';
+        else if (sortByFilter === 'newest') sortParam = '-created_at';
+        if (sortParam) queryParams.append("ordering", sortParam);
       }
 
       const response = await api.get<ApiResponse<ApiProduct>>(
         `/products/?${queryParams.toString()}`
       );
 
-      // IMPORTANT: Check if response.data and response.data.results exist
       if (response.data && response.data.results) {
         if (response.data.results.length === 0) {
           setNoProductsFoundMessage(`No products found for "${contextSubName || contextName}" with the selected filters.`);
@@ -226,26 +218,20 @@ return { type: 'invalid', name: null, subName: null };
           stock_quantity: p.stock_quantity,
           manufacturer: p.manufacturer,
           average_rating: p.average_rating,
-          type: p.type, // Make sure 'type' is included here
+          type: p.type,
         }));
 
         setProducts(transformedProducts);
         setTotalProducts(response.data.count);
         setTotalPages(Math.ceil(response.data.count / 10)); // Assuming 10 items per page
-        console.log(`[Category/Type Page] Products for "${contextSubName || contextName}" fetched successfully.`);
       } else {
-        // Handle case where response.data or response.data.results is null/undefined
         setNoProductsFoundMessage(`Failed to load products. Unexpected API response structure.`);
         setProducts([]);
-        setTotalProducts(0);
-        setTotalPages(1);
       }
-    } catch (err: unknown) {
+    } catch (err) {
       if (err instanceof AxiosError) {
-        console.error(`[Category/Type Page] Failed to fetch products for "${contextSubName || contextName}" (AxiosError):`, err.message);
-        setErrorMessage(`Failed to load products. An API error occurred: ${err.message}`);
+        setErrorMessage(`Failed to load products. API error: ${err.message}`);
       } else {
-        console.error(`[Category/Type Page] Failed to fetch products for "${contextSubName || contextName}":`, err);
         setErrorMessage(`Failed to load products. An unknown error occurred.`);
       }
       setProducts([]);
@@ -282,6 +268,9 @@ return { type: 'invalid', name: null, subName: null };
           context.type as 'category' | 'subcategory' | 'type',
           context.name,
           context.subName,
+          // CHANGED: Pass the IDs to the fetch function
+          context.id,
+          context.subId,
           currentPage,
           minPrice,
           maxPrice,
@@ -308,126 +297,85 @@ return { type: 'invalid', name: null, subName: null };
     sortBy,
   ]);
 
-
-  // Handle filter changes from SideFilter (this will cause navigation if category/type/subcategory changes)
+  // Handle filter changes (no changes needed here, as it navigates which triggers the main useEffect)
   const handleFilterChange = useCallback((
     filterValue: string | number,
     filterType: "category" | "subcategory" | "type" | "price_range" | "manufacturer" | "rating" | "sort_by",
-    newValue?: string | number | { min: number | ""; max: number | ""; } | null // For direct value updates
+    newValue?: string | number | { min: number | ""; max: number | ""; } | null
   ) => {
     const currentPath = `/${urlParamSlug}${subcategoryParamSlug ? `/${subcategoryParamSlug}` : ''}`;
     const newSearchParams = new URLSearchParams(searchParams.toString());
 
     if (filterType === "category" || filterType === "subcategory" || filterType === "type") {
-        let newPath = "";
-        const formattedFilterSlug = String(filterValue).toLowerCase().replace(/\s+/g, '-');
+      let newPath = "";
+      const formattedFilterSlug = String(filterValue).toLowerCase().replace(/\s+/g, '-');
 
-        // Reset other filters when navigating to a new category/subcategory/type
-        newSearchParams.delete('min_price');
-        newSearchParams.delete('max_price');
-        newSearchParams.delete('manufacturer');
-        newSearchParams.delete('min_average_rating');
-        newSearchParams.delete('sort_by');
-        newSearchParams.set('page', '1');
+      // Reset all filters on navigation
+      ['min_price', 'max_price', 'manufacturer', 'min_average_rating', 'sort_by'].forEach(p => newSearchParams.delete(p));
+      newSearchParams.set('page', '1');
 
-        setMinPrice('');
-        setMaxPrice('');
-        setSelectedManufacturer(null);
-        setSelectedRating(null);
-        setSortBy('relevance');
-        setCurrentPage(1);
+      setMinPrice('');
+      setMaxPrice('');
+      setSelectedManufacturer(null);
+      setSelectedRating(null);
+      setSortBy('relevance');
+      setCurrentPage(1);
 
-        if (filterType === "category") {
-            newPath = `/${formattedFilterSlug}`;
-        } else if (filterType === "subcategory") {
-            // Preserve the current category slug in the path if available, otherwise use the new subcategory slug directly
-            const currentCategorySlug = activeCategoryName?.toLowerCase().replace(/\s+/g, '-');
-            if (currentCategorySlug) {
-                newPath = `/${currentCategorySlug}/${formattedFilterSlug}`;
-            } else {
-                // Fallback: If no activeCategoryName context, navigate to the subcategory directly (might result in 404 if not a top-level category name)
-                newPath = `/${formattedFilterSlug}`;
-            }
-        } else if (filterType === "type") {
-            newPath = `/${formattedFilterSlug}`;
-        }
-        
-        router.push(`${newPath}?${newSearchParams.toString()}`);
+      if (filterType === "category" || filterType === "type") {
+        newPath = `/${formattedFilterSlug}`;
+      } else if (filterType === "subcategory") {
+        const currentCategorySlug = activeCategoryName?.toLowerCase().replace(/\s+/g, '-');
+        newPath = currentCategorySlug ? `/${currentCategorySlug}/${formattedFilterSlug}` : `/${formattedFilterSlug}`;
+      }
+
+      router.push(`${newPath}?${newSearchParams.toString()}`);
 
     } else {
-        // Handle other filter changes (price, manufacturer, rating, sort) without changing the base path
-        if (filterType === "price_range") {
-            if (typeof newValue === 'object' && newValue !== null && 'min' in newValue && 'max' in newValue) {
-                const { min, max } = newValue as { min: number | '', max: number | '' };
-                min === '' ? newSearchParams.delete('min_price') : newSearchParams.set('min_price', String(min));
-                max === '' ? newSearchParams.delete('max_price') : newSearchParams.set('max_price', String(max));
-                setMinPrice(min);
-                setMaxPrice(max);
-            }
-        } else if (filterType === "manufacturer") {
-            newValue ? newSearchParams.set('manufacturer', String(newValue)) : newSearchParams.delete('manufacturer');
-            setSelectedManufacturer(newValue ? String(newValue) : null);
-        } else if (filterType === "rating") {
-            newValue ? newSearchParams.set('min_average_rating', String(newValue)) : newSearchParams.delete('min_average_rating');
-            setSelectedRating(newValue ? Number(newValue) : null);
-        } else if (filterType === "sort_by") {
-            if (typeof filterValue === 'string') {
-              filterValue === 'relevance' ? newSearchParams.delete('sort_by') : newSearchParams.set('sort_by', filterValue);
-              setSortBy(filterValue);
-            }
-        }
-        
-        newSearchParams.set('page', '1'); // Reset page when filters change
-        setCurrentPage(1);
+      // Handle other filter changes
+      if (filterType === "price_range" && typeof newValue === 'object' && newValue !== null) {
+        const { min, max } = newValue as { min: number | '', max: number | '' };
+        min === '' ? newSearchParams.delete('min_price') : newSearchParams.set('min_price', String(min));
+        max === '' ? newSearchParams.delete('max_price') : newSearchParams.set('max_price', String(max));
+      } else if (filterType === "manufacturer") {
+        newValue ? newSearchParams.set('manufacturer', String(newValue)) : newSearchParams.delete('manufacturer');
+      } else if (filterType === "rating") {
+        newValue ? newSearchParams.set('min_average_rating', String(newValue)) : newSearchParams.delete('min_average_rating');
+      } else if (filterType === "sort_by" && typeof filterValue === 'string') {
+        filterValue === 'relevance' ? newSearchParams.delete('sort_by') : newSearchParams.set('sort_by', filterValue);
+      }
 
-        router.push(`${currentPath}?${newSearchParams.toString()}`);
+      newSearchParams.set('page', '1');
+      router.push(`${currentPath}?${newSearchParams.toString()}`);
     }
-  }, [
-    urlParamSlug,
-    subcategoryParamSlug,
-    activeCategoryName,
-    router,
-    searchParams
-  ]);
-
-
-  // Construct breadcrumb items
-  const breadcrumbItems = [{ label: "Home", href: "/" }];
-  if (activeCategoryName) {
-    breadcrumbItems.push({
-      label: activeCategoryName,
-      href: `/${urlParamSlug}`, // Use urlParamSlug for category base URL
-    });
-    if (activeSubcategoryName) {
-      breadcrumbItems.push({
-        label: activeSubcategoryName,
-        href: `/${urlParamSlug}/${subcategoryParamSlug}`, // Use subcategoryParamSlug for subcategory URL
-      });
-    }
-  } else if (activeTypeName) {
-    breadcrumbItems.push({
-      label: activeTypeName,
-      href: `/${urlParamSlug}`, // Use urlParamSlug for type base URL
-    });
-  }
+  }, [urlParamSlug, subcategoryParamSlug, activeCategoryName, router, searchParams]);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
-    const currentUrl = new URL(window.location.href);
-    currentUrl.searchParams.set('page', page.toString());
-    router.push(currentUrl.toString());
+    const newSearchParams = new URLSearchParams(searchParams.toString());
+    newSearchParams.set('page', page.toString());
+    router.push(`/${urlParamSlug}${subcategoryParamSlug ? `/${subcategoryParamSlug}` : ''}?${newSearchParams.toString()}`);
   };
 
   const handleSortChange = (value: string) => {
     setSortBy(value);
-    setCurrentPage(1); // Reset page on sort change
-    const currentUrl = new URL(window.location.href);
-    value === 'relevance' ? currentUrl.searchParams.delete('sort_by') : currentUrl.searchParams.set('sort_by', value);
-    currentUrl.searchParams.set('page', '1');
-    router.push(currentUrl.toString());
+    setCurrentPage(1);
+    const newSearchParams = new URLSearchParams(searchParams.toString());
+    value === 'relevance' ? newSearchParams.delete('sort_by') : newSearchParams.set('sort_by', value);
+    newSearchParams.set('page', '1');
+    router.push(`/${urlParamSlug}${subcategoryParamSlug ? `/${subcategoryParamSlug}` : ''}?${newSearchParams.toString()}`);
   };
 
-  // Show loading state
+
+  const breadcrumbItems = [{ label: "Home", href: "/" }];
+  if (activeCategoryName) {
+    breadcrumbItems.push({ label: activeCategoryName, href: `/${urlParamSlug}` });
+    if (activeSubcategoryName) {
+      breadcrumbItems.push({ label: activeSubcategoryName, href: `/${urlParamSlug}/${subcategoryParamSlug}` });
+    }
+  } else if (activeTypeName) {
+    breadcrumbItems.push({ label: activeTypeName, href: `/${urlParamSlug}` });
+  }
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-[calc(100vh-100px)]">
@@ -437,7 +385,6 @@ return { type: 'invalid', name: null, subName: null };
     );
   }
 
-  // Render the UI even if no products, but pass the noProductsFoundMessage
   return (
     <>
       <Breadcrumb items={breadcrumbItems} />
