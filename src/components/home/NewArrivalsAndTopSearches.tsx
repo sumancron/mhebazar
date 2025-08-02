@@ -141,7 +141,7 @@ export default function NewArrivalsAndTopSearches() {
         const products: ProductApiResponse[] = Array.isArray(res.data?.products)
           ? res.data.products
           : Array.isArray(res.data) ? res.data : []; // Also handle direct array response
-        
+
         const transformedProducts: NewArrivalDisplayItem[] = products
           .filter(p => p.image) // Only include items with an image initially
           .slice(0, 6) // Limit to 6 items as per previous code
@@ -232,7 +232,7 @@ export default function NewArrivalsAndTopSearches() {
     <div className="space-y-8 w-full max-w-md mx-auto sm:max-w-xl md:max-w-2xl lg:max-w-4xl xl:max-w-6xl">
       {/* New Arrivals Section */}
       <div>
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex justify-between items-center mb-8">
           <h2 className="text-lg sm:text-xl md:text-2xl font-bold">
             New Arrivals
           </h2>
@@ -243,54 +243,56 @@ export default function NewArrivalsAndTopSearches() {
           </Link>
         </div>
 
-        <div className="pb-6">
-          <p className="font-medium text-gray-900">
-            {newArrivalsCount > 0 ? `${newArrivalsCount}+ products added today` : "No new products added today."}
-          </p>
-        </div>
-
-        {isLoadingNewArrivals ? (
-          <div className="flex gap-4 overflow-x-auto bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-            {[...Array(3)].map((_, i) => (
-              <LoadingBoxSkeleton key={i} />
-            ))}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <div className="pb-6">
+            <p className="font-semibold text-2xl text-gray-900">
+              {newArrivalsCount > 0 ? `${newArrivalsCount}+ products added today` : "No new products added today."}
+            </p>
           </div>
-        ) : (
-          <div className="flex gap-4 overflow-x-auto bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-            {newArrivals.map((item, i) => (
-              <Link
-                href={`/${item.slug}`} // Link to product detail page
-                key={item.id || i}
-                className="relative w-24 h-24 sm:w-32 sm:h-32 flex-shrink-0 rounded-lg overflow-hidden bg-gray-50 border border-gray-100 hover:shadow-md transition-shadow cursor-pointer group flex items-center justify-center">
-                {item.image ? (
-                  <Image
-                    src={item.image}
-                    alt={item.alt}
-                    fill
-                    className="object-contain p-2 transform group-hover:scale-105 transition-transform duration-200"
-                    sizes="(max-width: 640px) 96px, 128px"
-                    onError={e => {
+
+          {isLoadingNewArrivals ? (
+            <div className="flex gap-4 overflow-x-auto ">
+              {[...Array(3)].map((_, i) => (
+                <LoadingBoxSkeleton key={i} />
+              ))}
+            </div>
+          ) : (
+            <div className="flex gap-4 overflow-x-auto">
+              {newArrivals.map((item, i) => (
+                <Link
+                  href={`/${item.slug}`} // Link to product detail page
+                  key={item.id || i}
+                  className="relative w-24 h-24 sm:w-32 sm:h-32 flex-shrink-0 rounded-lg overflow-hidden bg-gray-50 border border-gray-100 hover:shadow-md transition-shadow cursor-pointer group flex items-center justify-center">
+                  {item.image ? (
+                    <Image
+                      src={item.image}
+                      alt={item.alt}
+                      fill
+                      className="object-contain p-2 transform group-hover:scale-105 transition-transform duration-200 w-44 h-44"
+                      // sizes="(max-width: 640px) 96px, 128px"
+                      onError={e => {
                         const target = e.target as HTMLImageElement;
                         target.src = "/placeholder-image.png"; // Fallback image if URL is broken
                         target.className += " object-fill p-0"; // Adjust placeholder styling
-                    }}
-                  />
-                ) : (
+                      }}
+                    />
+                  ) : (
                     // Fallback to a generic placeholder when image is null
                     <span className="text-gray-500 text-xs text-center font-bold">
-                        No Image
+                      No Image
                     </span>
-                )}
-              </Link>
-            ))}
-          </div>
-        )}
+                  )}
+                </Link>
+              ))}
+            </div>
+          )}
 
-        {errors.newArrivals && (
-          <div className="mt-2 text-xs text-amber-600 bg-amber-50 px-2 py-1 rounded">
-            {/* {errors.newArrivals} */}
-          </div>
-        )}
+          {/* {errors.newArrivals && (
+          <div className="mt-2 text-xs text-amber-600 bg-amber-50 px-2 py-1 rounded"> */}
+          {/* {errors.newArrivals} */}
+          {/* </div>
+        )} */}
+        </div>
       </div>
 
       {/* Top Searched Products Section */}
