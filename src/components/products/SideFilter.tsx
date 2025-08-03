@@ -37,6 +37,7 @@ interface SideFilterProps {
   maxPrice: number | '';
   selectedManufacturer: string | null;
   selectedRating: number | null;
+  showManufacturerFilter?: boolean;
 }
 
 const SideFilter = ({
@@ -49,6 +50,7 @@ const SideFilter = ({
   maxPrice,
   selectedManufacturer,
   selectedRating,
+  showManufacturerFilter = true,
 }: SideFilterProps) => {
   const [search, setSearch] = useState<string>("");
   const [categories, setCategories] = useState<ApiCategory[]>([]);
@@ -58,9 +60,9 @@ const SideFilter = ({
 
   const [expandedCategory, setExpandedCategory] = useState<number | null>(null);
   const [priceRangeExpanded, setPriceRangeExpanded] = useState<boolean>(true);
-  const [manufacturerExpanded, setManufacturerExpanded] = useState<boolean>(true);
-  const [ratingExpanded, setRatingExpanded] = useState<boolean>(true);
-  const [productTypeExpanded, setProductTypeExpanded] = useState<boolean>(true);
+  // const [manufacturerExpanded, setManufacturerExpanded] = useState<boolean>(true);
+  // const [ratingExpanded, setRatingExpanded] = useState<boolean>(true);
+  // const [productTypeExpanded, setProductTypeExpanded] = useState<boolean>(true);
 
   // Local state for price inputs to avoid re-fetches on every keystroke
   const [localMinPrice, setLocalMinPrice] = useState<number | ''>(minPrice);
@@ -155,6 +157,14 @@ const SideFilter = ({
     return false;
   };
 
+  // Conditionally fetch manufacturers
+  useEffect(() => {
+    fetchCategories();
+    if (showManufacturerFilter) { // Only fetch if the filter is needed
+      fetchManufacturers();
+    }
+  }, [fetchCategories, fetchManufacturers, showManufacturerFilter]);
+
   if (isLoadingCategories) {
     return (
       <aside className="sticky top-0 w-full max-w-xs min-h-screen bg-white flex flex-col overflow-y-auto z-20 p-4 animate-pulse">
@@ -225,11 +235,11 @@ const SideFilter = ({
                       expandedCategory === category.id ? null : category.id
                     );
                   }
-                  onFilterChange(category.name, "category");
+                  onFilterChange(category.name, "category", category.name);
                 }}
                 className={`w-full flex items-center justify-between px-2 py-2 rounded-md transition-colors duration-200 ${isFilterActive(category.name)
-                    ? "bg-green-50 text-green-700 font-medium"
-                    : "hover:bg-gray-50 text-gray-700"
+                  ? "bg-green-50 text-green-700 font-medium"
+                  : "hover:bg-gray-50 text-gray-700"
                   }`}
                 aria-expanded={expandedCategory === category.id}
               >
@@ -259,10 +269,10 @@ const SideFilter = ({
                           animate={{ x: 0, opacity: 1 }}
                           transition={{ delay: index * 0.02 }}
                           className={`w-full text-left p-2 text-xs rounded-md transition-colors duration-200 ${isFilterActive(subcategory.name)
-                              ? "bg-blue-50 text-blue-700 font-medium"
-                              : "text-gray-600 hover:bg-green-50"
+                            ? "bg-blue-50 text-blue-700 font-medium"
+                            : "text-gray-600 hover:bg-green-50"
                             }`}
-                          onClick={() => onFilterChange(subcategory.name, "subcategory")}
+                          onClick={() => onFilterChange(subcategory.name, "subcategory", subcategory.name)}
                         >
                           {subcategory.name}
                         </motion.button>
@@ -283,8 +293,8 @@ const SideFilter = ({
               key={index}
               onClick={() => onFilterChange(type, "type")}
               className={`w-full text-left px-2 py-2 rounded-md transition-colors duration-200 ${isFilterActive(type)
-                  ? "bg-purple-50 text-purple-700 font-medium"
-                  : "hover:bg-gray-50 text-gray-700"
+                ? "bg-purple-50 text-purple-700 font-medium"
+                : "hover:bg-gray-50 text-gray-700"
                 }`}
             >
               <span className="text-sm">{type.charAt(0).toUpperCase() + type.slice(1)}</span>
@@ -343,22 +353,26 @@ const SideFilter = ({
         </div>
 
         {/* Manufacturer Filter */}
-        <h2 className="text-base font-semibold mb-2 text-gray-800">Manufacturer</h2>
-        <div className="space-y-1 mb-4">
-          <select
-            className="w-full border border-gray-200 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-green-500 bg-white"
-            value={selectedManufacturer || 'all'}
-            onChange={handleManufacturerChange}
-            aria-label="Select manufacturer"
-          >
-            <option value="all">All Manufacturers</option>
-            {manufacturers.map((manufacturer, index) => (
-              <option key={index} value={manufacturer}>
-                {manufacturer}
-              </option>
-            ))}
-          </select>
-        </div>
+        {showManufacturerFilter && (
+          <>
+            <h2 className="text-base font-semibold mb-2 text-gray-800">Manufacturer</h2>
+            <div className="space-y-1 mb-4">
+              <select
+                className="w-full border border-gray-200 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-green-500 bg-white"
+                value={selectedManufacturer || 'all'}
+                onChange={handleManufacturerChange}
+                aria-label="Select manufacturer"
+              >
+                <option value="all">All Manufacturers</option>
+                {manufacturers.map((manufacturer, index) => (
+                  <option key={index} value={manufacturer}>
+                    {manufacturer}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </>
+        )}
 
         {/* Rating Filter */}
         <h2 className="text-base font-semibold mb-2 text-gray-800">Rating</h2>

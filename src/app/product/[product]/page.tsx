@@ -1,4 +1,5 @@
 // src/app/product/[product]/page.tsx
+import SparePartsFeatured from "@/components/home/SparepartsFeatured";
 import ProductSection from "@/components/products/IndividualProduct";
 // import ReviewSection from "@/components/products/Reviews"; // This import is now handled within IndividualProduct.tsx
 
@@ -38,6 +39,8 @@ export default async function IndividualProductPage({
       {/* ProductSection will fetch its own data based on productSlug and productId */}
       {/* ReviewSection is now placed within IndividualProduct.tsx */}
       <ProductSection productSlug={productSlug} productId={productId} />
+
+      <SparePartsFeatured/>
     </>
   );
 }

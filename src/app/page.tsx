@@ -25,7 +25,7 @@ export default function HomePage() {
       <div className="max-w-[90vw] mx-auto">
         <CategoryButtons />
 
-        <div className="flex flex-col md:flex-row gap-4 md:gap-14 w-full py-8 mx-auto justify-center items-start px-4 md:px-0">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-14 w-full py-8 mx-auto justify-center items-start px-4 md:px-0">
           <div className="flex-1 w-full">
             <MostPopular />
           </div>
@@ -41,7 +41,7 @@ export default function HomePage() {
 
         <ExportProductsFeatured />
 
-        <Marquee className="my-4">
+        <Marquee className="my-12">
           <img src={"/logos/AEPL.png"} alt="AEP Logo" className="h-16 mx-4" />
           <img src={"/logos/Asmita.png"} alt="AEP Logo" className="h-16 mx-4" />
           <img src={"/logos/Bolzoni1.png"} alt="AEP Logo" className="h-16 mx-4" />

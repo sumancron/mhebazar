@@ -210,6 +210,7 @@ interface ProductListingProps {
   selectedRating: number | null;
   sortBy: string;
   onSortChange: (value: string) => void;
+  showManufacturerFilter?: boolean;
 }
 
 export default function ProductListing({
@@ -231,6 +232,7 @@ export default function ProductListing({
   selectedRating,
   sortBy,
   onSortChange,
+  showManufacturerFilter = true,
 }: ProductListingProps) {
   const [currentView, setCurrentView] = useState<"grid" | "list">("grid");
   const [mobileFilterOpen, setMobileFilterOpen] = useState<boolean>(false);
@@ -247,11 +249,50 @@ export default function ProductListing({
         {/* --- START: Conditional Rendering for Filters --- */}
 
         {/* Render the filters ONLY if the path does NOT start with /vendor-listing/ */}
-        {!window.location.pathname.startsWith("/vendor-listing/") && (
-          <>
-            {/* Desktop Sidebar */}
-            <div className="hidden lg:block flex-shrink-0 w-72 xl:w-80">
-              <div className="sticky top-4 h-[calc(100vh-2rem)] overflow-y-auto">
+        {/* {!window.location.pathname.startsWith("/vendor-listing/") && ( */}
+        <>
+          {/* Desktop Sidebar */}
+          <div className="hidden lg:block flex-shrink-0 w-72 xl:w-80">
+            <div className="sticky top-4 h-[calc(100vh-2rem)] overflow-y-auto">
+              <SideFilter
+                selectedFilters={selectedFilters}
+                onFilterChange={onFilterChange}
+                selectedCategoryName={selectedCategoryName}
+                selectedSubcategoryName={selectedSubcategoryName}
+                selectedTypeName={selectedTypeName}
+                minPrice={minPrice}
+                maxPrice={maxPrice}
+                selectedManufacturer={selectedManufacturer}
+                showManufacturerFilter={showManufacturerFilter} // Pass the new prop down
+                selectedRating={selectedRating}
+              />
+            </div>
+          </div>
+
+          {/* Sidebar Mobile Drawer */}
+          <div
+            className={`fixed inset-0 z-50 bg-black/60 backdrop-blur-sm lg:hidden transition-all duration-300 ${mobileFilterOpen
+              ? "opacity-100 pointer-events-auto"
+              : "opacity-0 pointer-events-none"
+              }`}
+            onClick={() => setMobileFilterOpen(false)}
+          >
+            <aside
+              className={`absolute left-0 top-0 h-full w-full max-w-sm bg-white shadow-2xl transition-transform duration-300 ${mobileFilterOpen ? "translate-x-0" : "-translate-x-full"
+                }`}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200 bg-gradient-to-r from-green-50 to-blue-50">
+                <span className="font-bold text-lg sm:text-xl text-gray-800">Filters</span>
+                <button
+                  onClick={() => setMobileFilterOpen(false)}
+                  className="p-2 rounded-full hover:bg-white/80 transition-colors duration-200 shadow-sm"
+                  aria-label="Close filters"
+                >
+                  <X className="w-5 h-5 text-gray-600" />
+                </button>
+              </div>
+              <div className="h-[calc(100%-80px)] overflow-y-auto">
                 <SideFilter
                   selectedFilters={selectedFilters}
                   onFilterChange={onFilterChange}
@@ -261,51 +302,14 @@ export default function ProductListing({
                   minPrice={minPrice}
                   maxPrice={maxPrice}
                   selectedManufacturer={selectedManufacturer}
+                  showManufacturerFilter={showManufacturerFilter} // Pass the new prop down
                   selectedRating={selectedRating}
                 />
               </div>
-            </div>
-
-            {/* Sidebar Mobile Drawer */}
-            <div
-              className={`fixed inset-0 z-50 bg-black/60 backdrop-blur-sm lg:hidden transition-all duration-300 ${mobileFilterOpen
-                ? "opacity-100 pointer-events-auto"
-                : "opacity-0 pointer-events-none"
-                }`}
-              onClick={() => setMobileFilterOpen(false)}
-            >
-              <aside
-                className={`absolute left-0 top-0 h-full w-full max-w-sm bg-white shadow-2xl transition-transform duration-300 ${mobileFilterOpen ? "translate-x-0" : "-translate-x-full"
-                  }`}
-                onClick={(e) => e.stopPropagation()}
-              >
-                <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200 bg-gradient-to-r from-green-50 to-blue-50">
-                  <span className="font-bold text-lg sm:text-xl text-gray-800">Filters</span>
-                  <button
-                    onClick={() => setMobileFilterOpen(false)}
-                    className="p-2 rounded-full hover:bg-white/80 transition-colors duration-200 shadow-sm"
-                    aria-label="Close filters"
-                  >
-                    <X className="w-5 h-5 text-gray-600" />
-                  </button>
-                </div>
-                <div className="h-[calc(100%-80px)] overflow-y-auto">
-                  <SideFilter
-                    selectedFilters={selectedFilters}
-                    onFilterChange={onFilterChange}
-                    selectedCategoryName={selectedCategoryName}
-                    selectedSubcategoryName={selectedSubcategoryName}
-                    selectedTypeName={selectedTypeName}
-                    minPrice={minPrice}
-                    maxPrice={maxPrice}
-                    selectedManufacturer={selectedManufacturer}
-                    selectedRating={selectedRating}
-                  />
-                </div>
-              </aside>
-            </div>
-          </>
-        )}
+            </aside>
+          </div>
+        </>
+        {/* )} */}
 
         {/* --- END: Conditional Rendering for Filters --- */}
 

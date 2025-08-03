@@ -94,8 +94,8 @@ export default function MostPopular() {
   return (
     <section className="w-full sm:px-6">
       {/* Header */}
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-lg sm:text-xl md:text-2xl font-bold mb-6">
+      <div className="flex justify-between items-center mb-8">
+        <h2 className="text-lg sm:text-xl md:text-2xl font-bold">
           Top Selling Products
         </h2>
         <button className="text-green-600 text-sm hover:text-green-700">
@@ -124,7 +124,7 @@ export default function MostPopular() {
               <CarouselItem key={category.id || idx} className="p-2 sm:p-4">
                 <Card className="p-2 sm:p-4 flex flex-col items-center text-center border-none shadow-none">
                   {/* Main Image */}
-                  <div className="relative w-48 h-48 sm:w-64 sm:h-64 mb-3 sm:mb-4">
+                  <div className="relative w-48 h-48 sm:w-44 sm:h-44 mb-3 sm:mb-4">
                     <Image
                       src={category.mainImage}
                       alt={category.mainLabel}

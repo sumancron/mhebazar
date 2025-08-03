@@ -1,15 +1,24 @@
-// src/app/vendor-listing/[vendor]/page.tsx
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useRouter, useSearchParams, notFound } from "next/navigation";
-import ProductListing, { Product } from "@/components/products/ProductListing";
+import ProductListing from "@/components/products/ProductListing"; // Corrected to remove { Product }
+import { Product } from "@/types"; // Assuming Product type is in @/types
 import Breadcrumb from "@/components/elements/Breadcrumb";
 import VendorBanner from "@/components/vendor-listing/VendorBanner";
 import api from "@/lib/api";
 import { AxiosError } from "axios";
 
-// --- API Response and Product Type Interfaces ---
+// --- Helper Functions ---
+const formatNameFromSlug = (slug: string): string => {
+  if (!slug) return '';
+  return slug.replace(/-/g, ' ').split(' ').map((word: string) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+};
+
+const slugify = (str: string): string =>
+  str.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+
+// --- API Response and Type Interfaces ---
 interface VendorDetails {
   id: number;
   user_id: number;
@@ -23,6 +32,17 @@ interface UserProfile {
   description: string | null;
   profile_photo: string | null;
   user_banner: { id: number; image: string }[];
+}
+
+interface ApiSubcategory {
+  id: number;
+  name: string;
+}
+
+interface ApiCategory {
+  id: number;
+  name: string;
+  subcategories: ApiSubcategory[];
 }
 
 interface ApiProduct {
@@ -64,25 +84,40 @@ export default function VendorPage({ params }: { params: { vendor: string } }) {
   const [error, setError] = useState<string | null>(null);
   const [noProductsFoundMessage, setNoProductsFoundMessage] = useState<string | null>(null);
 
-  // State for the controlled search input field
+  // --- Filter States ---
   const [searchInput, setSearchInput] = useState('');
+  const [selectedFilters, setSelectedFilters] = useState<Set<string>>(new Set<string>());
 
   // --- Derived State from URL Search Params ---
-  const { currentPage, sortBy, searchQuery } = useMemo(() => {
-    const page = parseInt(searchParams.get("page") || "1", 10);
-    const sort = searchParams.get("sort_by") || "relevance";
-    const query = searchParams.get("search") || "";
+  const {
+    currentPage,
+    sortBy,
+    searchQuery,
+    categorySlug,
+    subcategorySlug,
+    typeSlug,
+    minPrice,
+    maxPrice,
+    rating,
+  } = useMemo(() => {
     return {
-      currentPage: page,
-      sortBy: sort,
-      searchQuery: query
+      currentPage: parseInt(searchParams.get("page") || "1", 10),
+      sortBy: searchParams.get("sort_by") || "relevance",
+      searchQuery: searchParams.get("search") || "",
+      categorySlug: searchParams.get("category") || null,
+      subcategorySlug: searchParams.get("subcategory") || null,
+      typeSlug: searchParams.get("type") || null,
+      minPrice: searchParams.get("min_price") ? Number(searchParams.get("min_price")) : '',
+      maxPrice: searchParams.get("max_price") ? Number(searchParams.get("max_price")) : '',
+      rating: searchParams.get("average_rating") ? Number(searchParams.get("average_rating")) : null,
     };
   }, [searchParams]);
 
-  // Syncs the search input field with the URL query when the page loads or URL changes
+  // Syncs search input with the URL on load or URL change
   useEffect(() => {
     setSearchInput(searchQuery);
   }, [searchQuery]);
+
 
   // --- DATA FETCHING ---
 
@@ -115,59 +150,84 @@ export default function VendorPage({ params }: { params: { vendor: string } }) {
   }, [vendorSlug]);
 
 
-  // Effect 2: Fetch products whenever the vendor or search parameters change.
+  // Effect 2: Fetch products whenever the vendor or any filter parameters change.
   useEffect(() => {
     if (!vendorDetails) return;
 
     const fetchProducts = async () => {
       setIsLoading(true);
       setNoProductsFoundMessage(null);
-      setError(null);
+
       try {
         const queryParams = new URLSearchParams();
         queryParams.append("user", vendorDetails.user_id.toString());
         queryParams.append("page", currentPage.toString());
 
-        // Add search query if it exists
-        if (searchQuery) {
-          queryParams.append("search", searchQuery);
-        }
+        // Handle Category & Subcategory filters
+        const currentSelectedFilters = new Set<string>();
+        if (categorySlug) {
+          const formattedCatName = formatNameFromSlug(categorySlug);
+          try {
+            const catResponse = await api.get<ApiCategory[]>(`/categories/?name=${formattedCatName}`);
+            const category = catResponse.data[0];
+            if (category) {
+              queryParams.append("category", category.id.toString());
+              currentSelectedFilters.add(category.name);
 
+              if (subcategorySlug) {
+                const subcategory = category.subcategories.find(sub => slugify(sub.name) === subcategorySlug);
+                if (subcategory) {
+                  queryParams.append("subcategory", subcategory.id.toString());
+                  currentSelectedFilters.add(subcategory.name);
+                }
+              }
+            }
+          } catch (e) {
+            console.error(`Could not resolve category ID for slug: ${categorySlug}`, e);
+          }
+        }
+        if (typeSlug) currentSelectedFilters.add(formatNameFromSlug(typeSlug));
+        setSelectedFilters(currentSelectedFilters);
+
+        // Handle other filters
+        if (searchQuery) queryParams.append("search", searchQuery);
+        if (typeSlug) queryParams.append("type", typeSlug);
+        if (minPrice !== '') queryParams.append("min_price", minPrice.toString());
+        if (maxPrice !== '') queryParams.append("max_price", maxPrice.toString());
+        if (rating !== null) queryParams.append("average_rating", rating.toString());
+
+        // Handle sorting
         if (sortBy && sortBy !== "relevance") {
-          let sortParam = sortBy === "price_asc" ? "price" : sortBy === "price_desc" ? "-price" : "-created_at";
+          const sortParam = sortBy === "price_asc" ? "price" : sortBy === "price_desc" ? "-price" : "-created_at";
           queryParams.append("ordering", sortParam);
         }
 
         const response = await api.get<ApiResponse<ApiProduct>>(`/products/?${queryParams.toString()}`);
 
-        if (response.data && response.data.results) {
-          const transformedProducts: Product[] = response.data.results.map((p) => ({
-            id: p.id.toString(),
-            image: p.images.length > 0 ? p.images[0].image : "/placeholder-product.jpg",
-            title: p.name,
-            subtitle: p.description,
-            price: parseFloat(p.price),
-            currency: "₹",
-            category_name: p.category_name,
-            subcategory_name: p.subcategory_name,
-            direct_sale: p.direct_sale,
-            is_active: p.is_active,
-            hide_price: p.hide_price,
-            stock_quantity: p.stock_quantity,
-            manufacturer: p.manufacturer,
-            average_rating: p.average_rating,
-            type: p.type,
-          }));
+        const transformedProducts: Product[] = response.data.results.map((p) => ({
+          id: p.id.toString(),
+          image: p.images.length > 0 ? p.images[0].image : "/placeholder-product.jpg",
+          title: p.name,
+          subtitle: p.description,
+          price: parseFloat(p.price),
+          currency: "₹",
+          category_name: p.category_name,
+          subcategory_name: p.subcategory_name,
+          direct_sale: p.direct_sale,
+          is_active: p.is_active,
+          hide_price: p.hide_price,
+          stock_quantity: p.stock_quantity,
+          manufacturer: p.manufacturer,
+          average_rating: p.average_rating,
+          type: p.type,
+        }));
 
-          setProducts(transformedProducts);
-          setTotalProducts(response.data.count);
-          setTotalPages(Math.ceil(response.data.count / 20));
+        setProducts(transformedProducts);
+        setTotalProducts(response.data.count);
+        setTotalPages(Math.ceil(response.data.count / 20));
 
-          if (response.data.results.length === 0) {
-            setNoProductsFoundMessage("No products found for this vendor with the selected filters.");
-          }
-        } else {
-          setError("Failed to load products due to an unexpected API response.");
+        if (response.data.count === 0) {
+          setNoProductsFoundMessage("No products found for this vendor with the selected filters.");
         }
       } catch (err: unknown) {
         console.error("[Vendor Page] Failed to fetch products:", err);
@@ -178,7 +238,7 @@ export default function VendorPage({ params }: { params: { vendor: string } }) {
     };
 
     fetchProducts();
-  }, [vendorDetails, searchParams, currentPage, sortBy, searchQuery]);
+  }, [vendorDetails, searchParams]); // searchParams covers all filter changes
 
 
   // --- EVENT HANDLERS ---
@@ -186,28 +246,58 @@ export default function VendorPage({ params }: { params: { vendor: string } }) {
     e.preventDefault();
     const newSearchParams = new URLSearchParams(searchParams.toString());
     newSearchParams.set("page", "1");
-
-    if (searchInput) {
-      newSearchParams.set("search", searchInput);
-    } else {
-      newSearchParams.delete("search");
-    }
-
+    searchInput ? newSearchParams.set("search", searchInput) : newSearchParams.delete("search");
     router.push(`${window.location.pathname}?${newSearchParams.toString()}`);
-  }
+  };
+
+  const handleFilterChange = useCallback((
+    filterValue: string | number,
+    filterType: "category" | "subcategory" | "type" | "price_range" | "manufacturer" | "rating",
+    newValue?: string | number | { min: number | ""; max: number | "" } | null
+  ) => {
+    const newSearchParams = new URLSearchParams(searchParams.toString());
+    newSearchParams.set('page', '1');
+
+    const updateOrDeleteParam = (param: string, value: any) => {
+      value ? newSearchParams.set(param, String(value)) : newSearchParams.delete(param);
+    };
+
+    switch (filterType) {
+      case 'category':
+        updateOrDeleteParam('category', newValue ? slugify(String(newValue)) : null);
+        newSearchParams.delete('subcategory');
+        break;
+      case 'subcategory':
+        updateOrDeleteParam('subcategory', newValue ? slugify(String(newValue)) : null);
+        break;
+      case 'type':
+        updateOrDeleteParam('type', filterValue);
+        break;
+      case 'price_range':
+        const range = newValue as { min: number | '', max: number | '' } | null;
+        updateOrDeleteParam('min_price', range?.min);
+        updateOrDeleteParam('max_price', range?.max);
+        break;
+      case 'rating':
+        updateOrDeleteParam('average_rating', newValue);
+        break;
+      // 'manufacturer' case is intentionally omitted as it's not used on this page
+    }
+    router.push(`${window.location.pathname}?${newSearchParams.toString()}`);
+  }, [router, searchParams]);
 
   const handleSortChange = (value: string) => {
     const newSearchParams = new URLSearchParams(searchParams.toString());
     newSearchParams.set("page", "1");
     value === "relevance" ? newSearchParams.delete("sort_by") : newSearchParams.set("sort_by", value);
     router.push(`${window.location.pathname}?${newSearchParams.toString()}`);
-  }
+  };
 
   const handlePageChange = (page: number) => {
     const newSearchParams = new URLSearchParams(searchParams.toString());
     newSearchParams.set("page", page.toString());
     router.push(`${window.location.pathname}?${newSearchParams.toString()}`);
-  }
+  };
 
   // --- RENDER LOGIC ---
   if (isLoading && !vendorDetails) {
@@ -224,11 +314,9 @@ export default function VendorPage({ params }: { params: { vendor: string } }) {
 
   const bannerImageUrls = userProfile?.user_banner?.map(b => b.image) || [];
 
-  console.log(userProfile);
-
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto px-4 py-8">
+      <div className=" mx-auto px-4 py-8">
         <Breadcrumb
           items={[
             { label: "Home", href: "/" },
@@ -247,35 +335,29 @@ export default function VendorPage({ params }: { params: { vendor: string } }) {
           />
         )}
 
-        <div className="my-6 bg-white p-4 rounded-lg shadow">
-          <form onSubmit={handleSearch} className="flex items-center gap-4">
-            <input
-              type="text"
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              placeholder="Search by name, category, or subcategory..."
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-            />
-            <button
-              type="submit"
-              className="px-6 py-2 bg-[#5CA131] text-white font-semibold rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
-            >
-              Search
-            </button>
-          </form>
-        </div>
+        {/* The Search Bar is now part of ProductListing's top controls for consistency, so this can be removed */}
 
         <ProductListing
           products={products}
           title={`Products from ${vendorDetails.company_name}`}
           totalCount={totalProducts}
-          onSortChange={handleSortChange}
-          onPageChange={handlePageChange}
-          noProductsMessage={noProductsFoundMessage}
+          onFilterChange={handleFilterChange}
+          selectedFilters={selectedFilters}
+          selectedCategoryName={formatNameFromSlug(categorySlug || '')}
+          selectedSubcategoryName={formatNameFromSlug(subcategorySlug || '')}
+          selectedTypeName={formatNameFromSlug(typeSlug || '')}
           currentPage={currentPage}
           totalPages={totalPages}
+          onPageChange={handlePageChange}
+          noProductsMessage={noProductsFoundMessage}
+          minPrice={minPrice}
+          maxPrice={maxPrice}
+          selectedManufacturer={null} // Explicitly null
+          selectedRating={rating}
           sortBy={sortBy}
-          isLoading={isLoading}
+          onSortChange={handleSortChange}
+          // The critical prop to hide the redundant manufacturer filter UI
+          showManufacturerFilter={false}
         />
       </div>
     </div>
