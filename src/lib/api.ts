@@ -2,8 +2,7 @@
 import axios, { AxiosInstance, type InternalAxiosRequestConfig } from "axios";
 import Cookies from "js-cookie";
 
-// This URL is now relative, which is correct for Nginx proxying.
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "/api";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "https://mheback.onrender.com/api";
 
 const api: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
