@@ -12,7 +12,9 @@ export default function SiteLayout({ children }: { children: React.ReactNode }) 
   return (
     <>
       <Navbar />
-      {children}
+      <div className="mx-10">
+        {children}
+      </div>
       <Footer />
     </>
   );
