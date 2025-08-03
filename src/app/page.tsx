@@ -7,6 +7,7 @@ import VendorProductsFeatured from "@/components/home/VendorFeatured";
 import ExportProductsFeatured from "@/components/home/ExportProdcutsFeatured";
 import TestimonialsCarousel from "@/components/elements/Testimonials";
 import Marquee from "react-fast-marquee";
+import { BlogCarousel } from "@/components/home/BlogCarousal";
 // import ProductForm from "@/components/forms/uploadForm/ProductForm";
 // import CategoryForm from "@/components/forms/uploadForm/CategoryForm";
 // import SubcategoryForm from "@/components/forms/uploadForm/SubcategoryForm";
@@ -40,6 +41,8 @@ export default function HomePage() {
         <VendorProductsFeatured />
 
         <ExportProductsFeatured />
+
+        <BlogCarousel />
 
         <Marquee className="my-12">
           <img src={"/logos/AEPL.png"} alt="AEP Logo" className="h-16 mx-4" />
