@@ -13,12 +13,14 @@ import { Card } from "@/components/ui/card";
 import axios from "axios";
 
 // ====================
-// Types
+// Types (Unchanged)
 // ====================
-interface Product {
-  image: string;
-  label: string;
+interface ApiProduct {
+  id: number;
+  name: string;
+  images: { image: string }[];
 }
+
 interface Category {
   id?: string;
   title: string;
@@ -26,55 +28,67 @@ interface Category {
   mainImage: string;
   mainLabel: string;
   note: string;
-  products: Product[];
-}
-interface ApiResponse {
-  success: boolean;
-  data: Category[];
+  products: {
+    image: string;
+    label: string;
+  }[];
 }
 
 // ====================
-// Fallback Data
+// Data Transformation (Slightly Modified)
 // ====================
-const FALLBACK_DATA: Category[] = [
-  {
+const transformApiData = (apiProducts: ApiProduct[]): Category[] => {
+  if (!apiProducts || apiProducts.length === 0) {
+    return [];
+  }
+
+  const mainProduct = apiProducts[0];
+  // UPDATED: Get all other products (2nd to last) for the carousel
+  const otherProducts = apiProducts.slice(1);
+
+  const getPrimaryImageUrl = (product: ApiProduct): string =>
+    product.images?.[0]?.image || "/images/placeholder.png"; // A safe placeholder
+
+  const transformedCategory: Category = {
+    id: "most-popular",
     title: "Most Popular",
-    subtitle: "Batteries",
-    mainImage: "/home/category-main.png",
-    mainLabel: "80v / 500ah",
-    note: "*Battery Size Customizable",
-    products: [
-      { image: "/home/battery-1.png", label: "48v / 500ah" },
-      { image: "/home/battery-2.png", label: "25.6v / 300ah" },
-      { image: "/home/battery-3.png", label: "" },
-    ],
-  },
-  // Add as many fallback items as you want…
-];
+    subtitle: "Our Top Selling Product",
+    mainImage: getPrimaryImageUrl(mainProduct),
+    mainLabel: mainProduct.name,
+    note: "*Based on user activity",
+    products: otherProducts.map((p) => ({
+      image: getPrimaryImageUrl(p),
+      label: p.name,
+    })),
+  };
+
+  return [transformedCategory];
+};
+
 
 // ====================
-// Main Component
+// Main Component (Rendering Logic Changed)
 // ====================
 export default function MostPopular() {
-  const [categories, setCategories] = useState(FALLBACK_DATA);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch data
   const fetchData = useCallback(async () => {
+    // This data fetching logic remains the same
     const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
     if (!baseUrl) {
-      setIsLoading(false); // No URL? Skip fetch.
+      setIsLoading(false);
       return;
     }
-
     try {
-      const res = await axios.get<ApiResponse>(
+      const res = await axios.get<ApiProduct[]>(
         `${baseUrl}/products/most_popular/`
       );
-      const result = res.data;
-      if (result.success && Array.isArray(result.data) && result.data.length) {
-        setCategories(result.data);
+      const apiProducts = res.data;
+      if (Array.isArray(apiProducts) && apiProducts.length > 0) {
+        const formattedData = transformApiData(apiProducts);
+        setCategories(formattedData);
       }
     } catch (err) {
       setError(
@@ -91,101 +105,122 @@ export default function MostPopular() {
 
   if (isLoading) return <LoadingSkeleton />;
 
+  const popularData = categories[0];
+
+  if (!popularData) {
+    return (
+      <section className="w-full sm:px-6">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-lg sm:text-xl md:text-2xl font-bold">
+            Top Selling Products
+          </h2>
+        </div>
+        <p className="text-center text-gray-500 p-8 border rounded-lg">No popular products to display.</p>
+      </section>
+    );
+  }
+
   return (
     <section className="w-full sm:px-6">
       {/* Header */}
-      <div className="flex justify-between items-center mb-8">
+      <div className="flex justify-between items-center mb-4">
         <h2 className="text-lg sm:text-xl md:text-2xl font-bold">
           Top Selling Products
         </h2>
-        <button className="text-green-600 text-sm hover:text-green-700">
+        <a href="/products" className="text-green-600 text-sm hover:text-green-700">
           View more
-        </button>
+        </a>
       </div>
 
-      {/* Carousel */}
-      <div className="relative w-full max-w-4xl mx-auto p-3 sm:p-6 border border-gray-200 rounded-lg bg-white shadow-sm">
-        <Carousel className="w-full">
-          {/* Controls */}
-          <div className="absolute inset-y-0 left-0 right-0 flex items-center justify-between z-10 pointer-events-none">
-            <CarouselPrevious className="pointer-events-auto left-1 sm:left-2 border bg-white" />
-            <CarouselNext className="pointer-events-auto right-1 sm:right-2 border bg-white" />
+      {/* Main Container */}
+      <div className="p-4 sm:p-6 border border-gray-200 rounded-lg bg-white shadow-sm">
+
+        {/* --- Top Fixed Product --- */}
+        <div className="flex flex-col md:flex-row items-center justify-center gap-6 md:gap-12 mb-8 p-4 bg-gray-50 rounded-lg">
+          {/* Main Image */}
+          <div className="relative w-48 h-48 sm:w-56 sm:h-56 flex-shrink-0">
+            <Image
+              src={popularData.mainImage}
+              alt={popularData.mainLabel}
+              fill
+              sizes="(max-width: 768px) 192px, 224px"
+              className="object-contain"
+            />
           </div>
-
-          {/* Title */}
-          <div className="mb-4 sm:mb-6">
-            <h3 className="text-base sm:text-lg font-semibold">{categories[0]?.title}</h3>
-            <p className="text-sm text-gray-500">{categories[0]?.subtitle}</p>
+          {/* Main Details */}
+          <div className="text-center md:text-left">
+            <p className="text-gray-500 text-sm">{popularData.subtitle}</p>
+            <h3 className="text-2xl sm:text-3xl font-bold text-gray-800 my-2">
+              {popularData.mainLabel}
+            </h3>
+            <p className="text-xs text-gray-500 mt-2">{popularData.note}</p>
           </div>
+        </div>
 
-          {/* Content */}
-          <CarouselContent>
-            {categories.map((category, idx) => (
-              <CarouselItem key={category.id || idx} className="p-2 sm:p-4">
-                <Card className="p-2 sm:p-4 flex flex-col items-center text-center border-none shadow-none">
-                  {/* Main Image */}
-                  <div className="relative w-48 h-48 sm:w-44 sm:h-44 mb-3 sm:mb-4">
-                    <Image
-                      src={category.mainImage}
-                      alt={category.mainLabel}
-                      fill
-                      className="object-contain"
-                    />
-                  </div>
-
-                  {/* Label */}
-                  <p className="text-green-600 font-bold text-lg sm:text-xl mb-2">
-                    {category.mainLabel}
-                  </p>
-                  <p className="text-xs text-gray-500 mb-4 sm:mb-6">{category.note}</p>
-
-                  {/* Products */}
-                  <div className="flex justify-evenly w-full gap-2">
-                    {category.products.slice(0, 3).map((product, i) => (
-                      <div key={i} className="flex flex-col items-center flex-1 max-w-28 sm:max-w-36">
-                        <div className="relative w-24 h-24 sm:w-36 sm:h-36 bg-gray-50 rounded-lg overflow-hidden">
-                          <Image
-                            src={product.image}
-                            alt={product.label || `Product ${i + 1}`}
-                            width={250}
-                            height={250}
-                            className="object-contain p-1"
-                          />
-                        </div>
-                        {product.label && (
-                          <p className="text-xs mt-1 text-center leading-tight">
-                            {product.label}
-                          </p>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </Card>
+        {/* --- Carousel for Other Popular Products --- */}
+        <h4 className="text-md font-semibold text-gray-700 mb-4">Also Popular</h4>
+        <Carousel
+          opts={{ align: "start", loop: true }}
+          className="w-full"
+        >
+          <CarouselContent className="-ml-2">
+            {popularData.products.map((product, idx) => (
+              <CarouselItem key={idx} className="pl-2 basis-1/2 sm:basis-1/3">
+                <div className="p-1">
+                  <Card className="p-3 flex flex-col items-center text-center shadow-sm hover:shadow-lg transition-shadow duration-200 h-full">
+                    <div className="relative w-32 h-32 mb-3">
+                      <Image
+                        src={product.image}
+                        alt={product.label}
+                        fill
+                        sizes="128px"
+                        className="object-contain"
+                      />
+                    </div>
+                    <p className="text-sm font-semibold h-10 leading-tight flex items-center justify-center">
+                      {product.label}
+                    </p>
+                  </Card>
+                </div>
               </CarouselItem>
             ))}
           </CarouselContent>
+          <CarouselPrevious className="absolute left-[-10px] sm:left-[-20px]" />
+          <CarouselNext className="absolute right-[-10px] sm:right-[-20px]" />
         </Carousel>
 
         {error && (
-          <p className="mt-2 text-xs text-amber-600 bg-amber-50 px-2 py-1 rounded"></p>
+          <p className="mt-4 text-xs text-amber-600 bg-amber-50 px-2 py-1 rounded">
+            Error: {error}. Could not load latest data.
+          </p>
         )}
       </div>
     </section>
   );
 }
 
+
 // ====================
-// Skeleton Loader
+// Skeleton Loader (Unchanged)
 // ====================
 function LoadingSkeleton() {
   return (
-    <div className="w-full max-w-4xl mx-auto p-3 sm:p-6 border border-gray-200 rounded-lg bg-white animate-pulse">
-      <div className="h-6 bg-gray-200 rounded w-40 mb-4" />
-      <div className="h-48 sm:h-64 bg-gray-200 rounded mb-4" />
-      <div className="grid grid-cols-3 gap-2">
-        <div className="h-20 sm:h-24 bg-gray-200 rounded" />
-        <div className="h-20 sm:h-24 bg-gray-200 rounded" />
-        <div className="h-20 sm:h-24 bg-gray-200 rounded" />
+    <div className="w-full sm:px-6">
+      <div className="flex justify-between items-center mb-4">
+        <div className="h-8 bg-gray-200 rounded w-48 animate-pulse" />
+        <div className="h-5 bg-gray-200 rounded w-20 animate-pulse" />
+      </div>
+      <div className="w-full p-6 border border-gray-200 rounded-lg bg-white animate-pulse">
+        <div className="flex flex-col md:flex-row items-center gap-12 mb-8">
+          <div className="w-56 h-56 bg-gray-200 rounded-lg" />
+          <div className="flex-1">
+            <div className="h-4 bg-gray-200 rounded w-1/4 mb-4" />
+            <div className="h-8 bg-gray-200 rounded w-3/4 mb-3" />
+            <div className="h-4 bg-gray-200 rounded w-1/2" />
+          </div>
+        </div>
+        <div className="h-5 bg-gray-200 rounded w-32 mb-4" />
+        <div className="h-48 bg-gray-200 rounded" />
       </div>
     </div>
   );
