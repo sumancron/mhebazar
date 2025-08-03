@@ -123,7 +123,7 @@ export default function MostPopular() {
   return (
     <section className="w-full sm:px-6">
       {/* Header */}
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex justify-between items-center mb-8">
         <h2 className="text-lg sm:text-xl md:text-2xl font-bold">
           Top Selling Products
         </h2>
