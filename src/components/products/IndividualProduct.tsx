@@ -502,7 +502,7 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
         <div className="flex flex-row-reverse gap-2 lg:gap-4 w-full md:w-fit">
           {/* Main Product Image */}
           <div
-            className="relative bg-gray-50 rounded-lg overflow-hidden aspect-square w-full max-w-[420px] mx-auto group"
+            className="relative bg-gray-50 rounded-lg overflow-hidden aspect-square w-full mx-auto group"
             onMouseMove={e => {
               if (isZoomed) {
                 const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
@@ -557,15 +557,15 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
               <button
                 key={img.id}
                 onClick={() => setSelectedImage(index)}
-                className={`w-16 h-16 rounded border-2 overflow-hidden ${selectedImage === index ? "border-orange-500" : "border-gray-200"
+                className={`rounded border-2 overflow-hidden ${selectedImage === index ? "border-orange-500" : "border-gray-200"
                   } hover:border-orange-300 transition-colors`}
               >
                 <Image
                   src={img.image}
                   alt={`${data.name} thumbnail ${index + 1}`}
                   className="w-full h-full object-cover"
-                  width={100}
-                  height={100}
+                  width={104}
+                  height={104}
                 />
               </button>
             ))}

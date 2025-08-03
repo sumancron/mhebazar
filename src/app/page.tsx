@@ -3,7 +3,7 @@ import CategoryButtons from "@/components/home/CategoryButtons";
 import MostPopular from "@/components/home/MostPopular";
 import NewArrivalsAndTopSearches from "@/components/home/NewArrivalsAndTopSearches";
 import SpareParts from "@/components/home/SparepartsFeatured";
-import VendorProductsFeatured from "@/components/home/VendorProdcutsFeatured";
+import VendorProductsFeatured from "@/components/home/VendorFeatured";
 import ExportProductsFeatured from "@/components/home/ExportProdcutsFeatured";
 import TestimonialsCarousel from "@/components/elements/Testimonials";
 import Marquee from "react-fast-marquee";
