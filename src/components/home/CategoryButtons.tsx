@@ -1,32 +1,29 @@
+// src/components/CategoriesSection.tsx (assuming this is the file path)
 "use client";
 
 import { LayoutGrid } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { JSX, useEffect, useState } from "react";
-import axios from "axios";
-import api from "@/lib/api"; // Assuming your custom api wrapper is correctly configured
+// Import the local JSON data
+import categoriesData from "@/data/categories.json";
 
-// --- Updated Category interface to precisely match API response for a single category ---
+// --- Updated Category interface to match the local JSON data structure ---
 interface Category {
   id: number;
-  subcategories: never[]; // We'll ignore this for display, but keep it in interface
-  cat_image: string | null; // Can be a string (full URL) or null
-  cat_banner: string | null; // Can be a string (full URL) or null
-  name: string; // The category name
-  description: string;
-  meta_title: string | null;
-  meta_description: string | null;
-  product_details: never; // Can be null or JSONB data
-  created_at: string;
-  updated_at: string;
+  subcategories: {
+    id: number;
+    name: string;
+  }[];
+  image_url: string | null;
+  name: string;
 }
 
-// Internal interface for the component to use, maps API fields to component props
+// Internal interface for the component to use
 interface CategoryItemProps {
-  imageSrc: string | null; // Now directly takes the cat_image value (which might be full URL or null)
+  imageSrc: string | null;
   label: string;
-  slug: string; // For redirection, e.g., "forklift" for "FORKLIFT"
+  slug: string;
 }
 
 function CategoryItem({ imageSrc, label, slug }: CategoryItemProps): JSX.Element {
@@ -37,24 +34,23 @@ function CategoryItem({ imageSrc, label, slug }: CategoryItemProps): JSX.Element
     .join("")
     .toUpperCase();
 
-  const [showInitials, setShowInitials] = useState<boolean>(!imageSrc); // Initially show initials if no imageSrc
+  const [showInitials, setShowInitials] = useState<boolean>(!imageSrc);
 
-  // Handle image loading error: if image fails, switch to initials
   const handleImageError = () => {
     setShowInitials(true);
   };
 
   return (
-    <Link href={`/${slug}`} className="flex flex-col items-center group"> {/* Redirect on click */}
+    <Link href={`/${slug}`} className="flex flex-col items-center group">
       <div className="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 lg:w-36 lg:h-36 rounded-full bg-blue-50 flex items-center justify-center mb-2 overflow-hidden transform group-hover:scale-105 transition-transform duration-200">
         {imageSrc && !showInitials ? (
           <Image
             src={imageSrc}
             alt={label}
-            width={100} // Adjust based on your design for better quality
-            height={100} 
-            className="w-full h-full object-contain" // Use full width/height for responsive fill
-            onError={handleImageError} // If image fails to load, trigger fallback
+            width={100}
+            height={100}
+            className="w-full h-full object-contain"
+            onError={handleImageError}
           />
         ) : (
           <span className="text-blue-blue text-xl font-bold">{initials}</span>
@@ -70,55 +66,21 @@ function CategoryItem({ imageSrc, label, slug }: CategoryItemProps): JSX.Element
 export default function CategoriesSection(): JSX.Element {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-  const [showAll, setShowAll] = useState(false); // To toggle between showing initial 6 and all
-
-  // const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+  const [showAll, setShowAll] = useState(false);
 
   useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        setLoading(true);
-        // Fetch data from your API endpoint
-        const response = await api.get<{ count: number; next: string | null; previous: string | null; results: Category[] }>(`/categories/`);
+    // Simulate a brief loading state if needed, then set data
+    setLoading(true);
+    const timer = setTimeout(() => {
+      // The imported JSON data is already an array of Category objects
+      setCategories(categoriesData);
+      setLoading(false);
+    }, 500); // Simulate network delay
 
-        let fetchedCategories: Category[] = [];
-        if (response.data && Array.isArray(response.data.results)) {
-          // DRF's paginated response structure
-          fetchedCategories = response.data.results;
-        } else if (Array.isArray(response.data)) {
-          // Fallback if it's a direct array (not typically for DRF pagination)
-          fetchedCategories = response.data;
-        } else {
-          console.error('Unexpected API response format:', response.data);
-          setError('Unexpected data format from server.');
-          setCategories([]);
-          return;
-        }
-
-        // --- No need to prepend API_BASE_URL if cat_image is already a full URL ---
-        // Based on your provided API response, `cat_image` is already a full URL.
-        // So, no mapping for `cat_image` is needed here, pass it directly.
-        setCategories(fetchedCategories);
-
-      } catch (err) {
-        console.error('Error fetching categories:', err);
-        if (axios.isAxiosError(err)) {
-          setError(`Failed to load categories: ${err.message}. Please check your API base URL and server status.`);
-        } else {
-          setError('Failed to load categories due to an unknown error.');
-        }
-        setCategories([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchCategories();
-  }, []); // `API_BASE_URL` is a dependency as it's used in fetchCategories
+    return () => clearTimeout(timer);
+  }, []);
 
   // Determine which categories to display based on 'showAll' state
-  // Filter out any categories that might not have a name (though unlikely from your API)
   const displayedCategories = showAll ? categories : categories.slice(0, 6);
 
   return (
@@ -129,37 +91,31 @@ export default function CategoriesSection(): JSX.Element {
 
       {loading ? (
         <p className="text-center">Loading categories...</p>
-      ) : error ? (
-        <p className="text-center text-red-500">{error}</p>
       ) : categories.length === 0 ? (
         <p className="text-center text-gray-500">No categories found.</p>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 gap-4 sm:gap-6">
           {displayedCategories.map((cat) => (
-            <CategoryItem 
-              key={cat.id} 
-              imageSrc={cat.cat_image} 
+            <CategoryItem
+              key={cat.id}
+              // The JSON data uses 'image_url' instead of 'cat_image'
+              imageSrc={cat.image_url}
               label={cat.name}
-              slug={cat.name.toLowerCase().replace(/\s+/g, '-')} // Create a URL-friendly slug
+              slug={cat.name.toLowerCase().replace(/\s+/g, '-')}
             />
           ))}
-          {categories.length > 6 && ( // Only show "All Categories" button if there are more than 6
-            <Link
-              href={showAll ? "#" : "/categories"} // If showing all, link to '#' (or adjust if you have a separate "Show Less" route)
-              onClick={(e) => {
-                if (!showAll) { // Prevent default only if navigating away
-                  // If clicking 'All Categories', prevent default navigation to handle local state change
-                  e.preventDefault(); 
-                }
-                setShowAll(!showAll); // Toggle local state
-              }}
-              className="flex flex-col items-center border border-blue-500 rounded-full aspect-square justify-center hover:bg-blue-50 transition-colors w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 lg:w-36 lg:h-36 bg-blue-50 mb-2 overflow-hidden group"
-            >
-              <LayoutGrid className="text-blue-500 mb-2 group-hover:text-blue-700" size={24} />
-              <span className="text-xs sm:text-sm md:text-base font-medium text-center group-hover:text-blue-700">
-                {showAll ? "Show Less" : "All Categories"}
-              </span>
-            </Link>
+          {categories.length > 6 && (
+            <div className="flex flex-col items-center">
+              <button
+                onClick={() => setShowAll(!showAll)}
+                className="flex flex-col items-center justify-center border border-blue-500 rounded-full aspect-square hover:bg-blue-50 transition-colors w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 lg:w-36 lg:h-36 bg-blue-50 mb-2 overflow-hidden group"
+              >
+                <LayoutGrid className="text-blue-500 mb-2 group-hover:text-blue-700" size={24} />
+                <span className="text-xs sm:text-sm md:text-base font-medium text-center group-hover:text-blue-700">
+                  {showAll ? "Show Less" : "All Categories"}
+                </span>
+              </button>
+            </div>
           )}
         </div>
       )}
