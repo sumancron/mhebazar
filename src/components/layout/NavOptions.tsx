@@ -17,47 +17,6 @@ interface CategoryMenuProps {
 const createSlug = (name: string): string =>
   name.toLowerCase().replace(/\s+/g, "-");
 
-// Custom Image component with an error handler to show a fallback
-const FallbackImage = ({
-  src,
-  alt,
-  width,
-  height,
-  className,
-  fallbackSrc,
-}: {
-  src: string;
-  alt: string;
-  width: number;
-  height: number;
-  className: string;
-  fallbackSrc?: string | null;
-}): JSX.Element => {
-  const [imgSrc, setImgSrc] = useState<string>(src);
-
-  useEffect(() => {
-    setImgSrc(src); // Reset image source when parent src changes
-  }, [src]);
-
-  return (
-    <Image
-      src={imgSrc || fallbackSrc || "/placeholder-image.png"}
-      alt={alt}
-      width={width}
-      height={height}
-      className={className}
-      unoptimized
-      onError={() => {
-        if (imgSrc !== fallbackSrc) {
-          setImgSrc(fallbackSrc || "/placeholder-image.png");
-        } else if (imgSrc !== "/placeholder-image.png") {
-          setImgSrc("/placeholder-image.png");
-        }
-      }}
-    />
-  );
-};
-
 export default function CategoryMenu({
   isOpen,
   onClose,
@@ -239,6 +198,17 @@ export default function CategoryMenu({
                             height={64}
                             className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-105"
                             unoptimized
+                            onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.style.display = "none";
+                                const parent = target.parentElement;
+                                if (parent) {
+                                  const fallback = document.createElement("span");
+                                  fallback.className = "text-gray-500 text-xs font-semibold";
+                                  fallback.textContent = getInitials(subCategory.name);
+                                  parent.appendChild(fallback);
+                                }
+                            }}
                           />
                         ) : (
                           <span className="text-gray-500 text-xs font-semibold">
