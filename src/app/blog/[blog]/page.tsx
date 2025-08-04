@@ -165,7 +165,7 @@ const SingleBlogPage: React.FC = () => {
 
   const getImageUrl = (imageName: string | null) => {
     if (!imageName) return "/api/placeholder/800/400";
-    return `https://www.mhebazar.in/css/asset/image/${imageName}`;
+    return `https://www.mhebazar.in/css/asset/blogimg/${imageName}`;
   };
 
   const estimateReadingTime = (html: string) => {
