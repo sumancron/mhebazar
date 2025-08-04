@@ -4,47 +4,18 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ChevronRight } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState, useMemo, useCallback } from "react";
-import api from "@/lib/api";
+import { useState, useMemo, useCallback, useEffect, JSX } from "react";
 import { useRouter } from "next/navigation";
+import { Category, Subcategory } from "./Nav";
 
-// Define interfaces for the API response structures
-interface Product {
-  id: number;
-  category_name: string;
-  subcategory_name: string | null;
-  images: { id: number; image: string }[];
-  name: string;
-  subcategory: number | null; // Subcategory ID
-  category: number; // Category ID
-  category_image?: string; // Add this for the fallback
+interface CategoryMenuProps {
+  isOpen: boolean;
+  onClose: () => void;
+  categories: Category[];
 }
 
-interface SubCategory {
-  id: number;
-  category_name: string;
-  sub_image: string | null;
-  name: string;
-  category: number;
-}
-
-interface Category {
-  id: number;
-  subcategories: SubCategory[];
-  name: string;
-  cat_image: string | null; // Added cat_image to the Category interface
-}
-
-interface ProductsResponse {
-  count: number;
-  next: string | null;
-  previous: string | null;
-  results: Product[];
-}
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
-
-const createSlug = (name: string) => name.toLowerCase().replace(/\s+/g, "-");
+const createSlug = (name: string): string =>
+  name.toLowerCase().replace(/\s+/g, "-");
 
 // Custom Image component with an error handler to show a fallback
 const FallbackImage = ({
@@ -61,8 +32,8 @@ const FallbackImage = ({
   height: number;
   className: string;
   fallbackSrc?: string | null;
-}) => {
-  const [imgSrc, setImgSrc] = useState(src);
+}): JSX.Element => {
+  const [imgSrc, setImgSrc] = useState<string>(src);
 
   useEffect(() => {
     setImgSrc(src); // Reset image source when parent src changes
@@ -90,116 +61,57 @@ const FallbackImage = ({
 export default function CategoryMenu({
   isOpen,
   onClose,
-}: {
-  isOpen: boolean;
-  onClose: () => void;
-}) {
+  categories,
+}: CategoryMenuProps): JSX.Element {
   const router = useRouter();
 
-  const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [hoveredCategory, setHoveredCategory] = useState<Category | null>(null);
-  const [products, setProducts] = useState<Product[]>([]);
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [categoriesResponse, productsResponse] = await Promise.all([
-          api.get<Category[]>("/categories/"),
-          api.get<ProductsResponse>("/products/"),
-        ]);
-        setCategories(categoriesResponse.data);
-        setProducts(productsResponse.data.results);
-
-        if (categoriesResponse.data.length > 0) {
-          const defaultCategory =
-            categoriesResponse.data.find((cat) => cat.name === "Battery") ||
-            categoriesResponse.data[0];
-          setHoveredCategory(defaultCategory);
-        }
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      }
-    };
-
     if (isOpen) {
-      fetchData();
+      if (categories.length > 0) {
+        setHoveredCategory(categories[0]);
+      }
     } else {
       setSelectedCategory(null);
       setHoveredCategory(null);
     }
-  }, [isOpen]);
+  }, [isOpen, categories]);
 
-  const { subcategoryProductCounts, categoryTotalProductCounts } = useMemo(() => {
-    const subCounts = new Map<number, number>();
-    const catCounts = new Map<number, number>();
+  const getInitials = useCallback((name: string): string => {
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .substring(0, 2);
+  }, []);
 
-    for (const product of products) {
-      if (product.category) {
-        catCounts.set(product.category, (catCounts.get(product.category) || 0) + 1);
+  const handleCategoryNameClick = useCallback(
+    (category: Category) => {
+      if (category.subcategories.length > 0) {
+        setSelectedCategory(category.id === selectedCategory?.id ? null : category);
+        setHoveredCategory(category);
+      } else {
+        router.push(`/${createSlug(category.name)}`);
+        onClose();
       }
-      if (product.subcategory) {
-        subCounts.set(product.subcategory, (subCounts.get(product.subcategory) || 0) + 1);
-      }
-    }
-    return {
-      subcategoryProductCounts: subCounts,
-      categoryTotalProductCounts: catCounts,
-    };
-  }, [products]);
+    },
+    [selectedCategory, onClose, router]
+  );
 
-  const getProductCountForSubcategory = (subcategoryId: number) => {
-    return subcategoryProductCounts.get(subcategoryId) || 0;
-  };
+  const displayedCategory: Category | null = selectedCategory || hoveredCategory;
+  const subcategoriesToDisplay: Subcategory[] = displayedCategory?.subcategories || [];
 
-  const getProductCountForCategory = (categoryId: number) => {
-    return categoryTotalProductCounts.get(categoryId) || 0;
-  };
-
-  const displaySourceCategory = selectedCategory || hoveredCategory;
-
-  const categoriesCol1 = useMemo(
+  const categoriesCol1: Category[] = useMemo(
     () => categories.slice(0, Math.ceil(categories.length / 2)),
     [categories]
   );
-  const categoriesCol2 = useMemo(
+  const categoriesCol2: Category[] = useMemo(
     () => categories.slice(Math.ceil(categories.length / 2)),
     [categories]
   );
-
-  const getSubCategoryImage = (subCategory: SubCategory) => {
-    if (subCategory.sub_image) {
-      return subCategory.sub_image.startsWith("http")
-        ? subCategory.sub_image
-        : `${API_BASE_URL}${subCategory.sub_image}`;
-    }
-    const productWithImage = products.find(
-      (product) =>
-        product.subcategory === subCategory.id &&
-        product.images &&
-        product.images.length > 0
-    );
-    if (productWithImage && productWithImage.images[0]) {
-      return productWithImage.images[0].image.startsWith("http")
-        ? productWithImage.images[0].image
-        : `${API_BASE_URL}${productWithImage.images[0].image}`;
-    }
-    return null;
-  };
-
-  const getInitials = useCallback((name: string) => {
-    return name.split(" ").map((n) => n[0]).join("").toUpperCase().substring(0, 2);
-  }, []);
-
-  const handleCategoryNameClick = useCallback((category: Category) => {
-    if (category.subcategories.length > 0) {
-      setSelectedCategory(category.id === selectedCategory?.id ? null : category);
-      setHoveredCategory(category);
-    } else {
-      router.push(`/${createSlug(category.name)}`);
-      onClose();
-    }
-  }, [selectedCategory, onClose, router]);
 
   return (
     <AnimatePresence>
@@ -218,12 +130,13 @@ export default function CategoryMenu({
                 {categoriesCol1.map((category) => (
                   <div
                     key={category.id}
-                    className={`flex items-center justify-between px-3 py-2 text-sm cursor-pointer rounded transition-colors ${selectedCategory?.id === category.id
-                        ? "bg-white text-orange-600 font-medium shadow-sm"
+                    className={`flex items-center justify-between px-3 py-2 text-sm cursor-pointer rounded transition-colors ${
+                      selectedCategory?.id === category.id
+                        ? "bg-white text-green-600 font-medium shadow-sm"
                         : hoveredCategory?.id === category.id
-                          ? "bg-gray-100 text-orange-600"
-                          : "text-gray-700 hover:bg-white hover:text-orange-600"
-                      }`}
+                        ? "bg-gray-100 text-green-600"
+                        : "text-gray-700 hover:bg-white hover:text-green-600"
+                    }`}
                     onMouseEnter={() => {
                       if (!selectedCategory) {
                         setHoveredCategory(category);
@@ -261,12 +174,13 @@ export default function CategoryMenu({
                 {categoriesCol2.map((category) => (
                   <div
                     key={category.id}
-                    className={`flex items-center justify-between px-3 py-2 text-sm cursor-pointer rounded transition-colors ${selectedCategory?.id === category.id
-                        ? "bg-white text-orange-600 font-medium shadow-sm"
+                    className={`flex items-center justify-between px-3 py-2 text-sm cursor-pointer rounded transition-colors ${
+                      selectedCategory?.id === category.id
+                        ? "bg-white text-green-600 font-medium shadow-sm"
                         : hoveredCategory?.id === category.id
-                          ? "bg-gray-100 text-orange-600"
-                          : "text-gray-700 hover:bg-white hover:text-orange-600"
-                      }`}
+                        ? "bg-gray-100 text-green-600"
+                        : "text-gray-700 hover:bg-white hover:text-green-600"
+                    }`}
                     onMouseEnter={() => {
                       if (!selectedCategory) {
                         setHoveredCategory(category);
@@ -301,35 +215,26 @@ export default function CategoryMenu({
             {/* Right Content Column */}
             <div className="w-full md:w-80 bg-white p-4 flex-shrink-0">
               <div className="h-[200px] md:h-[400px] overflow-y-auto space-y-4 custom-scrollbar">
-                {!displaySourceCategory && (
+                {!displayedCategory && (
                   <p className="text-gray-500 text-sm p-3 text-center">
                     Hover over a category to see more.
                   </p>
                 )}
 
-                {displaySourceCategory && displaySourceCategory.subcategories.length > 0
-                  ? displaySourceCategory.subcategories.map((subCategory) => (
+                {subcategoriesToDisplay.length > 0 ? (
+                  subcategoriesToDisplay.map((subCategory) => (
                     <Link
                       key={subCategory.id}
-                      href={`/${createSlug(displaySourceCategory.name)}/${createSlug(subCategory.name)}`}
+                      href={`/${createSlug(displayedCategory!.name)}/${createSlug(subCategory.name)}`}
                       passHref
                       className="flex items-center gap-4 p-3 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors border border-gray-100 group"
                       onClick={onClose}
                     >
                       <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0">
-                        {getSubCategoryImage(subCategory) ? (
-                          <FallbackImage
-                            src={getSubCategoryImage(subCategory) as string}
-                            alt={subCategory.name}
-                            width={64}
-                            height={64}
-                            className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-105"
-                            fallbackSrc={displaySourceCategory.cat_image}
-                          />
-                        ) : displaySourceCategory.cat_image ? (
+                        {displayedCategory?.image_url ? (
                           <Image
-                            src={displaySourceCategory.cat_image}
-                            alt={displaySourceCategory.name}
+                            src={displayedCategory.image_url}
+                            alt={displayedCategory.name}
                             width={64}
                             height={64}
                             className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-105"
@@ -342,56 +247,56 @@ export default function CategoryMenu({
                         )}
                       </div>
                       <div className="flex-1">
-                        <h4 className="font-medium text-gray-900 text-sm mb-1 group-hover:text-orange-600 transition-colors">
+                        <h4 className="font-medium text-gray-900 text-sm mb-1 group-hover:text-green-600 transition-colors">
                           {subCategory.name}
                         </h4>
-                        <div className="inline-flex items-center justify-center bg-orange-100 text-orange-700 rounded-full px-2 py-1 text-xs font-medium min-w-[24px]">
-                          {getProductCountForSubcategory(subCategory.id).toString().padStart(2, "0")}
+                        <div className="inline-flex items-center justify-center bg-gray-100 text-gray-700 rounded-full px-2 py-1 text-xs font-medium min-w-[24px]">
+                          <span className="text-xs">View All</span>
                         </div>
                       </div>
                     </Link>
                   ))
-                  : displaySourceCategory && (
-                    <motion.div
-                      key="no-subcategories-card"
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 10 }}
-                      transition={{ duration: 0.2 }}
-                      className="flex flex-col items-center justify-center p-6 border border-orange-200 bg-orange-50 rounded-lg shadow-md h-full text-center"
-                    >
-                      <div className="mb-4 text-orange-600">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          strokeWidth={1.5}
-                          stroke="currentColor"
-                          className="w-12 h-12 mx-auto"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M9.75 3.104v5.303m0 0a3.001 3.001 0 1 0 6.002 0V3.104m-6.002 0h-3M9.75 3.104h3c0 1.258-.29 2.474-.836 3.565M9.75 3.104V2.001l-1.426-.399m-5.462 8.528l1.426.399M9.75 3.104h-3c-1.34 0-2.61.425-3.663 1.226C2.213 5.4 1.75 6.703 1.75 8.163V21c0 .828.672 1.5 1.5 1.5h17.5c.828 0 1.5-.672 1.5-1.5V8.163c0-1.46-.463-2.763-1.353-3.791a5.956 5.956 0 0 0-3.663-1.226M15.75 12h.008v.008h-.008V12zm2.25 0h.008v.008h-.008V12zm-4.5 0h.008v.008h-.008V12zm2.25 0h.008v.008h-.008V12z"
-                          />
-                        </svg>
-                      </div>
-                      <p className="text-gray-800 text-lg font-semibold mb-2">
-                        Browse {displaySourceCategory.name} Products
-                      </p>
-                      <p className="text-gray-700 text-sm mb-4">
-                        Explore all available items under this category.
-                      </p>
-                      <Link
-                        href={`/${createSlug(displaySourceCategory.name)}`}
-                        passHref
-                        className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-colors duration-200"
-                        onClick={onClose}
+                ) : displayedCategory ? (
+                  <motion.div
+                    key="no-subcategories-card"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 10 }}
+                    transition={{ duration: 0.2 }}
+                    className="flex flex-col items-center justify-center p-6 border border-green-200 bg-green-50 rounded-lg shadow-md h-full text-center"
+                  >
+                    <div className="mb-4 text-green-600">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        strokeWidth={1.5}
+                        stroke="currentColor"
+                        className="w-12 h-12 mx-auto"
                       >
-                        View All ({getProductCountForCategory(displaySourceCategory.id)})
-                      </Link>
-                    </motion.div>
-                  )}
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M9.75 3.104v5.303m0 0a3.001 3.001 0 1 0 6.002 0V3.104m-6.002 0h-3M9.75 3.104h3c0 1.258-.29 2.474-.836 3.565M9.75 3.104V2.001l-1.426-.399m-5.462 8.528l1.426.399M9.75 3.104h-3c-1.34 0-2.61.425-3.663 1.226C2.213 5.4 1.75 6.703 1.75 8.163V21c0 .828.672 1.5 1.5 1.5h17.5c.828 0 1.5-.672 1.5-1.5V8.163c0-1.46-.463-2.763-1.353-3.791a5.956 5.956 0 0 0-3.663-1.226M15.75 12h.008v.008h-.008V12zm2.25 0h.008v.008h-.008V12zm-4.5 0h.008v.008h-.008V12zm2.25 0h.008v.008h-.008V12z"
+                        />
+                      </svg>
+                    </div>
+                    <p className="text-gray-800 text-lg font-semibold mb-2">
+                      Browse {displayedCategory.name} Products
+                    </p>
+                    <p className="text-gray-700 text-sm mb-4">
+                      Explore all available items under this category.
+                    </p>
+                    <Link
+                      href={`/${createSlug(displayedCategory.name)}`}
+                      passHref
+                      className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors duration-200"
+                      onClick={onClose}
+                    >
+                      View All
+                    </Link>
+                  </motion.div>
+                ) : null}
               </div>
             </div>
           </div>

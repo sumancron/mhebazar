@@ -1,10 +1,10 @@
 // SearchBar.tsx
-/* eslint-disable @typescript-eslint/no-explicit-any */
+"use client";
 
 import { Search, Mic } from "lucide-react";
-import { useRef, useState, useEffect, useCallback } from "react";
+import { useRef, useState, useEffect, useCallback, JSX } from "react";
 import { useRouter } from "next/navigation";
-import api from "@/lib/api";
+import { Category, Subcategory } from "./Nav";
 
 // TypeScript support for SpeechRecognition
 declare global {
@@ -16,107 +16,71 @@ declare global {
 type SpeechRecognition = any;
 type SpeechRecognitionEvent = any;
 
-interface Product {
-  id: number;
-  name: string;
-  category_name: string;
-  subcategory_name: string;
-}
-
-interface SubCategory {
-  id: number;
-  name: string;
-  category_name: string;
-}
-
-interface Category {
-  id: number;
-  name: string;
-}
-
 type SearchBarProps = {
+  categories: Category[];
   searchQuery: string;
   setSearchQuery: (value: string) => void;
 };
 
 // Helper function to create slugs
-const createSlug = (name: string) => name.toLowerCase().replace(/\s+/g, "-");
+const createSlug = (name: string): string =>
+  name.toLowerCase().replace(/\s+/g, "-");
 
-export default function SearchBar({ searchQuery, setSearchQuery }: SearchBarProps) {
-  const [listening, setListening] = useState(false);
+export default function SearchBar({
+  categories,
+  searchQuery,
+  setSearchQuery,
+}: SearchBarProps): JSX.Element {
+  const [listening, setListening] = useState<boolean>(false);
   const [suggestions, setSuggestions] = useState<
-    Array<Category | SubCategory | Product>
+    Array<(Category | Subcategory) & { type: "category" | "subcategory"; category_name?: string }>
   >([]);
-  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState<boolean>(false);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const searchBarRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
-
-  const [allCategories, setAllCategories] = useState<Category[]>([]);
-  const [allSubcategories, setAllSubcategories] = useState<SubCategory[]>([]);
-  const [allProducts, setAllProducts] = useState<Product[]>([]);
-
-  // Fetch all categories, subcategories, and products on component mount
-  useEffect(() => {
-    const fetchAllData = async () => {
-      try {
-        const [categoriesRes, subcategoriesRes, productsRes] = await Promise.all([
-          api.get<Category[]>("/categories/"),
-          api.get<SubCategory[]>("/subcategories/"),
-          api.get<{ results: Product[] }>("/products/"),
-        ]);
-        setAllCategories(categoriesRes.data);
-        setAllSubcategories(subcategoriesRes.data);
-        setAllProducts(productsRes.data.results);
-      } catch (error) {
-        console.error("Error fetching search data:", error);
-      }
-    };
-    fetchAllData();
-  }, []);
 
   // Filter suggestions based on search query
   useEffect(() => {
     if (searchQuery.length > 0) {
       const lowerCaseQuery = searchQuery.toLowerCase();
+      let combinedSuggestions: (Category | Subcategory)[] = [];
 
-      const filteredCategories = allCategories.filter((cat) =>
-        cat.name.toLowerCase().includes(lowerCaseQuery)
-      );
+      categories.forEach((category) => {
+        // Check if category name matches
+        if (category.name.toLowerCase().includes(lowerCaseQuery)) {
+          combinedSuggestions.push({ ...category, type: "category" });
+        }
 
-      const filteredSubcategories = allSubcategories.filter((subcat) =>
-        subcat.name.toLowerCase().includes(lowerCaseQuery)
-      );
-
-      // FIX: Add null checks before calling .toLowerCase() on optional properties
-      const filteredProducts = allProducts.filter((product) =>
-        product.name.toLowerCase().includes(lowerCaseQuery) ||
-        (product.category_name && product.category_name.toLowerCase().includes(lowerCaseQuery)) ||
-        (product.subcategory_name && product.subcategory_name.toLowerCase().includes(lowerCaseQuery))
-      );
-
-      // Combine and remove duplicates based on name and type
-      const combinedSuggestions = [
-        ...filteredCategories.map((item) => ({ ...item, type: "category" })),
-        ...filteredSubcategories.map((item) => ({ ...item, type: "subcategory" })),
-        ...filteredProducts.map((item) => ({ ...item, type: "product" })),
-      ];
+        // Check if any subcategory name matches
+        category.subcategories.forEach((subcategory) => {
+          if (subcategory.name.toLowerCase().includes(lowerCaseQuery)) {
+            combinedSuggestions.push({
+              ...subcategory,
+              type: "subcategory",
+              category_name: category.name, // Add parent category name for display
+            });
+          }
+        });
+      });
 
       const uniqueSuggestions = Array.from(
-        new Map(combinedSuggestions.map((item) => [`${item.type}-${item.name}`, item])).values()
+        new Map(
+          combinedSuggestions.map((item) => [`${item.type}-${item.name}`, item])
+        ).values()
       );
 
-      setSuggestions(uniqueSuggestions.slice(0, 10)); // Limit suggestions
+      setSuggestions(uniqueSuggestions.slice(0, 10) as Array<(Category | Subcategory) & { type: "category" | "subcategory"; category_name?: string }>); // Limit suggestions
       setShowSuggestions(true);
     } else {
       setSuggestions([]);
       setShowSuggestions(false);
     }
-  }, [searchQuery, allCategories, allSubcategories, allProducts]);
+  }, [searchQuery, categories]);
 
   // Handle click outside to close suggestions
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
+    const handleClickOutside = (event: MouseEvent): void => {
       if (searchBarRef.current && !searchBarRef.current.contains(event.target as Node)) {
         setShowSuggestions(false);
       }
@@ -128,7 +92,7 @@ export default function SearchBar({ searchQuery, setSearchQuery }: SearchBarProp
   }, []);
 
   // Start/stop voice recognition
-  const handleMicClick = () => {
+  const handleMicClick = useCallback((): void => {
     if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
       alert("Voice search is not supported in this browser.");
       return;
@@ -141,18 +105,18 @@ export default function SearchBar({ searchQuery, setSearchQuery }: SearchBarProp
       recognitionRef.current.interimResults = false;
       recognitionRef.current.maxAlternatives = 1;
 
-      recognitionRef.current.onresult = (event: SpeechRecognitionEvent) => {
-        const transcript = event.results[0][0].transcript;
+      recognitionRef.current.onresult = (event: SpeechRecognitionEvent): void => {
+        const transcript: string = event.results[0][0].transcript;
         setSearchQuery(transcript);
         setListening(false);
         setShowSuggestions(true); // Show suggestions after voice input
       };
 
-      recognitionRef.current.onerror = () => {
+      recognitionRef.current.onerror = (): void => {
         setListening(false);
       };
 
-      recognitionRef.current.onend = () => {
+      recognitionRef.current.onend = (): void => {
         setListening(false);
       };
     }
@@ -164,25 +128,23 @@ export default function SearchBar({ searchQuery, setSearchQuery }: SearchBarProp
       setListening(false);
       recognitionRef.current.stop();
     }
-  };
+  }, [listening, setSearchQuery]);
 
-  const handleSuggestionClick = useCallback((item: (Category | SubCategory | Product) & { type: string }) => {
-    setShowSuggestions(false);
-    setSearchQuery(""); // Clear search query after selection
+  const handleSuggestionClick = useCallback(
+    (item: (Category | Subcategory) & { type: "category" | "subcategory"; category_name?: string }) => {
+      setShowSuggestions(false);
+      setSearchQuery("");
 
-    if (item.type === "category") {
-      router.push(`/${createSlug(item.name)}`);
-    } else if (item.type === "subcategory") {
-      const subCategoryItem = item as SubCategory;
-      // FIX: Correctly handle cases where category_name might be null
-      const categorySlug = subCategoryItem.category_name ? createSlug(subCategoryItem.category_name) : "category";
-      router.push(`/${categorySlug}/${createSlug(subCategoryItem.name)}`);
-    } else if (item.type === "product") {
-      // FIX: Add the product ID as a query parameter to the URL
-      const productItem = item as Product;
-      router.push(`/product/${createSlug(productItem.name)}?id=${productItem.id}`);
-    }
-  }, [router, setSearchQuery]);
+      if (item.type === "category") {
+        router.push(`/${createSlug(item.name)}`);
+      } else if (item.type === "subcategory") {
+        const subCategoryItem = item as Subcategory & { category_name: string };
+        const categorySlug = createSlug(subCategoryItem.category_name);
+        router.push(`/${categorySlug}/${createSlug(subCategoryItem.name)}`);
+      }
+    },
+    [router, setSearchQuery]
+  );
 
   return (
     <div className="relative w-full" ref={searchBarRef}>
@@ -191,7 +153,6 @@ export default function SearchBar({ searchQuery, setSearchQuery }: SearchBarProp
         placeholder="Search by Products, Category..."
         value={searchQuery}
         onChange={(e) => setSearchQuery(e.target.value)}
-        // FIX: Simplify onFocus to consistently show suggestions when there's a query
         onFocus={() => searchQuery.length > 0 && setShowSuggestions(true)}
         className="w-full px-4 py-2 pl-10 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm transition-shadow"
         autoComplete="off"
@@ -222,16 +183,12 @@ export default function SearchBar({ searchQuery, setSearchQuery }: SearchBarProp
             <div
               key={index}
               className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm flex justify-between items-center"
-              onClick={() => handleSuggestionClick(item as (Category | SubCategory | Product) & { type: string })}
+              onClick={() => handleSuggestionClick(item)}
             >
               <span>
                 {item.name}
                 {" "}
-                {/* Display category/subcategory name for products */}
-                {'category_name' in item && item.category_name && item.type === 'product' && (
-                  <span className="text-gray-500 text-xs"> (in {item.category_name})</span>
-                )}
-                 {'category_name' in item && item.category_name && item.type === 'subcategory' && (
+                {'category_name' in item && item.category_name && (
                   <span className="text-gray-500 text-xs"> (Category: {item.category_name})</span>
                 )}
               </span>
