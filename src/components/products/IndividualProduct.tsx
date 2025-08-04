@@ -496,7 +496,7 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
   const validSpecs = getValidSpecs(data.product_details);
 
   return (
-    <div className="px-4 mx-auto p-2 sm:p-4 bg-white">
+    <div className="px-4 mx-auto p-2 sm:p-4 bg-white max-w-7xl">
       <div className="flex flex-col md:flex-row gap-8">
         {/* Left Side - Product Images */}
         <div className="flex flex-row-reverse gap-2 lg:gap-4 w-full md:w-fit">
@@ -577,7 +577,7 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
           <div className="flex flex-col lg:flex-row gap-4">
             <div className="w-full lg:w-2/3">
               {/* Product Title */}
-              <h1 className="text-2xl font-semibold text-gray-900 mb-2">{data.name}</h1>
+              <h1 className="text-2xl font-bold text-gray-900 mb-2">{data.name}</h1>
               <div className="text-base text-gray-600 mb-2">
                 {data.category_name} {data.subcategory_name ? `> ${data.subcategory_name}` : ''}
               </div>
