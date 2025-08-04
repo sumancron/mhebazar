@@ -1,23 +1,26 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 // src/components/products/SideFilter.tsx
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, JSX } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, ChevronRight, Search } from "lucide-react";
 import Image from "next/image";
 import api from "@/lib/api";
 
-// Define interfaces for API response
-interface ApiSubcategory {
+// Import the local JSON data for categories
+import categoriesData from "@/data/categories.json";
+
+// Define interfaces based on the local JSON data structure
+interface Subcategory {
   id: number;
   name: string;
-  category: number;
 }
 
-interface ApiCategory {
+interface Category {
   id: number;
   name: string;
-  subcategories: ApiSubcategory[];
+  subcategories: Subcategory[];
 }
 
 // Product types as provided by your backend
@@ -51,18 +54,16 @@ const SideFilter = ({
   selectedManufacturer,
   selectedRating,
   showManufacturerFilter = true,
-}: SideFilterProps) => {
+}: SideFilterProps): JSX.Element => {
   const [search, setSearch] = useState<string>("");
-  const [categories, setCategories] = useState<ApiCategory[]>([]);
   const [manufacturers, setManufacturers] = useState<string[]>([]);
-  const [isLoadingCategories, setIsLoadingCategories] = useState<boolean>(true);
-  const [errorCategories, setErrorCategories] = useState<string | null>(null);
+  const [isLoadingManufacturers, setIsLoadingManufacturers] = useState<boolean>(true);
+  
+  // Use the imported JSON data directly
+  const categories: Category[] = categoriesData;
 
   const [expandedCategory, setExpandedCategory] = useState<number | null>(null);
   const [priceRangeExpanded, setPriceRangeExpanded] = useState<boolean>(true);
-  // const [manufacturerExpanded, setManufacturerExpanded] = useState<boolean>(true);
-  // const [ratingExpanded, setRatingExpanded] = useState<boolean>(true);
-  // const [productTypeExpanded, setProductTypeExpanded] = useState<boolean>(true);
 
   // Local state for price inputs to avoid re-fetches on every keystroke
   const [localMinPrice, setLocalMinPrice] = useState<number | ''>(minPrice);
@@ -74,37 +75,26 @@ const SideFilter = ({
     setLocalMaxPrice(maxPrice);
   }, [minPrice, maxPrice]);
 
-
-  // Fetch categories and their subcategories from the API
-  const fetchCategories = useCallback(async () => {
-    setIsLoadingCategories(true);
-    setErrorCategories(null);
-    try {
-      const response = await api.get<ApiCategory[]>("/categories/");
-      setCategories(response.data);
-    } catch (err: unknown) {
-      console.error("[SideFilter] Failed to fetch categories:", err);
-      setErrorCategories("Failed to load categories. Please try again later.");
-    } finally {
-      setIsLoadingCategories(false);
-    }
-  }, []);
-
-  // Fetch unique manufacturers
+  // Fetch unique manufacturers (this still requires an API call as the data is dynamic)
   const fetchManufacturers = useCallback(async () => {
+    setIsLoadingManufacturers(true);
     try {
       const response = await api.get<{ results: { manufacturer: string }[] }>("/products/unique-manufacturers/");
       const uniqueManufacturers = Array.from(new Set(response.data.results.map(item => item.manufacturer)));
       setManufacturers(uniqueManufacturers.filter(Boolean) as string[]);
     } catch (err) {
       console.error("[SideFilter] Failed to fetch manufacturers:", err);
+    } finally {
+      setIsLoadingManufacturers(false);
     }
   }, []);
 
   useEffect(() => {
-    fetchCategories();
-    fetchManufacturers();
-  }, [fetchCategories, fetchManufacturers]);
+    // Only fetch manufacturers if the filter is enabled
+    if (showManufacturerFilter) {
+      fetchManufacturers();
+    }
+  }, [fetchManufacturers, showManufacturerFilter]);
 
   // Expand the category if a subcategory within it is currently selected
   useEffect(() => {
@@ -120,12 +110,12 @@ const SideFilter = ({
   }, [selectedCategoryName, selectedSubcategoryName, categories]);
 
   // Filter categories by search input
-  const filteredCategories = categories.filter((cat) =>
+  const filteredCategories: Category[] = categories.filter((cat) =>
     cat.name.toLowerCase().includes(search.toLowerCase())
   );
 
   // Filter product types by search input
-  const filteredProductTypes = PRODUCT_TYPE_CHOICES.filter(type =>
+  const filteredProductTypes: string[] = PRODUCT_TYPE_CHOICES.filter(type =>
     type.toLowerCase().includes(search.toLowerCase())
   );
 
@@ -136,7 +126,6 @@ const SideFilter = ({
       max: localMaxPrice
     });
   }, [localMinPrice, localMaxPrice, onFilterChange]);
-
 
   const handleManufacturerChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value === 'all' ? null : e.target.value;
@@ -156,44 +145,6 @@ const SideFilter = ({
     if (selectedTypeName && lowerValue === selectedTypeName.toLowerCase()) return true;
     return false;
   };
-
-  // Conditionally fetch manufacturers
-  useEffect(() => {
-    fetchCategories();
-    if (showManufacturerFilter) { // Only fetch if the filter is needed
-      fetchManufacturers();
-    }
-  }, [fetchCategories, fetchManufacturers, showManufacturerFilter]);
-
-  if (isLoadingCategories) {
-    return (
-      <aside className="sticky top-0 w-full max-w-xs min-h-screen bg-white flex flex-col overflow-y-auto z-20 p-4 animate-pulse">
-        <div className="h-6 bg-gray-200 rounded w-1/3 mb-4"></div>
-        <div className="flex items-center gap-2 mb-4">
-          <div className="w-4 h-4 bg-gray-200 rounded"></div>
-          <div className="w-full h-8 bg-gray-200 rounded-md"></div>
-        </div>
-        <div className="h-5 bg-gray-200 rounded w-1/2 mb-3"></div>
-        <div className="space-y-2">
-          {[...Array(5)].map((_, i: number) => (
-            <div key={i} className="h-10 bg-gray-100 rounded-md"></div>
-          ))}
-        </div>
-        <div className="mt-auto p-3 sm:p-4">
-          <div className="w-full h-48 bg-gray-200 rounded-lg"></div>
-        </div>
-      </aside>
-    );
-  }
-
-  if (errorCategories) {
-    return (
-      <aside className="sticky top-0 w-full max-w-xs min-h-screen bg-white flex flex-col overflow-y-auto z-20 p-4 text-red-600">
-        <p className="text-sm mb-4">{errorCategories}</p>
-        <button onClick={fetchCategories} className="mt-auto px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors">Retry</button>
-      </aside>
-    );
-  }
 
   return (
     <aside className="sticky top-0 w-full max-w-xs min-h-screen bg-white flex flex-col overflow-y-auto z-20 border-r border-gray-100 shadow-sm">
@@ -226,7 +177,7 @@ const SideFilter = ({
         {/* Categories Section */}
         <h2 className="text-base font-semibold mb-2 text-gray-800">Categories</h2>
         <div className="space-y-1 mb-4">
-          {filteredCategories.map((category: ApiCategory) => (
+          {filteredCategories.map((category: Category) => (
             <div key={category.id} className="border-b border-gray-100 last:border-b-0">
               <button
                 onClick={() => {
@@ -262,7 +213,7 @@ const SideFilter = ({
                     className="overflow-hidden"
                   >
                     <div className="ml-4 mt-1 space-y-1">
-                      {category.subcategories.map((subcategory: ApiSubcategory, index: number) => (
+                      {category.subcategories.map((subcategory: Subcategory, index: number) => (
                         <motion.button
                           key={subcategory.id}
                           initial={{ x: -10, opacity: 0 }}

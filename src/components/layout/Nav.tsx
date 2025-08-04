@@ -13,10 +13,9 @@ import {
   Heart,
   LogOut,
   UserIcon,
-  Repeat
+  Repeat,
 } from "lucide-react";
-import { useRef, useState, JSX, useEffect } from "react";
-import React from "react";
+import { useRef, useState, useEffect, JSX } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
@@ -26,19 +25,21 @@ import SearchBar from "./SearchBar";
 import { useUser } from "@/context/UserContext";
 import { useRouter } from "next/navigation";
 import { handleLogout } from "@/lib/auth/logout";
-import api from "@/lib/api";
+
+// Import the local JSON data directly
+import categoriesData from "@/data/categories.json";
+
+// Define interfaces based on the local JSON structure
+export interface Subcategory {
+  id: number;
+  name: string;
+}
 
 export interface Category {
   id: number;
   name: string;
-  slug: string;
-}
-
-export interface Subcategory {
-  id: number;
-  name: string;
-  slug: string;
-  category: number; // Foreign key to the Category's ID
+  image_url: string;
+  subcategories: Subcategory[];
 }
 
 const navigationLinks = [
@@ -49,24 +50,34 @@ const navigationLinks = [
   { name: "Services", href: "/services" },
   { name: "Training", href: "/training" },
   { name: "Blogs", href: "/blog" },
-
 ];
 
-export default function Navbar(): JSX.Element {
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [subcategories, setSubcategories] = useState<Subcategory[]>([]);
+export interface User {
+  id: number;
+  username?: string | { image: string }[];
+  email: string;
+  role?: {
+    id: number;
+    name: string;
+  };
+  user_banner?: { url: string }[];
+}
 
-  const [searchQuery, setSearchQuery] = useState("");
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [categoriesOpen, setCategoriesOpen] = useState(false);
-  const [vendorDrawerOpen, setVendorDrawerOpen] = useState(false);
-  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+export default function Navbar(): JSX.Element {
+  // Use the imported data directly instead of state
+  const categories: Category[] = categoriesData;
+
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
+  const [categoriesOpen, setCategoriesOpen] = useState<boolean>(false);
+  const [vendorDrawerOpen, setVendorDrawerOpen] = useState<boolean>(false);
+  const [profileMenuOpen, setProfileMenuOpen] = useState<boolean>(false);
   const profileMenuRef = useRef<HTMLDivElement>(null);
   const categoryMenuRef = useRef<HTMLDivElement>(null);
 
-  const createSlug = (name: string) => name.toLowerCase().replace(/\s+/g, "-");
+  const createSlug = (name: string): string =>
+    name.toLowerCase().replace(/\s+/g, "-");
 
-  // ADD THIS STATE: Tracks the ID of the currently open category in the mobile menu
   const [openCategory, setOpenCategory] = useState<number | null>(null);
 
   const { user, isLoading, setUser } = useUser();
@@ -74,39 +85,14 @@ export default function Navbar(): JSX.Element {
 
   // Close dropdown on outside click for profile menu
   useEffect(() => {
-    const fetchData = async () => {
-      // Configure your base API URL. This can also be set in an axios instance.
-      // Example: const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/";
-      try {
-        // Fetch categories and subcategories in parallel for better performance
-        const [categoryResponse, subcategoryResponse] = await Promise.all([
-          api.get("/categories/"), // Fetches from 'api/categories/' endpoint
-          api.get("/subcategories/"), // Fetches from 'api/subcategories/' endpoint
-        ]);
-
-        // Update state with data from the API response
-        // Make sure the response structure matches (e.g., response.data)
-        setCategories(categoryResponse.data);
-        setSubcategories(subcategoryResponse.data);
-      } catch (error) {
-        console.error("Failed to fetch data:", error);
-        // You could set an error state here to inform the user
-      }
-    };
-
-    fetchData();
-  }, []); // Empty dependency array ensures this runs only once when the component mounts
-
-  // Close dropdown on outside click for profile menu
-  useEffect(() => {
-    function handleClick(e: MouseEvent) {
+    const handleClick = (e: MouseEvent): void => {
       if (
         profileMenuRef.current &&
         !profileMenuRef.current.contains(e.target as Node)
       ) {
         setProfileMenuOpen(false);
       }
-    }
+    };
     if (profileMenuOpen) {
       document.addEventListener("mousedown", handleClick);
     }
@@ -115,14 +101,14 @@ export default function Navbar(): JSX.Element {
 
   // Close dropdown on outside click for category menu
   useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
+    const handleClickOutside = (event: MouseEvent): void => {
       if (
         categoryMenuRef.current &&
         !categoryMenuRef.current.contains(event.target as Node)
       ) {
         setCategoriesOpen(false);
       }
-    }
+    };
     if (categoriesOpen) {
       document.addEventListener("mousedown", handleClickOutside);
     }
@@ -146,7 +132,7 @@ export default function Navbar(): JSX.Element {
                 <span>Loading...</span>
               ) : user ? (
                 <span className="font-semibold">
-                  Hello, {user.username || user.email}!
+                  Hello, {typeof user.username === 'string' ? user.username : user.email}!
                 </span>
               ) : (
                 <>
@@ -201,22 +187,22 @@ export default function Navbar(): JSX.Element {
             {/* Search Bar with Brand Store - Desktop */}
             <div className="hidden md:flex flex-1 max-w-2xl mx-8 items-center gap-4">
               <SearchBar
+                categories={categories}
                 searchQuery={searchQuery}
                 setSearchQuery={setSearchQuery}
               />
               {/* Brand Store Badge */}
               <Link
                 href="/vendor-listing"
-                className="flex-shrink-0 px-3 py-1 rounded bg-gradient-to-r from-orange-400 to-rose-400 text-white text-xs font-semibold flex items-center gap-1 shadow-sm hover:scale-105 transition-transform"
+                className="flex-shrink-0 px-3 py-1 rounded-full bg-gradient-to-r from-orange-400 to-rose-400 text-white text-xs font-semibold flex items-center gap-1 shadow-md hover:scale-105 transition-transform duration-300 animate-pulse-slow"
               >
-                <span className="w-2 h-2 rounded-full bg-white/80 inline-block animate-pulse"></span>
+                <span className="w-2 h-2 rounded-full bg-white/80 inline-block"></span>
                 Brand Store
               </Link>
             </div>
 
             {/* Right Section */}
             <div className="flex items-center gap-4">
-
               {/* Compare Icon using Repeat */}
               <Link
                 href="/compare"
@@ -226,33 +212,15 @@ export default function Navbar(): JSX.Element {
                 <Repeat className="w-5 h-5" />
               </Link>
 
-
-              {/* Conditional rendering for Cart and Notifications: Only if user is logged in */}
+              {/* Conditional rendering for Cart */}
               {!isLoading && user && (
-                <>
-                  <Link
-                    href="/cart"
-                    className="flex items-center text-gray-600 hover:text-green-600 transition"
-                  >
-                    <ShoppingCart className="w-5 h-5" />
-                  </Link>
-                  {/* <Link
-                    href="/notifications"
-                    className="flex items-center text-gray-600 hover:text-green-600 transition"
-                    aria-label="Notifications"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="w-5 h-5"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
-                      <path d="M13.73 21a2 2 0 01-3.46 0" />
-                    </svg>
-                  </Link> */}
-                </>
+                <Link
+                  href="/cart"
+                  className="flex items-center text-gray-600 hover:text-green-600 transition"
+                  aria-label="Cart"
+                >
+                  <ShoppingCart className="w-5 h-5" />
+                </Link>
               )}
 
               {/* Profile Dropdown */}
@@ -269,18 +237,18 @@ export default function Navbar(): JSX.Element {
                     </div>
                   ) : user ? (
                     <>
-                      {Array.isArray(user.username) &&
-                      user.username[0]?.image ? (
+                      {/* Check if user.username is an array and has an image */}
+                      {Array.isArray(user.username) && user.username[0]?.image ? (
                         <Image
                           src={user.username[0].image}
                           alt="Profile"
                           width={40}
                           height={40}
-                          className="w-10 h-10 rounded-full border-2 border-white shadow-sm object-cover"
+                          className="w-10 h-10 rounded-full border-2 border-green-600 shadow-sm object-cover"
                         />
                       ) : (
-                        <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
-                          <UserIcon className="w-5 h-5 text-gray-500" />
+                        <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
+                          <UserIcon className="w-5 h-5 text-green-600" />
                         </div>
                       )}
                     </>
@@ -301,38 +269,37 @@ export default function Navbar(): JSX.Element {
                     >
                       {user ? (
                         <>
-                          {/* Common User Account Links */}
+                          <div className="px-6 py-2 text-sm text-gray-500 font-semibold uppercase">
+                            My Account
+                          </div>
                           <Link
                             href="/account"
-                            className="flex items-center gap-3 px-6 py-4 text-gray-800 hover:bg-gray-50 transition text-base"
+                            className="flex items-center gap-3 px-6 py-3 text-gray-800 hover:bg-gray-50 transition text-base"
                             onClick={() => setProfileMenuOpen(false)}
                           >
                             <User className="w-5 h-5 text-green-600" />
                             My Account
                           </Link>
-                          <div className="border-t border-gray-100" />
                           <Link
                             href="/account/orders"
-                            className="flex items-center gap-3 px-6 py-4 text-gray-800 hover:bg-gray-50 transition text-base"
+                            className="flex items-center gap-3 px-6 py-3 text-gray-800 hover:bg-gray-50 transition text-base"
                             onClick={() => setProfileMenuOpen(false)}
                           >
                             <Package className="w-5 h-5 text-green-600" />
                             My Orders
                           </Link>
-                          <div className="border-t border-gray-100" />
                           <Link
                             href="/account/wishlist"
-                            className="flex items-center gap-3 px-6 py-4 text-gray-800 hover:bg-gray-50 transition text-base"
+                            className="flex items-center gap-3 px-6 py-3 text-gray-800 hover:bg-gray-50 transition text-base"
                             onClick={() => setProfileMenuOpen(false)}
                           >
                             <Heart className="w-5 h-5 text-green-600" />
                             Wishlist
                           </Link>
 
-                          {/* Vendor specific links */}
                           {user.role?.id === 2 && (
                             <>
-                              <div className="border-t border-gray-100" />
+                              <div className="border-t border-gray-100 mt-2" />
                               <div className="px-6 py-2 text-sm text-gray-500 font-semibold uppercase">
                                 Vendor Panel
                               </div>
@@ -363,10 +330,9 @@ export default function Navbar(): JSX.Element {
                             </>
                           )}
 
-                          {/* Admin specific links */}
                           {user.role?.id === 1 && (
                             <>
-                              <div className="border-t border-gray-100" />
+                              <div className="border-t border-gray-100 mt-2" />
                               <div className="px-6 py-2 text-sm text-gray-500 font-semibold uppercase">
                                 Admin Panel
                               </div>
@@ -381,9 +347,9 @@ export default function Navbar(): JSX.Element {
                             </>
                           )}
 
-                          <div className="border-t border-gray-100" />
+                          <div className="border-t border-gray-100 mt-2" />
                           <button
-                            className="flex items-center gap-3 px-6 py-4 text-gray-800 hover:bg-gray-50 transition text-base w-full text-left"
+                            className="flex items-center gap-3 px-6 py-3 text-gray-800 hover:bg-gray-50 transition text-base w-full text-left"
                             onClick={async () => {
                               setProfileMenuOpen(false);
                               await handleLogout(() => setUser(null), router);
@@ -398,16 +364,15 @@ export default function Navbar(): JSX.Element {
                         <>
                           <Link
                             href="/login"
-                            className="flex items-center gap-3 px-6 py-4 text-gray-800 hover:bg-gray-50 transition text-base"
+                            className="flex items-center gap-3 px-6 py-3 text-gray-800 hover:bg-gray-50 transition text-base"
                             onClick={() => setProfileMenuOpen(false)}
                           >
                             <User className="w-5 h-5 text-green-600" />
                             Sign In
                           </Link>
-                          <div className="border-t border-gray-100" />
                           <Link
                             href="/register"
-                            className="flex items-center gap-3 px-6 py-4 text-gray-800 hover:bg-gray-50 transition text-base"
+                            className="flex items-center gap-3 px-6 py-3 text-gray-800 hover:bg-gray-50 transition text-base"
                             onClick={() => setProfileMenuOpen(false)}
                           >
                             <User className="w-5 h-5 text-green-600" />
@@ -426,15 +391,15 @@ export default function Navbar(): JSX.Element {
           <div className="md:hidden pb-3">
             <div className="flex items-center gap-2">
               <SearchBar
+                categories={categories}
                 searchQuery={searchQuery}
                 setSearchQuery={setSearchQuery}
               />
-              {/* Brand Store Badge - Mobile */}
               <Link
                 href="/vendor-listing"
-                className="flex-shrink-0 px-2 py-1 rounded bg-gradient-to-r from-orange-400 to-rose-400 text-white text-xs font-semibold flex items-center gap-1 shadow-sm hover:scale-105 transition-transform"
+                className="flex-shrink-0 px-2 py-1 rounded-full bg-gradient-to-r from-orange-400 to-rose-400 text-white text-xs font-semibold flex items-center gap-1 shadow-sm hover:scale-105 transition-transform duration-300 animate-pulse-slow"
               >
-                <span className="w-2 h-2 rounded-full bg-white/80 inline-block animate-pulse mr-1"></span>
+                <span className="w-2 h-2 rounded-full bg-white/80 inline-block animate-pulse"></span>
                 Store
               </Link>
             </div>
@@ -461,6 +426,7 @@ export default function Navbar(): JSX.Element {
                 <CategoryMenu
                   isOpen={categoriesOpen}
                   onClose={() => setCategoriesOpen(false)}
+                  categories={categories}
                 />
               </div>
 
@@ -518,13 +484,13 @@ export default function Navbar(): JSX.Element {
                 )
               ) : null}
 
-              {/* <Link
+              <Link
                 href="/services/subscription-plan"
                 className="flex items-center gap-2 text-gray-600 px-4 py-3 hover:text-green-600 transition"
               >
                 <Tag className="w-4 h-4" />
                 <span className="text-sm">Price Plan</span>
-              </Link> */}
+              </Link>
             </div>
           </div>
         </div>
@@ -586,15 +552,15 @@ export default function Navbar(): JSX.Element {
                     <div key={category.id} className="border-b border-gray-100">
                       <button
                         onClick={() => {
-                          // Toggle behavior: if it's already open, close it. Otherwise, open it.
                           setOpenCategory(openCategory === category.id ? null : category.id);
                         }}
                         className="w-full flex justify-between items-center px-6 py-3 text-left text-gray-700 hover:bg-green-50 transition"
                       >
                         <span>{category.name}</span>
                         <ChevronDown
-                          className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${openCategory === category.id ? "rotate-180" : ""
-                            }`}
+                          className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${
+                            openCategory === category.id ? "rotate-180" : ""
+                          }`}
                         />
                       </button>
 
@@ -618,18 +584,24 @@ export default function Navbar(): JSX.Element {
                             </Link>
 
                             {/* Filter and list the subcategories for the open category */}
-                            {subcategories
-                              .filter((sub) => sub.category === category.id)
-                              .map((sub) => (
+                            {category.subcategories.length > 0 ? (
+                              category.subcategories.map((sub) => (
                                 <Link
                                   key={sub.id}
-                                  href={`/${createSlug(category.name)}/${createSlug(sub.name)}`}
+                                  href={`/${createSlug(category.name)}/${createSlug(
+                                    sub.name
+                                  )}`}
                                   className="block pl-10 pr-6 py-3 text-gray-600 hover:bg-green-50/50 transition"
                                   onClick={() => setMobileMenuOpen(false)}
                                 >
                                   {sub.name}
                                 </Link>
-                              ))}
+                              ))
+                            ) : (
+                              <p className="pl-10 pr-6 py-3 text-gray-400 text-sm italic">
+                                No subcategories found.
+                              </p>
+                            )}
                           </motion.div>
                         )}
                       </AnimatePresence>
@@ -664,7 +636,6 @@ export default function Navbar(): JSX.Element {
                   >
                     Help
                   </Link>
-
                   {isLoading ? (
                     <span className="block px-4 py-3 text-gray-700">
                       Loading...
@@ -690,7 +661,7 @@ export default function Navbar(): JSX.Element {
                     </button>
                   )}
                   <Link
-                    href="/subscription-plan"
+                    href="/services/subscription-plan"
                     className="block px-4 py-3 text-gray-700 hover:bg-green-50 border-b border-gray-100 font-medium transition"
                     onClick={() => setMobileMenuOpen(false)}
                   >
@@ -710,16 +681,4 @@ export default function Navbar(): JSX.Element {
       />
     </header>
   );
-}
-
-export interface User {
-  id: number;
-  username?: string;
-  email: string;
-  role?: {
-    id: number;
-    name: string;
-  };
-  user_banner?: { url: string }[]; // Add this line to fix the error
-  // ...other properties
 }

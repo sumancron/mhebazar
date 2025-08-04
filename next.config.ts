@@ -14,6 +14,14 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: "https",
+        hostname: "mhebazar.in",
+      },
+      {
+        protocol: "https",
+        hostname: "mheback.onrender.com",
+      },
+      {
+        protocol: "https",
         hostname: "www.mhebazar.in",
       },
       {
