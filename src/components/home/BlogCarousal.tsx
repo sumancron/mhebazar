@@ -20,6 +20,7 @@ interface BlogPost {
   id: number;
   blog_title: string;
   image1: string; // Updated from 'image' to 'image1'
+  blog_url: string;
 }
 
 // Define the structure of the API response
@@ -34,6 +35,19 @@ export function BlogCarousel() {
   const [blogs, setBlogs] = React.useState<BlogPost[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
+
+  // FIX: This function now extracts the filename from the incorrect API URL
+  // and builds the correct URL with the path you specified.
+  const getImageUrl = (imagePath: string | null) => {
+    if (!imagePath) {
+      return "/placeholder-image.webp"; // Fallback image
+    }
+    // Extract the filename from the URL provided by the API
+    const filename = imagePath.split('/').pop();
+
+    // Construct the correct URL using the specified path
+    return `https://mheback.onrender.com/media/blog/image/${filename}`;
+  };
 
   React.useEffect(() => {
     const fetchBlogs = async () => {
@@ -95,7 +109,8 @@ export function BlogCarousel() {
                   <CardContent className="flex flex-col p-0 flex-grow">
                     <div className="relative w-full h-48">
                       <Image
-                        src={"https://mheback.onrender.com/blog/image/"+blog.image1} // Updated field
+                        // FIX: Use the corrected getImageUrl function
+                        src={getImageUrl(blog.image1)}
                         alt={blog.blog_title} // Updated field
                         fill
                         className="object-cover"
@@ -108,8 +123,8 @@ export function BlogCarousel() {
                       </p>
                       {/* Using a generic "Read More" since category name is not in the object */}
                       <Link
-                        // Link to the 'blog-detail' page using the blog's ID
-                        href={`/blogs/${blog.id}`}
+                        // Link to the 'blog-detail' page using the blog's URL
+                        href={`/blog/${blog.blog_url}`}
                         className="text-green-600 font-semibold inline-flex items-center gap-1 group mt-4"
                       >
                         Read More

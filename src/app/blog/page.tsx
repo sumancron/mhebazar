@@ -105,9 +105,16 @@ const BlogListPage: React.FC = () => {
     return temp.textContent || temp.innerText || "";
   };
 
-  const getImageUrl = (imageName: string | null) => {
-    if (!imageName) return "/mhe-logo.png"; // Fallback image
-    return `https://mheback.onrender.com/blog/image/${imageName}`;
+  // FIX: This function now extracts the filename from the incorrect API URL
+  // and builds the correct URL with the path you specified.
+  const getImageUrl = (imagePath: string | null) => {
+    if (!imagePath) return "/mhe-logo.png"; // Fallback image
+    
+    // Extract the filename from the URL provided by the API
+    const filename = imagePath.split('/').pop();
+
+    // Construct the correct URL using the specified path
+    return `https://mheback.onrender.com/media/blog/image/${filename}`;
   };
 
   if (error) {
