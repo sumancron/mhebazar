@@ -107,7 +107,9 @@ const BlogListPage: React.FC = () => {
 
   const getImageUrl = (imageName: string | null) => {
     if (!imageName) return "/mhe-logo.png"; // Fallback image
-    return `https://mheback.onrender.com/blog/image/${imageName}`;
+    // Updated URL based on the user's provided information
+    const fileName = imageName?.split('/').pop();
+    return `https://mheback.onrender.com/media/blog/image/${fileName}`;
   };
 
   if (error) {
