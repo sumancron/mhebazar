@@ -4,7 +4,7 @@
 import { Search, Mic } from "lucide-react";
 import { useRef, useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import api from "@/lib/api"; // Assuming you have an api.ts for API calls
+import api from "@/lib/api";
 
 // TypeScript support for SpeechRecognition
 declare global {
@@ -166,16 +166,21 @@ export default function SearchBar({ searchQuery, setSearchQuery }: SearchBarProp
     }
   };
 
-  const handleSuggestionClick = useCallback((item: Category | SubCategory | Product & { type: string }) => {
+  const handleSuggestionClick = useCallback((item: (Category | SubCategory | Product) & { type: string }) => {
     setShowSuggestions(false);
     setSearchQuery(""); // Clear search query after selection
+
     if (item.type === "category") {
       router.push(`/${createSlug(item.name)}`);
     } else if (item.type === "subcategory") {
       const subCategoryItem = item as SubCategory;
-      router.push(`/${createSlug(subCategoryItem.category_name)}/${createSlug(subCategoryItem.name)}`);
+      // FIX: Correctly handle cases where category_name might be null
+      const categorySlug = subCategoryItem.category_name ? createSlug(subCategoryItem.category_name) : "category";
+      router.push(`/${categorySlug}/${createSlug(subCategoryItem.name)}`);
     } else if (item.type === "product") {
-      router.push(`/product/${createSlug(item.name)}`);
+      // FIX: Add the product ID as a query parameter to the URL
+      const productItem = item as Product;
+      router.push(`/product/${createSlug(productItem.name)}?id=${productItem.id}`);
     }
   }, [router, setSearchQuery]);
 
@@ -186,7 +191,8 @@ export default function SearchBar({ searchQuery, setSearchQuery }: SearchBarProp
         placeholder="Search by Products, Category..."
         value={searchQuery}
         onChange={(e) => setSearchQuery(e.target.value)}
-        onFocus={() => searchQuery.length > 0 && setSuggestions(suggestions.length > 0 ? suggestions : []) && setShowSuggestions(true)}
+        // FIX: Simplify onFocus to consistently show suggestions when there's a query
+        onFocus={() => searchQuery.length > 0 && setShowSuggestions(true)}
         className="w-full px-4 py-2 pl-10 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm transition-shadow"
         autoComplete="off"
       />
