@@ -88,10 +88,11 @@ export default function SearchBar({ searchQuery, setSearchQuery }: SearchBarProp
         subcat.name.toLowerCase().includes(lowerCaseQuery)
       );
 
+      // FIX: Add null checks before calling .toLowerCase() on optional properties
       const filteredProducts = allProducts.filter((product) =>
         product.name.toLowerCase().includes(lowerCaseQuery) ||
-        product.category_name.toLowerCase().includes(lowerCaseQuery) ||
-        product.subcategory_name.toLowerCase().includes(lowerCaseQuery)
+        (product.category_name && product.category_name.toLowerCase().includes(lowerCaseQuery)) ||
+        (product.subcategory_name && product.subcategory_name.toLowerCase().includes(lowerCaseQuery))
       );
 
       // Combine and remove duplicates based on name and type
