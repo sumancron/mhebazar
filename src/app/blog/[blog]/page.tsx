@@ -70,6 +70,8 @@ const SingleBlogPage: React.FC = () => {
   const [likes] = useState(Math.floor(Math.random() * 50) + 10);
   const contentRef = useRef<HTMLDivElement>(null);
 
+  const [imageError, setImageError] = useState(false);
+
   useEffect(() => {
     if (blogUrl) {
       fetchBlog();
@@ -162,11 +164,23 @@ const SingleBlogPage: React.FC = () => {
       day: "numeric",
     });
   };
+  
+  // FIX: This function now correctly assumes the API returns a full URL,
+  // extracts the filename, and builds the URL from the public folder.
+  const getImageUrl = (imagePath: string | null) => {
+    if (!imagePath) return "/mhe-logo.png";
+    
+    // Extract the filename from the URL provided by the API
+    const filename = imagePath.split('/').pop();
 
-  const getImageUrl = (imageName: string | null) => {
-    if (!imageName) return "/api/placeholder/800/400";
-    return `https://www.mhebazar.in/css/asset/blogimg/${imageName}`;
+    // Construct the correct URL from the Next.js public directory
+    return `/css/asset/blogimg/${filename}`;
   };
+
+  const handleImageError = () => {
+    setImageError(true);
+  };
+
 
   const estimateReadingTime = (html: string) => {
     const text = html.replace(/<[^>]*>/g, '');
@@ -179,6 +193,7 @@ const SingleBlogPage: React.FC = () => {
     let processedHtml = html.replace(
       /src="([^"]*\.(jpg|jpeg|png|gif|webp))"/gi,
       (match, imageName) => {
+        // FIX: Extract the filename from the src attribute and build the URL
         const fileName = imageName.split('/').pop();
         return `src="${getImageUrl(fileName)}"`;
       }
@@ -448,7 +463,7 @@ const SingleBlogPage: React.FC = () => {
                     className="w-full h-auto object-cover"
                     onError={(e) => {
                       const target = e.target as HTMLImageElement;
-                      target.src = "/api/placeholder/800/400";
+                      target.src = "/mhe-logo.png";
                     }}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
@@ -528,7 +543,7 @@ const SingleBlogPage: React.FC = () => {
                             className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-300"
                             onError={(e) => {
                               const target = e.target as HTMLImageElement;
-                              target.src = "/api/placeholder/300/200";
+                              target.src = "/mhe-logo.png";
                             }}
                           />
                           <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />

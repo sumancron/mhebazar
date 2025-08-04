@@ -19,7 +19,8 @@ import { ArrowUpRight } from 'lucide-react';
 interface BlogPost {
   id: number;
   blog_title: string;
-  image1: string; // Updated from 'image' to 'image1'
+  image1: string;
+  blog_url: string;
 }
 
 // Define the structure of the API response
@@ -35,13 +36,25 @@ export function BlogCarousel() {
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
 
+  // FIX: This function now correctly assumes the API returns a full URL,
+  // extracts the filename, and builds the URL from the public folder.
+  const getImageUrl = (imagePath: string | null) => {
+    if (!imagePath) {
+      return "/mhe-logo.png"; // Fallback image
+    }
+    
+    // Extract the filename from the URL provided by the API
+    const filename = imagePath.split('/').pop();
+
+    // Construct the correct URL from the Next.js public directory
+    return `/css/asset/blogimg/${filename}`;
+  };
+
   React.useEffect(() => {
     const fetchBlogs = async () => {
       try {
-        // Fetch data from the 'blog-list-create' endpoint
         const response = await api.get<ApiResponse>('/blogs/');
 
-        // The blog posts are in the 'results' array
         if (response.data && response.data.results) {
           setBlogs(response.data.results);
         } else {
@@ -60,7 +73,6 @@ export function BlogCarousel() {
   }, []);
 
   if (loading) {
-    // A simple loading state skeleton
     return (
       <div className="w-full max-w-6xl mx-auto px-4 py-8">
         <div className="flex space-x-4">
@@ -95,21 +107,24 @@ export function BlogCarousel() {
                   <CardContent className="flex flex-col p-0 flex-grow">
                     <div className="relative w-full h-48">
                       <Image
-                        src={"https://mheback.onrender.com/blog/image/"+blog.image1} // Updated field
-                        alt={blog.blog_title} // Updated field
+                        src={getImageUrl(blog.image1)}
+                        alt={blog.blog_title}
                         fill
                         className="object-cover"
                         sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.src = "/mhe-logo.png";
+                        }}
                       />
                     </div>
                     <div className="p-6 w-full text-left flex flex-col flex-grow">
                       <p className="font-semibold text-lg text-gray-800 flex-grow">
-                        {blog.blog_title} {/* Updated field */}
+                        {blog.blog_title}
                       </p>
-                      {/* Using a generic "Read More" since category name is not in the object */}
+                      {/* FIX: Corrected link to point to the dynamic blog page using blog_url */}
                       <Link
-                        // Link to the 'blog-detail' page using the blog's ID
-                        href={`/blogs/${blog.id}`}
+                        href={`/blog/${blog.blog_url}`}
                         className="text-green-600 font-semibold inline-flex items-center gap-1 group mt-4"
                       >
                         Read More
