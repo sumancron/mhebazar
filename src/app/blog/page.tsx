@@ -1,13 +1,13 @@
 // src/app/blog/page.tsx
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Calendar, User, ArrowRight, Loader2 } from "lucide-react";
+import { Search, Calendar, User, ArrowRight, Loader2, Filter, SortDesc, SortAsc } from "lucide-react";
 import api from "@/lib/api";
 
 interface Blog {
@@ -47,16 +47,21 @@ const BlogListPage: React.FC = () => {
   const [nextPage, setNextPage] = useState<string | null>(null);
   const [previousPage, setPreviousPage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  
+  // New state for filtering and sorting
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>("");
+  const [sortOrder, setSortOrder] = useState<string>("-created_at"); // Default to latest first
 
-  console.log("comit");
-
-  const fetchBlogs = async (page = 1, search = "") => {
+  // A memoized function to fetch data to prevent unnecessary re-creations
+  const fetchBlogs = useCallback(async (page: number, search: string, categoryId: string, order: string) => {
     try {
       setLoading(true);
       setError(null);
 
       // Fetch all categories to create a lookup map
       const categoriesResponse = await api.get<Category[]>("/categories/");
+      setCategories(categoriesResponse.data);
       const categoryMap = new Map<number, string>();
       categoriesResponse.data.forEach((cat) => {
         categoryMap.set(cat.id, cat.name);
@@ -66,10 +71,15 @@ const BlogListPage: React.FC = () => {
       if (search.trim()) {
         url += `&search=${encodeURIComponent(search)}`;
       }
+      if (categoryId) {
+        url += `&blog_category=${categoryId}`;
+      }
+      if (order) {
+        url += `&ordering=${order}`;
+      }
 
       const response = await api.get<BlogResponse>(url);
       
-      // Map category ID to name and update the blogs data
       const enrichedBlogs = response.data.results.map((blog: any) => ({
         ...blog,
         blog_category_id: blog.blog_category,
@@ -86,16 +96,15 @@ const BlogListPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    fetchBlogs(currentPage, searchTerm);
-  }, [currentPage, searchTerm]);
+    fetchBlogs(currentPage, searchTerm, selectedCategoryId, sortOrder);
+  }, [currentPage, searchTerm, selectedCategoryId, sortOrder, fetchBlogs]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     setCurrentPage(1);
-    fetchBlogs(1, searchTerm);
   };
 
   const handleNextPage = () => {
@@ -145,7 +154,7 @@ const BlogListPage: React.FC = () => {
         <Card className="max-w-md w-full">
           <CardContent className="p-6 text-center">
             <p className="text-red-600 mb-4">{error}</p>
-            <Button onClick={() => fetchBlogs(currentPage, searchTerm)}>
+            <Button onClick={() => fetchBlogs(currentPage, searchTerm, selectedCategoryId, sortOrder)}>
               Try Again
             </Button>
           </CardContent>
@@ -170,10 +179,8 @@ const BlogListPage: React.FC = () => {
 
           {/* Search Bar */}
           <form onSubmit={handleSearch} className="max-w-2xl mx-auto mt-8">
-            <div className="flex items-center">
-              {/* Add a relative wrapper for the input and icon */}
+            <div className="flex items-center space-x-2">
               <div className="relative w-full">
-                {/* Position the icon absolutely */}
                 <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                   <Search className="h-5 w-5 text-gray-400" />
                 </div>
@@ -185,11 +192,7 @@ const BlogListPage: React.FC = () => {
                   className="w-full pl-10 pr-24 py-3 text-lg"
                 />
               </div>
-              <Button
-                type="submit"
-                className=""
-                disabled={loading}
-              >
+              <Button type="submit" className="shrink-0" disabled={loading}>
                 {loading ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
@@ -200,6 +203,50 @@ const BlogListPage: React.FC = () => {
           </form>
         </div>
       </div>
+
+      {/* Filter and Sort Section */}
+      <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8 bg-white border-b flex flex-wrap items-center justify-between gap-4">
+        <div className="flex items-center gap-2">
+          <Filter className="h-5 w-5 text-gray-500" />
+          <span className="text-sm font-medium text-gray-700">Filter by:</span>
+          <select
+            value={selectedCategoryId}
+            onChange={(e) => {
+              setSelectedCategoryId(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="rounded-md border border-gray-300 py-1 pl-3 pr-8 text-sm"
+          >
+            <option value="">All Categories</option>
+            {categories.map((cat) => (
+              <option key={cat.id} value={cat.id}>
+                {cat.name}
+              </option>
+            ))}
+          </select>
+        </div>
+        
+        <div className="flex items-center gap-2">
+          {sortOrder === "-created_at" ? (
+            <SortDesc className="h-5 w-5 text-gray-500" />
+          ) : (
+            <SortAsc className="h-5 w-5 text-gray-500" />
+          )}
+          <span className="text-sm font-medium text-gray-700">Sort by:</span>
+          <select
+            value={sortOrder}
+            onChange={(e) => {
+              setSortOrder(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="rounded-md border border-gray-300 py-1 pl-3 pr-8 text-sm"
+          >
+            <option value="-created_at">Latest First</option>
+            <option value="created_at">Oldest First</option>
+          </select>
+        </div>
+      </div>
+
 
       {/* Blog Grid */}
       <div className="max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
@@ -242,7 +289,6 @@ const BlogListPage: React.FC = () => {
                     
                     <CardHeader className="pb-2">
                       <div className="flex items-center justify-between mb-2">
-                        {/* FIX: Use blog_category_name instead of blog_category ID */}
                         <Badge variant="secondary" className="text-xs">
                           {blog.blog_category_name}
                         </Badge>
