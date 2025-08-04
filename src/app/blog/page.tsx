@@ -106,8 +106,8 @@ const BlogListPage: React.FC = () => {
   };
 
   const getImageUrl = (imageName: string | null) => {
-    if (!imageName) return "/api/placeholder/400/250";
-    return `https://www.mhebazar.in/css/asset/image/${imageName}`;
+    if (!imageName) return "/mhe-logo.png"; // Fallback image
+    return `https://mheback.onrender.com/blog/image/${imageName}`;
   };
 
   if (error) {

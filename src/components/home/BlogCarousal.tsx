@@ -95,7 +95,7 @@ export function BlogCarousel() {
                   <CardContent className="flex flex-col p-0 flex-grow">
                     <div className="relative w-full h-48">
                       <Image
-                        src={blog.image1} // Updated field
+                        src={"https://mheback.onrender.com/blog/image/"+blog.image1} // Updated field
                         alt={blog.blog_title} // Updated field
                         fill
                         className="object-cover"
