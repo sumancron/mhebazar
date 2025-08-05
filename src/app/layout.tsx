@@ -20,9 +20,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Material Handling Equipment Manufacturer and Supplier in India | MHE Bazar",
   description: "MHE Bazar is a leading supplier of material handling equipment like forklifts, scissor lifts, and reach trucks. Rentals, sales, and maintenance are available in India.",
-  icons: {
-    icon: '/mhe-logo.png', // This is the key line
-  },
+
 };
 
 export default function RootLayout({
