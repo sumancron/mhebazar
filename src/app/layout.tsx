@@ -18,11 +18,14 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+// Get domain prefix from environment variable
+const SITE_URL = process.env.NEXT_PUBLIC_APP_URL || "";
+
 export const metadata: Metadata = {
   title: "Material Handling Equipment Manufacturer and Supplier in India | MHE Bazar",
   description: "MHE Bazar is a leading supplier of material handling equipment like forklifts, scissor lifts, and reach trucks. Rentals, sales, and maintenance are available in India.",
   icons: {
-    icon: "/favicon.ico", // fallback default
+    icon: `${SITE_URL}/favicon.ico`,
   },
 };
 
@@ -34,11 +37,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <Head>
-        {/* Absolute links just to be safe */}
-        <link rel="icon" href="/favicon.ico" />
-        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
-        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
-        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+        <link rel="icon" href={`${SITE_URL}/favicon.ico`} />
+        <link rel="icon" type="image/png" sizes="16x16" href={`${SITE_URL}/favicon-16x16.png`} />
+        <link rel="icon" type="image/png" sizes="32x32" href={`${SITE_URL}/favicon-32x32.png`} />
+        <link rel="apple-touch-icon" sizes="180x180" href={`${SITE_URL}/apple-touch-icon.png`} />
       </Head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased font-inter`}>
         <Toaster
