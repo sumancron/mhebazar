@@ -20,9 +20,9 @@ export default function BannerCarousel({ className }: BannerCarouselProps) {
   const { selectedIndex, scrollSnaps, onDotClick } = useDotButton(api);
 
   const [banners, setBanners] = useState<{ image: string; alt: string }[]>([
-    { image: "/HeroBanners.png", alt: "Default 1" },
-    // { image: "/default_carousel.png", alt: "Default 2" },
-    { image: "/mhevendor.png", alt: "Default 3" },
+    { image: "/Banner1.png", alt: "Default 1" },
+    // { image: "/Banner3.png", alt: "Default 2" },
+    { image: "/Banner2.png", alt: "Default 3" },
   ]);
   const [isDefault, setIsDefault] = useState(true);
   const [loaded, setLoaded] = useState<boolean[]>([false, false, false]);
@@ -39,7 +39,7 @@ export default function BannerCarousel({ className }: BannerCarouselProps) {
         if (Array.isArray(data) && data.length > 0) {
           setBanners(
             data.map((item: BannerItem, index: number) => ({
-              image: item.image || "/default_carousel.png",
+              image: item.image || "/Banner3.png",
               alt: item.alt || `Banner ${index + 1}`,
             }))
           );
