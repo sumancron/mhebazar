@@ -6,7 +6,6 @@ import { Suspense } from "react";
 import Loading from "./loading";
 import { Toaster } from "sonner";
 import { UserProvider } from "@/context/UserContext";
-import Head from "next/head";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -18,15 +17,10 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-// Get domain prefix from environment variable
-const SITE_URL = process.env.NEXT_PUBLIC_APP_URL || "";
-
 export const metadata: Metadata = {
   title: "Material Handling Equipment Manufacturer and Supplier in India | MHE Bazar",
   description: "MHE Bazar is a leading supplier of material handling equipment like forklifts, scissor lifts, and reach trucks. Rentals, sales, and maintenance are available in India.",
-  icons: {
-    icon: `${SITE_URL}/favicon.ico`,
-  },
+
 };
 
 export default function RootLayout({
@@ -36,12 +30,6 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <Head>
-        <link rel="icon" href={`${SITE_URL}/favicon.ico`} />
-        <link rel="icon" type="image/png" sizes="16x16" href={`${SITE_URL}/favicon-16x16.png`} />
-        <link rel="icon" type="image/png" sizes="32x32" href={`${SITE_URL}/favicon-32x32.png`} />
-        <link rel="apple-touch-icon" sizes="180x180" href={`${SITE_URL}/apple-touch-icon.png`} />
-      </Head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased font-inter`}>
         <Toaster
           position="top-right"
@@ -55,13 +43,15 @@ export default function RootLayout({
             },
           }}
         />
-        <UserProvider>
+
+        <UserProvider> {/* ✅ Move this above SiteLayout */}
           <SiteLayout>
             <Suspense fallback={<Loading />}>
               {children}
             </Suspense>
           </SiteLayout>
         </UserProvider>
+        
       </body>
     </html>
   );
