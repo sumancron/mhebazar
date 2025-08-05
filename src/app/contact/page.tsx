@@ -23,7 +23,7 @@ const offices = [
   {
     title: "Corporate Office:",
     address: `Survey no.76/1A, Poonamallee High Road, Velappanchavadi, Chennai-600077`,
-    person: "Mr. Ulias Makeshwar",
+    person: "Mr. Ulhas Makeshwar",
     phone: "+91 984 008 8428",
     email: "sales.2@mhebazar.com",
     mapUrl:

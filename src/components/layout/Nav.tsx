@@ -125,7 +125,7 @@ export default function Navbar(): JSX.Element {
           <div className="flex justify-between items-center py-2">
             <div className="flex items-center gap-2 text-sm">
               <Phone className="w-4 h-4" />
-              <span>+91 97456 81234</span>
+              <span>+91 73059 50939</span>
             </div>
             <div className="flex items-center gap-4 text-sm">
               {isLoading ? (

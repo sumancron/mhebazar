@@ -153,7 +153,7 @@ Key environment variables (see `.env.example` for complete list):
 ```env
 NEXT_PUBLIC_API_BASE_URL=http://localhost:8000/api
 NEXT_PUBLIC_APP_URL=http://localhost:3000
-NEXT_PUBLIC_CONTACT_PHONE=+91 97456 81234
+NEXT_PUBLIC_CONTACT_PHONE=+91 73059 50939
 NEXT_PUBLIC_CONTACT_EMAIL=info@mhebazar.com
 ```
 
@@ -181,7 +181,7 @@ This project includes a comprehensive `Rules` file for AI assistance:
 ## 📞 Support
 
 - **Business Inquiries**: info@mhebazar.com
-- **Technical Support**: +91 97456 81234
+- **Technical Support**: +91 73059 50939
 - **Documentation**: See `Rules` file for detailed guidelines
 
 ## 🤝 Contributing
