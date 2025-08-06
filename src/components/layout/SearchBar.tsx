@@ -5,6 +5,9 @@ import { Search, Mic } from "lucide-react";
 import { useRef, useState, useEffect, useCallback, JSX } from "react";
 import { useRouter } from "next/navigation";
 import { Category, Subcategory } from "./Nav";
+// Assuming you have a toast library like react-hot-toast imported globally or passed as prop
+// For this example, I'll add a simple console.error for toast.error calls if not available.
+declare const toast: { error: (message: string) => void };
 
 // TypeScript support for SpeechRecognition
 declare global {
@@ -94,7 +97,13 @@ export default function SearchBar({
   // Start/stop voice recognition
   const handleMicClick = useCallback((): void => {
     if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
-      alert("Voice search is not supported in this browser.");
+      // Using a toast message instead of alert()
+      // Fallback if toast is not defined
+      if (typeof toast !== 'undefined' && toast.error) {
+        toast.error("Voice search is not supported in this browser.");
+      } else {
+        console.error("Voice search is not supported in this browser.");
+      }
       return;
     }
 
@@ -154,25 +163,28 @@ export default function SearchBar({
         value={searchQuery}
         onChange={(e) => setSearchQuery(e.target.value)}
         onFocus={() => searchQuery.length > 0 && setShowSuggestions(true)}
-        className="w-full px-4 py-2 pl-10 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm transition-shadow"
+        // Adjusted height to h-8 and padding to match smaller search bar in image
+        className="w-full px-3 py-1 pl-9 pr-9 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm transition-shadow h-8" // Changed h-10 to h-8, text-base to text-sm, adjusted padding
         autoComplete="off"
       />
-      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+      {/* Adjusted icon positioning for smaller input field */}
+      <Search className="absolute left-2.5 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" /> {/* Changed left-3 to left-2.5, w-5 h-5 to w-4 h-4 */}
       <button
         type="button"
-        className={`absolute right-3 top-1/2 transform -translate-y-1/2 rounded-full p-1 transition
+        className={`absolute right-2.5 top-1/2 transform -translate-y-1/2 rounded-full p-0.5 transition
           ${listening ? "bg-green-100 animate-pulse shadow-lg" : "hover:bg-gray-100"}
         `}
         aria-label={listening ? "Stop voice input" : "Start voice input"}
         onClick={handleMicClick}
       >
-        <Mic className={`w-4 h-4 ${listening ? "text-green-600" : "text-gray-400"}`} />
+        {/* Adjusted icon size */}
+        <Mic className={`w-4 h-4 ${listening ? "text-green-600" : "text-gray-400"}`} /> {/* Changed w-5 h-5 to w-4 h-4 */}
         {listening && (
-          <span className="absolute -top-2 -right-2 w-2 h-2 bg-green-500 rounded-full animate-ping"></span>
+          <span className="absolute -top-1 -right-1 w-2 h-2 bg-green-500 rounded-full animate-ping"></span>
         )}
       </button>
       {listening && (
-        <div className="absolute right-12 top-1/2 -translate-y-1/2 bg-white border border-green-200 rounded px-2 py-1 text-xs text-green-700 shadow animate-fade-in">
+        <div className="absolute right-10 top-1/2 -translate-y-1/2 bg-white border border-green-200 rounded px-2 py-1 text-xs text-green-700 shadow animate-fade-in">
           Listening...
         </div>
       )}

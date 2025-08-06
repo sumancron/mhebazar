@@ -6,6 +6,7 @@ import { Suspense } from "react";
 import Loading from "./loading";
 import { Toaster } from "sonner";
 import { UserProvider } from "@/context/UserContext";
+import WhatsAppChat from "@/components/elements/WhatsAppChat"; // Import the new WhatsAppChat component
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -20,7 +21,16 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Material Handling Equipment Manufacturer and Supplier in India | MHE Bazar",
   description: "MHE Bazar is a leading supplier of material handling equipment like forklifts, scissor lifts, and reach trucks. Rentals, sales, and maintenance are available in India.",
-
+  icons: {
+    icon: [
+      { url: "/favicon.ico" },
+      { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
+      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+    ],
+    apple: [
+      { url: "/apple-touch-icon.png", sizes: "180x180" },
+    ],
+  },
 };
 
 export default function RootLayout({
@@ -44,14 +54,14 @@ export default function RootLayout({
           }}
         />
 
-        <UserProvider> {/* ✅ Move this above SiteLayout */}
+        <UserProvider>
           <SiteLayout>
             <Suspense fallback={<Loading />}>
               {children}
             </Suspense>
           </SiteLayout>
+          <WhatsAppChat /> {/* Use the imported WhatsAppChat component here */}
         </UserProvider>
-        
       </body>
     </html>
   );

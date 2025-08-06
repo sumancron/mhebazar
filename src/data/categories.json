@@ -2,13 +2,13 @@
   {
     "id": 4,
     "name": "Manual Platform Trolly",
-    "image_url": "https://mheback.onrender.com/media/category/4/Manual-PLatform-Trolley1_hdngQDc.webp",
+    "image_url": "/media/category/4/Manual-PLatform-Trolley1_hdngQDc.webp",
     "subcategories": []
   },
   {
     "id": 5,
     "name": "Platform Truck",
-    "image_url": "https://mheback.onrender.com/media/category/5/4-wheeler-platform-truck-electric1.webp",
+    "image_url": "/media/category/5/4-wheeler-platform-truck-electric1.webp",
     "subcategories": [
       {
         "id": 18,
@@ -23,7 +23,7 @@
   {
     "id": 1,
     "name": "Battery",
-    "image_url": "https://mheback.onrender.com/media/category/1/battery1.webp",
+    "image_url": "/media/category/1/battery1.webp",
     "subcategories": [
       {
         "id": 53,
@@ -38,7 +38,7 @@
   {
     "id": 2,
     "name": "Pallet Truck",
-    "image_url": "https://mheback.onrender.com/media/category/2/hand-pallet-truck1_s3ceCaW.webp",
+    "image_url": "/media/category/2/hand-pallet-truck1_s3ceCaW.webp",
     "subcategories": [
       {
         "id": 1,
@@ -65,7 +65,7 @@
   {
     "id": 6,
     "name": "Tow Truck",
-    "image_url": "https://mheback.onrender.com/media/category/6/tow-truck1.webp",
+    "image_url": "/media/category/6/tow-truck1.webp",
     "subcategories": [
       {
         "id": 20,
@@ -80,7 +80,7 @@
   {
     "id": 3,
     "name": "Stacker",
-    "image_url": "https://mheback.onrender.com/media/category/3/stacker1_8P5moJF.webp",
+    "image_url": "/media/category/3/stacker1_8P5moJF.webp",
     "subcategories": [
       {
         "id": 6,
@@ -131,7 +131,7 @@
   {
     "id": 7,
     "name": "Dock Leveller",
-    "image_url": "https://mheback.onrender.com/media/category/7/dock-leveler1.webp",
+    "image_url": "/media/category/7/dock-leveler1.webp",
     "subcategories": [
       {
         "id": 22,
@@ -146,7 +146,7 @@
   {
     "id": 8,
     "name": "Scissors Lift",
-    "image_url": "https://mheback.onrender.com/media/category/8/scissors-lift1.webp",
+    "image_url": "/media/category/8/scissors-lift1.webp",
     "subcategories": [
       {
         "id": 24,
@@ -193,19 +193,19 @@
   {
     "id": 15,
     "name": "Order Picker",
-    "image_url": "https://mheback.onrender.com/media/category/15/download_7.jpeg",
+    "image_url": "/media/category/15/download_7.webp",
     "subcategories": []
   },
   {
     "id": 14,
     "name": "Explosionproof MHE Solution",
-    "image_url": "https://mheback.onrender.com/media/category/14/download.png",
+    "image_url": "/media/category/14/download.webp",
     "subcategories": []
   },
   {
     "id": 13,
     "name": "Container Handler",
-    "image_url": "https://mheback.onrender.com/media/category/13/download_8.jpeg",
+    "image_url": "/media/category/13/download_8.webp",
     "subcategories": [
       {
         "id": 54,
@@ -220,7 +220,7 @@
   {
     "id": 12,
     "name": "Forklift",
-    "image_url": "https://mheback.onrender.com/media/category/12/form1.png",
+    "image_url": "/media/category/12/form1.webp",
     "subcategories": [
       {
         "id": 47,
@@ -251,7 +251,7 @@
   {
     "id": 11,
     "name": "Racking System",
-    "image_url": "https://mheback.onrender.com/media/category/11/download_9.jpeg",
+    "image_url": "/media/category/11/download_9.webp",
     "subcategories": [
       {
         "id": 38,
@@ -290,7 +290,7 @@
   {
     "id": 10,
     "name": "Reach Truck",
-    "image_url": "https://mheback.onrender.com/media/category/10/download_10.jpeg",
+    "image_url": "/media/category/10/download_10.webp",
     "subcategories": [
       {
         "id": 36,
@@ -309,7 +309,7 @@
   {
     "id": 9,
     "name": "Electric Pallet Truck (BOPT)",
-    "image_url": "https://mheback.onrender.com/media/category/9/download_3.jpeg",
+    "image_url": "/media/category/9/download_3.webp",
     "subcategories": [
       {
         "id": 34,
@@ -320,19 +320,19 @@
   {
     "id": 25,
     "name": "Charger",
-    "image_url": "https://mheback.onrender.com/media/category/25/image_8.jpeg",
+    "image_url": "/media/category/25/image_8.webp",
     "subcategories": []
   },
   {
     "id": 24,
     "name": "Cleaning Equipment",
-    "image_url": "https://mheback.onrender.com/media/category/24/image_5.png",
+    "image_url": "/media/category/24/image_5.webp",
     "subcategories": []
   },
   {
     "id": 23,
     "name": "Wrapping Machine",
-    "image_url": "https://mheback.onrender.com/media/category/23/download.jpeg",
+    "image_url": "/media/category/23/download.webp",
     "subcategories": [
       {
         "id": 136,
@@ -355,7 +355,7 @@
   {
     "id": 22,
     "name": "Conveyor",
-    "image_url": "https://mheback.onrender.com/media/category/22/download_1.jpeg",
+    "image_url": "/media/category/22/download_1.webp",
     "subcategories": [
       {
         "id": 127,
@@ -398,7 +398,7 @@
   {
     "id": 21,
     "name": "Forklift Attachments",
-    "image_url": "https://mheback.onrender.com/media/category/21/download_2.jpeg",
+    "image_url": "/media/category/21/download_2.webp",
     "subcategories": [
       {
         "id": 115,
@@ -461,31 +461,31 @@
   {
     "id": 20,
     "name": "Safety Solutions",
-    "image_url": "https://mheback.onrender.com/media/category/20/image_2.png",
+    "image_url": "/media/category/20/image_2.webp",
     "subcategories": []
   },
   {
     "id": 18,
     "name": "Spare Parts",
-    "image_url": "https://mheback.onrender.com/media/category/18/download_4.jpeg",
+    "image_url": "/media/category/18/download_4.webp",
     "subcategories": []
   },
   {
     "id": 17,
     "name": "Automated Guided Vehicle",
-    "image_url": "https://mheback.onrender.com/media/category/17/download_5.jpeg",
+    "image_url": "/media/category/17/download_5.webp",
     "subcategories": []
   },
   {
     "id": 16,
     "name": "Very Narrow Aisle Truck",
-    "image_url": "https://mheback.onrender.com/media/category/16/download_6.jpeg",
+    "image_url": "/media/category/16/download_6.webp",
     "subcategories": []
   },
   {
     "id": 19,
     "name": "Pallet",
-    "image_url": "https://mheback.onrender.com/media/category/19/download_11.jpeg",
+    "image_url": "/media/category/19/download_11.webp",
     "subcategories": [
       {
         "id": 109,

@@ -2,7 +2,7 @@
 
 "use client";
 
-import { useState, useEffect, JSX } from "react";
+import { useState, useEffect, JSX, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import api from "@/lib/api";
@@ -37,21 +37,55 @@ const FALLBACK_TOP_RATED: DisplayItem[] = [
 ];
 
 // --- Helper Component for Top Rated Items ---
-function TopRatedItem({ item }: { item: DisplayItem }): JSX.Element {
+function TopRatedItem({ item }: { item: DisplayItem }): JSX.Element | null {
   const { image, label, alt, slug } = item;
   const [showInitials, setShowInitials] = useState<boolean>(!image);
+
+  if (!image && (!label || label.trim() === '')) {
+    return null;
+  }
+
   const initials = label?.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase();
 
   return (
     <Link href={`/product/${slug}/?id=${item.id}`} className="flex items-center gap-3 sm:gap-4 bg-gray-50 p-3 sm:p-4 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer border border-gray-100 group">
       <div className="relative w-12 h-12 sm:w-16 sm:h-16 rounded-lg overflow-hidden bg-white border border-gray-200 flex-shrink-0 flex items-center justify-center">
         {image && !showInitials ? (
-          <Image src={image} alt={alt || label} fill className="object-contain p-1 transform group-hover:scale-105 transition-transform duration-200" sizes="(max-width: 640px) 48px, 64px" onError={() => setShowInitials(true)} />
+          <Image
+            src={image}
+            alt={alt || label}
+            fill
+            className="object-contain p-1 transform group-hover:scale-105 transition-transform duration-200"
+            sizes="(max-width: 640px) 48px, 64px"
+            onError={() => setShowInitials(true)}
+          />
         ) : (
-          <span className="text-blue-500 text-base sm:text-xl font-bold">{initials}</span>
+          <span className="text-green-500 text-base sm:text-xl font-bold">{initials}</span>
         )}
       </div>
-      <p className="font-medium text-gray-900 flex-1 text-sm sm:text-base group-hover:text-blue-700 transition-colors">{label}</p>
+      <p className="font-medium text-gray-900 flex-1 text-sm sm:text-base group-hover:text-green-700 transition-colors">{label}</p>
+    </Link>
+  );
+}
+
+// New component for New Arrivals to handle image error
+function NewArrivalItem({ item }: { item: DisplayItem }): JSX.Element | null {
+  const [imageError, setImageError] = useState(false);
+
+  if (imageError || !item.image) {
+    return null;
+  }
+
+  return (
+    <Link href={`/product/${item.slug}/?id=${item.id}`} key={item.id} className="relative w-24 h-24 sm:w-32 sm:h-32 flex-shrink-0 rounded-lg overflow-hidden bg-gray-50 border group">
+      <Image
+        src={item.image}
+        alt={item.alt}
+        fill
+        className="object-contain p-2 group-hover:scale-105 transition-transform"
+        sizes="(max-width: 640px) 96px, 128px"
+        onError={() => setImageError(true)}
+      />
     </Link>
   );
 }
@@ -63,45 +97,43 @@ export default function NewArrivalsAndTopSearches() {
   const [newArrivalsCount, setNewArrivalsCount] = useState<number>(0);
   const [isLoadingNewArrivals, setIsLoadingNewArrivals] = useState<boolean>(true);
   const [isLoadingTopRated, setIsLoadingTopRated] = useState<boolean>(true);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [scrollIndex, setScrollIndex] = useState(0);
 
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
   const createSlug = (text: string | undefined) => text ? text.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') : "#";
-  // const getAbsoluteImageUrl = (path: string | null | undefined) => path ? (path.startsWith('http') ? path : `${API_BASE_URL}${path.startsWith('/') ? '' : '/'}${path}`) : null;
 
   useEffect(() => {
-    // Fetch New Arrivals
     setIsLoadingNewArrivals(true);
     api.get<{ count?: number; products?: ProductApiResponse[] }>(`/products/new-arrival/`)
       .then(res => {
         const products = res.data?.products || [];
-        const transformed = products.slice(0, 10).map(p => ({
+        const transformed = products.map(p => ({
           id: p.id,
-          image: p.images[0]?.image || null,
+          image: p.images?.[0]?.image || null,
           label: p.title || p.name || "New Product",
           alt: p.title || p.name || "New Product",
           slug: createSlug(p.title || p.name),
-        }));
-        if (transformed.length > 0) {
-          setNewArrivals(transformed);
-          setNewArrivalsCount(res.data?.count || transformed.length);
-        }
+        })).filter(item => item.image !== null);
+         
+        setNewArrivals(transformed.slice(0, 10));
+        setNewArrivalsCount(res.data?.count || transformed.length);
       }).catch(console.error).finally(() => setIsLoadingNewArrivals(false));
 
-    // Fetch Top Rated
     setIsLoadingTopRated(true);
     api.get<{ count?: number; products?: ProductApiResponse[] }>(`/products/top-rated/`)
       .then(res => {
         const products = res.data?.products || [];
-        console.log("Top Rated Products:", products);
-        const transformed = products.slice(0, 10).map(p => ({
+        const transformed = products.map(p => ({
           id: p.id,
-          image: p.images[0]?.image || null,
+          image: p.images?.[0]?.image || null,
           label: p.title || p.name || "Top Rated Product",
           alt: p.title || p.name || "Top Rated Product",
           slug: createSlug(p.title || p.name),
-        }));
-        if (transformed.length > 0) setTopRated(transformed);
+        })).filter(item => item.image !== null);
+
+        setTopRated(transformed.slice(0, 10));
       }).catch(console.error).finally(() => setIsLoadingTopRated(false));
   }, [API_BASE_URL]);
 
@@ -113,7 +145,25 @@ export default function NewArrivalsAndTopSearches() {
     </div>
   );
 
-  // console.log("New Arrivals:", newArrivals);
+  const handleScroll = () => {
+    if (scrollContainerRef.current) {
+      const scrollLeft = scrollContainerRef.current.scrollLeft;
+      // You may need to adjust this logic based on how many items are visible at once
+      const itemWidth = scrollContainerRef.current.children[0].clientWidth + 16; 
+      const newIndex = Math.round(scrollLeft / itemWidth);
+      setScrollIndex(newIndex);
+    }
+  };
+
+  const handleDotClick = (index: number) => {
+    if (scrollContainerRef.current) {
+      const itemWidth = scrollContainerRef.current.children[0].clientWidth + 16;
+      scrollContainerRef.current.scrollTo({
+        left: index * itemWidth,
+        behavior: 'smooth',
+      });
+    }
+  };
 
   return (
     <div className="space-y-8 w-full max-w-md mx-auto sm:max-w-xl md:max-w-2xl lg:max-w-4xl xl:max-w-6xl">
@@ -129,16 +179,34 @@ export default function NewArrivalsAndTopSearches() {
               {newArrivalsCount > 0 ? `${newArrivalsCount}+ products added today` : "No new products today"}
             </p>
           </div>
-          <div className="flex gap-4 overflow-x-auto pb-2">
-            {isLoadingNewArrivals ? (
-              [...Array(5)].map((_, i) => <LoadingBoxSkeleton key={i} />)
-            ) : (
-              newArrivals.map((item) => (
-                <Link href={`/product/${item.slug}/?id=${item.id}`} key={item.id} className="relative w-24 h-24 sm:w-32 sm:h-32 flex-shrink-0 rounded-lg overflow-hidden bg-gray-50 border group">
-                  {item.image && <Image src={item.image} alt={item.alt} fill className="object-contain p-2 group-hover:scale-105 transition-transform" sizes="(max-width: 640px) 96px, 128px" />}
-                </Link>
-              ))
-            )}
+          <div className="relative">
+            <div
+              ref={scrollContainerRef}
+              className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide"
+              onScroll={handleScroll}
+            >
+              {isLoadingNewArrivals ? (
+                [...Array(5)].map((_, i) => <LoadingBoxSkeleton key={i} />)
+              ) : (
+                newArrivals.map((item) => (
+                  <NewArrivalItem key={item.id} item={item} />
+                ))
+              )}
+            </div>
+            {/* Green dots as a scroll indicator */}
+            <div className="flex justify-center space-x-2 mt-4">
+              {newArrivals.map((_, idx) => (
+                <span
+                  key={idx}
+                  onClick={() => handleDotClick(idx)}
+                  className={`cursor-pointer w-3 h-3 rounded-full transition-colors duration-300 ${
+                    idx === scrollIndex
+                      ? "bg-[#42a856] scale-110" // Active dot: darker green
+                      : "bg-[#b5e0c0] hover:bg-[#a5d8b2]" // Inactive dot: lighter green
+                  }`}
+                ></span>
+              ))}
+            </div>
           </div>
         </div>
       </div>
@@ -150,8 +218,8 @@ export default function NewArrivalsAndTopSearches() {
           <Link href="/products/battery" className="text-green-600 text-sm font-medium hover:text-green-700">View more</Link>
         </div>
 
-        {/* MODIFIED: Added a wrapper div with max-height and overflow for the scrollable list */}
-        <div className="max-h-96 overflow-y-auto pr-2">
+        {/* MODIFIED: Added a wrapper div with custom scrollbar styling */}
+        <div className="max-h-96 overflow-y-auto pr-2 custom-scrollbar">
           {isLoadingTopRated ? (
             <div className="space-y-4">
               {[...Array(3)].map((_, i) => <LoadingListItemSkeleton key={i} />)}

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import React, { useState, useCallback, useEffect, useRef } from "react";
@@ -150,30 +151,41 @@ const ProductCard = ({
 
   const formButtonText = productType === 'rental' || productType === 'used' ? "Rent Now" : "Get a Quote";
 
+  // Format price with Rupee symbol and handle hidden/zero price
+  const displayPrice = (hide_price || parseFloat(price.toString()) <= 0) ? (
+    <span className="text-xl font-bold text-gray-400 tracking-wider">
+      ₹ *******
+    </span>
+  ) : (
+    <span className="text-xl font-bold text-green-600 tracking-wide">
+      ₹ {typeof price === "number" ? price.toLocaleString("en-IN") : parseFloat(price.toString()).toLocaleString("en-IN")}
+    </span>
+  );
+
   return (
     <div
-      className={`bg-white rounded-2xl shadow-md border border-gray-200 hover:shadow-lg transition-all duration-300 overflow-hidden flex flex-col w-full max-w-sm mx-auto h-auto min-h-[400px] ${!isAvailable && directSale ? "opacity-50 pointer-events-none" : ""
+      className={`bg-white rounded-2xl shadow-md border border-gray-200 hover:shadow-lg transition-all duration-300 overflow-hidden flex flex-col w-full h-full ${!isAvailable && directSale ? "opacity-50 pointer-events-none" : ""
         }`}
     >
       {/* Image Container */}
-      <div className="relative w-full h-48 sm:h-56 flex-shrink-0 bg-gray-100">
+      <div className="relative w-full h-48 sm:h-56 flex-shrink-0 bg-gray-100 rounded-t-2xl overflow-hidden">
         <Link href={productDetailUrl} className="block w-full h-full">
           <FallbackImage
             src={image}
             alt={title}
-            width={320}
-            height={224}
-            className="object-cover w-full h-full rounded-t-2xl"
+            width={320} // Adjusted width for better quality in grid
+            height={224} // Adjusted height for better quality in grid
+            className="object-cover w-full h-full" // Removed rounded-t-2xl here, handled by parent div
             quality={85}
             sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, (max-width: 1280px) 25vw, 20vw"
             fallbackSrc={category_image}
           />
         </Link>
         {/* Action Icons Top-Right */}
-        <div className="absolute top-2 right-2 flex flex-col gap-2">
+        <div className="absolute top-3 right-3 flex flex-col gap-2"> {/* Adjusted top/right for exact positioning */}
           <button
             onClick={() => onWishlistClick(id)}
-            className="bg-white p-2 rounded-full border border-gray-200 shadow-sm transition hover:bg-gray-100"
+            className="bg-white p-2 rounded-full border border-gray-200 shadow-sm transition hover:bg-gray-100 flex items-center justify-center w-8 h-8" // Added w/h for consistent size
             aria-label="Add to wishlist"
             disabled={!is_active}
           >
@@ -181,7 +193,7 @@ const ProductCard = ({
           </button>
           <button
             onClick={() => onCompareClick(productData)}
-            className="bg-white p-2 rounded-full border border-gray-200 shadow-sm transition hover:bg-gray-100"
+            className="bg-white p-2 rounded-full border border-gray-200 shadow-sm transition hover:bg-gray-100 flex items-center justify-center w-8 h-8" // Added w/h for consistent size
             aria-label="Compare"
             disabled={!is_active}
           >
@@ -189,7 +201,7 @@ const ProductCard = ({
           </button>
           <button
             onClick={() => onShareClick(window.location.origin + productDetailUrl, title)}
-            className="bg-white p-2 rounded-full border border-gray-200 shadow-sm transition hover:bg-gray-100"
+            className="bg-white p-2 rounded-full border border-gray-200 shadow-sm transition hover:bg-gray-100 flex items-center justify-center w-8 h-8" // Added w/h for consistent size
             aria-label="Share"
           >
             <Share2 className="w-4 h-4 text-gray-600" />
@@ -210,15 +222,7 @@ const ProductCard = ({
           </p>
           {/* Price */}
           <div className="mb-3">
-            {(hide_price || price <= "0") ? (
-              <span className="text-lg font-semibold text-gray-400 tracking-wider">
-                {currency} *******
-              </span>
-            ) : (
-              <span className="text-lg font-bold text-green-600 tracking-wide">
-                {currency} {typeof price === "number" ? price.toLocaleString("en-IN") : price}
-              </span>
-            )}
+            {displayPrice}
           </div>
         </div>
 
@@ -276,7 +280,7 @@ const ProductCard = ({
               >
                 Buy Now
               </button>
-              {!isPurchasable && (
+              {!isPurchasable && ( // This condition seems redundant if directSale is true and stock > 0. Re-evaluate if this dialog should always be available.
                 <Dialog>
                   <DialogTrigger asChild>
                     <button

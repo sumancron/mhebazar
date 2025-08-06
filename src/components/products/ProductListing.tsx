@@ -111,13 +111,13 @@ function ProductGrid({
 
                   {/* Price */}
                   <div className="flex items-center gap-2">
-                    {(product.hide_price == true || product.price <= "0") ? (
+                    {(product.hide_price == true || product.price <= 0) ? ( // Changed "0" to 0 for number comparison
                       <span className="text-xl md:text-2xl font-bold text-gray-400 tracking-wider">
                         {product.currency} *******
                       </span>
                     ) : (
                       <span className="text-xl md:text-2xl lg:text-3xl font-bold text-emerald-600 tracking-wide">
-                        {product.currency} {typeof product.price === "number" ? product.price.toLocaleString("en-IN") : product.price}
+                        {product.currency} {typeof product.price === "number" ? product.price.toLocaleString("en-IN") : parseFloat(product.price.toString()).toLocaleString("en-IN")}
                       </span>
                     )}
                   </div>
@@ -166,7 +166,7 @@ function ProductGrid({
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 md:gap-6 lg:gap-8 p-2 sm:p-4 md:p-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 lg:gap-8 p-2 sm:p-4 md:p-6"> {/* Changed grid to lg:grid-cols-4 */}
       {products.map((product: Product) => (
         <ProductCardContainer
           key={product.id}
@@ -194,7 +194,7 @@ interface ProductListingProps {
   onFilterChange: (
     filterValue: string | number,
     filterType: "category" | "subcategory" | "type" | "price_range" | "manufacturer" | "rating" | "sort_by",
-    newValue?: number | string | { min: number | '', max: number | '' } | null
+    newValue?: number | string | { min: number | ''; max: number | '' } | null
   ) => void;
   selectedFilters: Set<string>;
   selectedCategoryName: string | null;

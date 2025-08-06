@@ -1,3 +1,5 @@
+// BannerCarousel.tsx
+
 "use client";
 
 import Image from "next/image";
@@ -10,6 +12,7 @@ import {
 } from "@/components/ui/carousel";
 import { DotButton, useDotButton } from "@/components/ui/carousel-dots";
 import { cn } from "@/lib/utils";
+// import { motion } from "framer-motion";
 
 type BannerCarouselProps = {
   className?: string;
@@ -21,11 +24,10 @@ export default function BannerCarousel({ className }: BannerCarouselProps) {
 
   const [banners, setBanners] = useState<{ image: string; alt: string }[]>([
     { image: "/Banner1.png", alt: "Default 1" },
-    // { image: "/Banner3.png", alt: "Default 2" },
     { image: "/Banner2.png", alt: "Default 3" },
   ]);
   const [isDefault, setIsDefault] = useState(true);
-  const [loaded, setLoaded] = useState<boolean[]>([false, false, false]);
+  const [loaded, setLoaded] = useState<boolean[]>([false, false]);
 
   type BannerItem = { image?: string; alt?: string };
 
@@ -48,11 +50,11 @@ export default function BannerCarousel({ className }: BannerCarouselProps) {
         }
       } catch {
         setIsDefault(true);
-        setLoaded([true, true, true]);
+        setLoaded(Array(banners.length).fill(true));
       }
     };
     fetchBanners();
-  }, []);
+  }, [banners.length]);
 
   useEffect(() => {
     if (!api) return;
@@ -69,7 +71,7 @@ export default function BannerCarousel({ className }: BannerCarouselProps) {
   };
 
   return (
-    <div className={cn("w-full relative bg-white overflow-hidden", className)}>
+    <div className={cn("w-full relative bg-white overflow-hidden flex flex-col", className)}>
       <Carousel
         className="w-full"
         setApi={setApi}
@@ -108,15 +110,15 @@ export default function BannerCarousel({ className }: BannerCarouselProps) {
         </CarouselContent>
       </Carousel>
 
-      <div className="absolute bottom-4 left-0 right-0 flex justify-center space-x-2 z-20">
+      <div className="flex justify-center space-x-2 mt-4 ">
         {scrollSnaps.map((_, idx) => (
           <span
             key={idx}
             className={`transition-all duration-300 ${
               idx === selectedIndex
-                ? "w-8 h-3 bg-white shadow-lg scale-110"
-                : "w-3 h-3 bg-white/60 hover:bg-white/80 hover:scale-110"
-            } rounded-full cursor-pointer backdrop-blur-sm border border-white/20 flex items-center justify-center`}
+                ? "w-3 h-3 bg-[#42a856] scale-110"
+                : "w-3 h-3 bg-[#b5e0c0] hover:bg-[#a5d8b2] hover:scale-110"
+            } rounded-full cursor-pointer flex items-center justify-center`}
           >
             <DotButton
               selected={idx === selectedIndex}

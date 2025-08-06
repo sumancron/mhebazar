@@ -91,54 +91,51 @@ export function BlogCarousel() {
   }
 
   return (
-    <div className="w-full mx-auto px-4 py-8">
+    <div className="w-full px-4 py-8">
       <Carousel
         opts={{
           align: 'start',
           loop: true,
         }}
-        className="w-full"
+        className="w-full max-w-none"
       >
-        <CarouselContent className="-ml-2">
+        <CarouselContent className="-ml-8">
           {blogs.map((blog) => (
-            <CarouselItem key={blog.id} className="pl-2 md:basis-1/2 lg:basis-1/3">
-              <div className="p-1">
-                <Card className="bg-slate-100 border-none rounded-lg overflow-hidden h-full flex flex-col">
-                  <CardContent className="flex flex-col p-0 flex-grow">
-                    <div className="relative w-full h-48">
-                      <Image
-                        src={getImageUrl(blog.image1)}
-                        alt={blog.blog_title}
-                        fill
-                        className="object-cover"
-                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.src = "/mhe-logo.png";
-                        }}
-                      />
-                    </div>
-                    <div className="p-6 w-full text-left flex flex-col flex-grow">
-                      <p className="font-semibold text-lg text-gray-800 flex-grow">
-                        {blog.blog_title}
-                      </p>
-                      {/* FIX: Corrected link to point to the dynamic blog page using blog_url */}
-                      <Link
-                        href={`/blog/${blog.blog_url}`}
-                        className="text-green-600 font-semibold inline-flex items-center gap-1 group mt-4"
-                      >
-                        Read More
-                        <ArrowUpRight className="h-4 w-4 transition-transform group-hover:-translate-y-1 group-hover:translate-x-1" />
-                      </Link>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
+            <CarouselItem key={blog.id} className="pl-8 md:basis-1/2 lg:basis-1/3 xl:basis-1/4">
+              <Card className="bg-white border-0 rounded-2xl overflow-hidden h-full flex flex-col shadow-sm hover:shadow-lg transition-shadow duration-300 mx-2">
+                <CardContent className="flex flex-col p-0 flex-grow">
+                  <div className="relative w-full h-48 overflow-hidden rounded-t-2xl">
+                    <Image
+                      src={getImageUrl(blog.image1)}
+                      alt={blog.blog_title}
+                      fill
+                      className="object-cover transition-transform duration-300 hover:scale-105"
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = "/mhe-logo.png";
+                      }}
+                    />
+                  </div>
+                  <div className="p-6 flex flex-col flex-grow justify-between">
+                    <h3 className="font-semibold text-lg leading-6 text-gray-900 mb-4 line-clamp-3">
+                      {blog.blog_title}
+                    </h3>
+                    <Link
+                      href={`/blog/${blog.blog_url}`}
+                      className="inline-flex items-center gap-2 text-green-600 font-semibold text-base group hover:text-green-700 transition-colors duration-200"
+                    >
+                      Read More
+                      <ArrowUpRight className="h-4 w-4 transition-transform duration-200 group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+                    </Link>
+                  </div>
+                </CardContent>
+              </Card>
             </CarouselItem>
           ))}
         </CarouselContent>
-        <CarouselPrevious className="absolute left-[-20px] top-1/2 -translate-y-1/2 sm:flex hidden" />
-        <CarouselNext className="absolute right-[-20px] top-1/2 -translate-y-1/2 sm:flex hidden" />
+        <CarouselPrevious className="absolute left-[-20px] top-1/2 -translate-y-1/2 sm:flex hidden bg-white border-gray-200 hover:bg-gray-50 text-gray-600 hover:text-gray-900" />
+        <CarouselNext className="absolute right-[-20px] top-1/2 -translate-y-1/2 sm:flex hidden bg-white border-gray-200 hover:bg-gray-50 text-gray-600 hover:text-gray-900" />
       </Carousel>
     </div>
   );

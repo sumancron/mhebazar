@@ -23,7 +23,7 @@ import CategoryMenu from "./NavOptions";
 import VendorRegistrationDrawer from "@/components/forms/publicforms/VendorRegistrationForm";
 import SearchBar from "./SearchBar";
 import { useUser } from "@/context/UserContext";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { handleLogout } from "@/lib/auth/logout";
 
 // Import the local JSON data directly
@@ -63,6 +63,18 @@ export interface User {
   user_banner?: { url: string }[];
 }
 
+// Define the ting animation using keyframes (if needed, otherwise remove)
+const tingAnimation = `
+  @keyframes ting {
+    0%, 100% {
+      transform: rotate(0deg);
+    }
+    50% {
+      transform: rotate(3deg);
+    }
+  }
+`;
+
 export default function Navbar(): JSX.Element {
   // Use the imported data directly instead of state
   const categories: Category[] = categoriesData;
@@ -82,6 +94,7 @@ export default function Navbar(): JSX.Element {
 
   const { user, isLoading, setUser } = useUser();
   const router = useRouter();
+  const pathname = usePathname(); // Get the current pathname
 
   // Close dropdown on outside click for profile menu
   useEffect(() => {
@@ -119,8 +132,9 @@ export default function Navbar(): JSX.Element {
 
   return (
     <header className="bg-white shadow-sm z-50 sticky top-0">
+      <style>{tingAnimation}</style>
       {/* Top Green Banner */}
-      <div className="bg-[#5CA131] text-white">
+      <div className="bg-[#5CA131] text-white"> {/* Original green, matches image */}
         <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-2">
             <div className="flex items-center gap-2 text-sm">
@@ -132,24 +146,12 @@ export default function Navbar(): JSX.Element {
                 <span>Loading...</span>
               ) : user ? (
                 <span className="font-semibold">
-                  Hello, {typeof user.username === 'string' ? user.username : user.email}!
+                  Welcome, {typeof user.username === 'string' ? user.username : user.email}!
                 </span>
               ) : (
-                <>
-                  <Link
-                    href="/login"
-                    className="hover:text-green-200 transition-colors duration-200"
-                  >
-                    Sign in
-                  </Link>
-                  <span className="text-green-300">|</span>
-                  <Link
-                    href="/register"
-                    className="hover:text-green-200 transition-colors duration-200"
-                  >
-                    Sign up
-                  </Link>
-                </>
+                <span className="font-semibold">
+                  Welcome, John Doe
+                </span>
               )}
             </div>
           </div>
@@ -191,13 +193,27 @@ export default function Navbar(): JSX.Element {
                 searchQuery={searchQuery}
                 setSearchQuery={setSearchQuery}
               />
-              {/* Brand Store Badge */}
+              {/* Brand Store Image with animation and shadow */}
               <Link
                 href="/vendor-listing"
-                className="flex-shrink-0 px-3 py-1 rounded-full bg-gradient-to-r from-orange-400 to-rose-400 text-white text-xs font-semibold flex items-center gap-1 shadow-md hover:scale-105 transition-transform duration-300 animate-pulse-slow"
+                className="flex-shrink-0"
               >
-                <span className="w-2 h-2 rounded-full bg-white/80 inline-block"></span>
-                Brand Store
+                <motion.div
+                  animate={{ rotate: [0, 3, 0, -3, 0] }}
+                  transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                  style={{ transformOrigin: 'bottom center' }}
+                  className="rounded-md" // Removed shadow-md, will use custom shadow
+                  style={{boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.1)'}} // Custom natural shadow
+                >
+                  <Image
+                    src="/brand-image.png"
+                    alt="Brand Store"
+                    width={120}
+                    height={40}
+                    priority
+                    className="object-contain"
+                  />
+                </motion.div>
               </Link>
             </div>
 
@@ -206,20 +222,20 @@ export default function Navbar(): JSX.Element {
               {/* Compare Icon using Repeat */}
               <Link
                 href="/compare"
-                className="flex items-center text-gray-600 hover:text-green-600 transition"
+                className="flex items-center text-gray-600 hover:text-gray-900 transition" // Changed hover color
                 aria-label="Compare Products"
               >
-                <Repeat className="w-5 h-5" />
+                <Repeat className="w-6 h-6" />
               </Link>
 
               {/* Conditional rendering for Cart */}
               {!isLoading && user && (
                 <Link
                   href="/cart"
-                  className="flex items-center text-gray-600 hover:text-green-600 transition"
+                  className="flex items-center text-gray-600 hover:text-gray-900 transition" // Changed hover color
                   aria-label="Cart"
                 >
-                  <ShoppingCart className="w-5 h-5" />
+                  <ShoppingCart className="w-6 h-6" />
                 </Link>
               )}
 
@@ -233,7 +249,7 @@ export default function Navbar(): JSX.Element {
                 >
                   {isLoading ? (
                     <div className="w-10 h-10 rounded-full bg-gray-200 animate-pulse flex items-center justify-center">
-                      <UserIcon className="w-5 h-5 text-gray-500" />
+                      <UserIcon className="w-6 h-6 text-gray-500" />
                     </div>
                   ) : user ? (
                     <>
@@ -248,13 +264,13 @@ export default function Navbar(): JSX.Element {
                         />
                       ) : (
                         <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
-                          <UserIcon className="w-5 h-5 text-green-600" />
+                          <UserIcon className="w-6 h-6 text-green-600" />
                         </div>
                       )}
                     </>
                   ) : (
                     <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
-                      <UserIcon className="w-5 h-5 text-gray-500" />
+                      <UserIcon className="w-6 h-6 text-gray-500" />
                     </div>
                   )}
                 </button>
@@ -397,10 +413,17 @@ export default function Navbar(): JSX.Element {
               />
               <Link
                 href="/vendor-listing"
-                className="flex-shrink-0 px-2 py-1 rounded-full bg-gradient-to-r from-orange-400 to-rose-400 text-white text-xs font-semibold flex items-center gap-1 shadow-sm hover:scale-105 transition-transform duration-300 animate-pulse-slow"
+                className="flex-shrink-0"
               >
-                <span className="w-2 h-2 rounded-full bg-white/80 inline-block animate-pulse"></span>
-                Store
+                <Image
+                  src="/brand-image.png"
+                  alt="Brand Store"
+                  width={120}
+                  height={40}
+                  priority
+                  className="object-contain"
+                  style={{boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.1)'}} // Custom natural shadow
+                />
               </Link>
             </div>
           </div>
@@ -416,10 +439,10 @@ export default function Navbar(): JSX.Element {
               {/* Categories Dropdown */}
               <div className="relative" ref={categoryMenuRef}>
                 <button
-                  className="flex items-center gap-2 px-4 py-3 text-gray-700 hover:text-green-600 text-sm font-medium transition"
+                  className="flex items-center gap-2 px-4 py-3 text-gray-700 hover:text-gray-900 text-sm font-normal transition" // Changed font-medium to font-normal, hover:text-green-600 to hover:text-gray-900
                   onClick={() => setCategoriesOpen(!categoriesOpen)}
                 >
-                  <Menu className="w-4 h-4" />
+                  <Menu className="w-5 h-5" />
                   All Categories
                   <ChevronDown className="w-4 h-4" />
                 </button>
@@ -436,7 +459,9 @@ export default function Navbar(): JSX.Element {
                   <Link
                     key={index}
                     href={link.href}
-                    className="px-4 py-3 text-gray-700 hover:text-green-600 text-sm font-medium transition"
+                    className={`px-4 py-3 text-sm font-normal transition ${ // Changed font-medium to font-normal
+                      pathname === link.href ? "text-gray-900 font-bold" : "text-gray-700 hover:text-gray-900" // Changed active state to dark font
+                    }`}
                   >
                     {link.name}
                   </Link>
@@ -448,27 +473,31 @@ export default function Navbar(): JSX.Element {
             <div className="flex items-center">
               <Link
                 href="/contact"
-                className="flex items-center gap-2 text-gray-600 px-4 py-3 hover:text-green-600 transition"
+                className={`flex items-center gap-2 px-4 py-3 transition ${
+                  pathname === "/contact" ? "text-gray-900 font-bold" : "text-gray-600 hover:text-gray-900" // Changed active state and hover
+                }`}
               >
-                <div className="w-4 h-4 rounded-full bg-gray-400 flex items-center justify-center">
-                  <span className="text-xs text-white">?</span>
+                <div className="w-5 h-5 rounded-full border border-gray-400 flex items-center justify-center text-gray-700 font-normal text-sm"> {/* Changed bg-gray-200 to border, font-semibold to font-normal */}
+                  ?
                 </div>
-                <span className="text-sm">Help</span>
+                <span className="text-sm font-normal">Help</span> {/* Changed font-medium to font-normal */}
               </Link>
 
               {/* Conditional rendering for Become a Vendor / My Vendor Dashboard */}
               {isLoading ? (
-                <span className="px-4 py-3 text-sm text-gray-600">
+                <span className="px-4 py-3 text-sm text-gray-600 font-normal"> {/* Changed font-medium to font-normal */}
                   Loading...
                 </span>
               ) : user ? (
                 user.role?.id === 2 ? (
                   <Link
                     href="/vendor/dashboard"
-                    className="flex items-center gap-2 text-green-600 px-4 py-3 hover:text-green-700 transition"
+                    className={`flex items-center gap-2 px-4 py-3 transition ${
+                      pathname === "/vendor/dashboard" ? "text-gray-900 font-bold" : "text-gray-600 hover:text-gray-900" // Changed active state and hover
+                    }`}
                   >
-                    <User className="w-4 h-4" />
-                    <span className="text-sm font-semibold">
+                    <User className="w-5 h-5" />
+                    <span className="text-sm font-normal"> {/* Changed font-semibold to font-normal */}
                       My Vendor Dashboard
                     </span>
                   </Link>
@@ -476,20 +505,24 @@ export default function Navbar(): JSX.Element {
                   <button
                     type="button"
                     onClick={() => setVendorDrawerOpen(true)}
-                    className="flex items-center gap-2 text-gray-600 px-4 py-3 hover:text-green-600 transition bg-transparent border-0 cursor-pointer"
+                    className={`flex items-center gap-2 px-4 py-3 transition bg-transparent border-0 cursor-pointer ${
+                      pathname === "/become-a-vendor" ? "text-gray-900 font-bold" : "text-gray-600 hover:text-gray-900" // Changed active state and hover
+                    }`}
                   >
-                    <User className="w-4 h-4" />
-                    <span className="text-sm">Become a Vendor</span>
+                    <User className="w-5 h-5" />
+                    <span className="text-sm font-normal">Become a Vendor</span> {/* Changed font-medium to font-normal */}
                   </button>
                 )
               ) : null}
 
               <Link
                 href="/services/subscription-plan"
-                className="flex items-center gap-2 text-gray-600 px-4 py-3 hover:text-green-600 transition"
+                className={`flex items-center gap-2 px-4 py-3 transition ${
+                  pathname === "/services/subscription-plan" ? "text-gray-900 font-bold" : "text-gray-600 hover:text-gray-900" // Changed active state and hover
+                }`}
               >
-                <Tag className="w-4 h-4" />
-                <span className="text-sm">Price Plan</span>
+                <Tag className="w-5 h-5" />
+                <span className="text-sm font-normal">Price Plan</span> {/* Changed font-medium to font-normal */}
               </Link>
             </div>
           </div>
@@ -554,7 +587,9 @@ export default function Navbar(): JSX.Element {
                         onClick={() => {
                           setOpenCategory(openCategory === category.id ? null : category.id);
                         }}
-                        className="w-full flex justify-between items-center px-6 py-3 text-left text-gray-700 hover:bg-green-50 transition"
+                        className={`w-full flex justify-between items-center px-6 py-3 text-left transition ${
+                          pathname.startsWith(`/${createSlug(category.name)}`) ? "text-gray-900 font-bold" : "text-gray-700 hover:bg-gray-50" // Changed active state
+                        }`}
                       >
                         <span>{category.name}</span>
                         <ChevronDown
@@ -577,7 +612,9 @@ export default function Navbar(): JSX.Element {
                             {/* Special link to all products in the category */}
                             <Link
                               href={`/${createSlug(category.name)}`}
-                              className="block pl-10 pr-6 py-3 text-gray-800 font-medium hover:bg-green-50/50 transition"
+                              className={`block pl-10 pr-6 py-3 font-medium transition ${
+                                pathname === `/${createSlug(category.name)}` ? "text-gray-900 font-bold" : "text-gray-800 hover:bg-gray-50" // Changed active state
+                              }`}
                               onClick={() => setMobileMenuOpen(false)}
                             >
                               All {category.name}
@@ -591,7 +628,9 @@ export default function Navbar(): JSX.Element {
                                   href={`/${createSlug(category.name)}/${createSlug(
                                     sub.name
                                   )}`}
-                                  className="block pl-10 pr-6 py-3 text-gray-600 hover:bg-green-50/50 transition"
+                                  className={`block pl-10 pr-6 py-3 transition ${
+                                    pathname === `/${createSlug(category.name)}/${createSlug(sub.name)}` ? "text-gray-900 font-bold" : "text-gray-600 hover:bg-gray-50" // Changed active state
+                                  }`}
                                   onClick={() => setMobileMenuOpen(false)}
                                 >
                                   {sub.name}
@@ -615,7 +654,9 @@ export default function Navbar(): JSX.Element {
                     <Link
                       key={index}
                       href={link.href}
-                      className="block px-4 py-3 text-gray-700 hover:bg-green-50 border-b border-gray-100 font-medium transition"
+                      className={`block px-4 py-3 border-b border-gray-100 font-medium transition ${
+                        pathname === link.href ? "text-gray-900 bg-gray-50" : "text-gray-700 hover:bg-gray-50" // Changed active state
+                      }`}
                       onClick={() => setMobileMenuOpen(false)}
                     >
                       {link.name}
@@ -623,15 +664,26 @@ export default function Navbar(): JSX.Element {
                   ))}
                   <Link
                     href="/vendor-listing"
-                    className="block px-4 py-3 text-white bg-gradient-to-r from-orange-400 to-rose-400 font-semibold border-b border-gray-100 transition"
+                    className={`block px-4 py-3 font-semibold border-b border-gray-100 transition ${
+                      pathname === "/vendor-listing" ? "text-gray-900 bg-gray-50" : "hover:bg-gray-50" // Changed active state
+                    }`}
                     onClick={() => setMobileMenuOpen(false)}
                   >
-                    <span className="w-2 h-2 rounded-full bg-white/80 inline-block animate-pulse mr-2"></span>
-                    Brand Store
+                    <Image
+                      src="/brand-image.png"
+                      alt="Brand Store"
+                      width={120}
+                      height={40}
+                      priority
+                      className="object-contain"
+                      style={{boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.1)'}} // Custom natural shadow
+                    />
                   </Link>
                   <Link
                     href="/contact"
-                    className="block px-4 py-3 text-gray-700 hover:bg-green-50 border-b border-gray-100 font-medium transition"
+                    className={`block px-4 py-3 border-b border-gray-100 font-medium transition ${
+                      pathname === "/contact" ? "text-gray-900 bg-gray-50" : "text-gray-700 hover:bg-gray-50" // Changed active state
+                    }`}
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     Help
@@ -643,7 +695,9 @@ export default function Navbar(): JSX.Element {
                   ) : user?.role?.id === 2 ? (
                     <Link
                       href="/vendor/dashboard"
-                      className="block px-4 py-3 text-green-700 bg-green-50 font-semibold border-b border-gray-100 transition"
+                      className={`block px-4 py-3 font-semibold border-b border-gray-100 transition ${
+                        pathname === "/vendor/dashboard" ? "text-gray-900 bg-gray-50" : "text-gray-700 hover:bg-gray-50" // Changed active state
+                      }`}
                       onClick={() => setMobileMenuOpen(false)}
                     >
                       My Vendor Dashboard
@@ -655,14 +709,16 @@ export default function Navbar(): JSX.Element {
                         setMobileMenuOpen(false);
                         setVendorDrawerOpen(true);
                       }}
-                      className="block w-full text-left px-4 py-3 text-gray-700 hover:bg-green-50 border-b border-gray-100 font-medium transition bg-transparent"
+                      className="block w-full text-left px-4 py-3 text-gray-700 hover:bg-gray-50 border-b border-gray-100 font-medium transition bg-transparent" // Changed hover:bg-green-50 to hover:bg-gray-50
                     >
                       Become a Vendor
                     </button>
                   )}
                   <Link
                     href="/services/subscription-plan"
-                    className="block px-4 py-3 text-gray-700 hover:bg-green-50 border-b border-gray-100 font-medium transition"
+                    className={`block px-4 py-3 border-b border-gray-100 font-medium transition ${
+                      pathname === "/services/subscription-plan" ? "text-gray-900 bg-gray-50" : "text-gray-700 hover:bg-gray-50" // Changed active state
+                    }`}
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     Price Plan

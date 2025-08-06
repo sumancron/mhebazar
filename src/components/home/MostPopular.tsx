@@ -73,6 +73,7 @@ export default function MostPopular() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [mainImageError, setMainImageError] = useState(false); // New state for main image error
 
   const fetchData = useCallback(async () => {
     // This data fetching logic remains the same
@@ -107,7 +108,8 @@ export default function MostPopular() {
 
   const popularData = categories[0];
 
-  if (!popularData) {
+  // If no popular data or main image fails to load, show fallback
+  if (!popularData || mainImageError) {
     return (
       <section className="w-full sm:px-6">
         <div className="flex justify-between items-center mb-4">
@@ -119,6 +121,38 @@ export default function MostPopular() {
       </section>
     );
   }
+
+  // Component to handle individual carousel item rendering and image error
+  const CarouselProductItem = ({ product, idx }: { product: { image: string; label: string; }; idx: number }) => {
+    const [itemImageError, setItemImageError] = useState(false);
+
+    if (itemImageError) {
+      return null; // Don't render this carousel item if its image fails
+    }
+
+    return (
+      <CarouselItem key={idx} className="pl-2 basis-1/2 sm:basis-1/3">
+        <div className="p-1">
+          <Card className="p-3 flex flex-col items-center text-center shadow-sm hover:shadow-lg transition-shadow duration-200 h-full">
+            <div className="relative w-32 h-32 mb-3">
+              <Image
+                src={product.image}
+                alt={product.label}
+                fill
+                sizes="128px"
+                className="object-contain"
+                onError={() => setItemImageError(true)} // Set error state if image fails
+              />
+            </div>
+            <p className="text-sm font-semibold h-10 leading-tight flex items-center justify-center">
+              {product.label}
+            </p>
+          </Card>
+        </div>
+      </CarouselItem>
+    );
+  };
+
 
   return (
     <section className="w-full sm:px-6">
@@ -145,6 +179,7 @@ export default function MostPopular() {
               fill
               sizes="(max-width: 768px) 192px, 224px"
               className="object-contain"
+              onError={() => setMainImageError(true)} // Set error state for main image
             />
           </div>
           {/* Main Details */}
@@ -165,24 +200,7 @@ export default function MostPopular() {
         >
           <CarouselContent className="-ml-2">
             {popularData.products.map((product, idx) => (
-              <CarouselItem key={idx} className="pl-2 basis-1/2 sm:basis-1/3">
-                <div className="p-1">
-                  <Card className="p-3 flex flex-col items-center text-center shadow-sm hover:shadow-lg transition-shadow duration-200 h-full">
-                    <div className="relative w-32 h-32 mb-3">
-                      <Image
-                        src={product.image}
-                        alt={product.label}
-                        fill
-                        sizes="128px"
-                        className="object-contain"
-                      />
-                    </div>
-                    <p className="text-sm font-semibold h-10 leading-tight flex items-center justify-center">
-                      {product.label}
-                    </p>
-                  </Card>
-                </div>
-              </CarouselItem>
+              <CarouselProductItem key={idx} product={product} idx={idx} />
             ))}
           </CarouselContent>
           <CarouselPrevious className="absolute left-[-10px] sm:left-[-20px]" />

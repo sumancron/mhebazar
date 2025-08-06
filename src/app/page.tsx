@@ -1,3 +1,4 @@
+"use client";
 import HomeBanner from "@/components/layout/HomeBanner";
 import CategoryButtons from "@/components/home/CategoryButtons";
 import MostPopular from "@/components/home/MostPopular";
@@ -8,81 +9,104 @@ import ExportProductsFeatured from "@/components/home/ExportProdcutsFeatured";
 import TestimonialsCarousel from "@/components/elements/Testimonials";
 import Marquee from "react-fast-marquee";
 import { BlogCarousel } from "@/components/home/BlogCarousal";
-// import ProductForm from "@/components/forms/uploadForm/ProductForm";
-// import CategoryForm from "@/components/forms/uploadForm/CategoryForm";
-// import SubcategoryForm from "@/components/forms/uploadForm/SubcategoryForm";
-// import ProductCards from "@/components/test/card";
-// import MheWriteAReview from "@/components/test/reviewCard";
+import Image from "next/image";
+import { motion, useInView, useScroll, useTransform } from "framer-motion";
+import { useRef } from "react";
+
+const SectionWrapper = ({ children, className }: { children: React.ReactNode; className?: string }) => {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, amount: 0.2 });
+
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 50 }}
+      animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 50 }}
+      transition={{ duration: 0.6, ease: "easeOut" }}
+      className={className}
+    >
+      {children}
+    </motion.div>
+  );
+};
 
 export default function HomePage() {
+  const bannerRef = useRef(null);
+  const { scrollYProgress } = useScroll({
+    target: bannerRef,
+    offset: ["start start", "end start"],
+  });
+  const y = useTransform(scrollYProgress, [0, 1], ["0%", "50%"]);
+  const opacity = useTransform(scrollYProgress, [0, 1], [1, 0.5]);
+
   return (
     <>
-
-      {/* Home page hero/banner */}
-      <HomeBanner />
-
-      {/* Category buttons section */}
-
-      <div className="max-w-[90vw] mx-auto">
-        <CategoryButtons />
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-14 w-full py-8 mx-auto justify-center items-start px-4 md:px-0">
-          <div className="flex-1 w-full">
-            <MostPopular />
-          </div>
-          <div className="flex-1 w-full">
-            <NewArrivalsAndTopSearches />
-          </div>
-        </div>
-
-        <SpareParts />
-
-
-        <VendorProductsFeatured />
-
-        <ExportProductsFeatured />
-
-        <BlogCarousel />
-
-        <Marquee className="my-12">
-          <img src={"/logos/AEPL.png"} alt="AEP Logo" className="h-16 mx-4" />
-          <img src={"/logos/Asmita.png"} alt="AEP Logo" className="h-16 mx-4" />
-          <img src={"/logos/Bolzoni1.png"} alt="AEP Logo" className="h-16 mx-4" />
-          <img src={"/logos/BYD Forklift.png"} alt="AEP Logo" className="h-16 mx-4" />
-          <img src={"/logos/Cascade.png"} alt="AEP Logo" className="h-16 mx-4" />
-          <img src={"/logos/Godrej.png"} alt="AEP Logo" className="h-16 mx-4" />
-          <img src={"/logos/Greentech India.png"} alt="AEP Logo" className="h-16 mx-4" />
-          <img src={"/logos/Logisnext.png"} alt="AEP Logo" className="h-16 mx-4" />
-          <img src={"/logos/Logisnext-1.png"} alt="AEP Logo" className="h-16 mx-4" />
-          <img src={"/logos/Logisnext-2.png"} alt="AEP Logo" className="h-16 mx-4" />
-          <img src={"/logos/Logisnext-3.png"} alt="AEP Logo" className="h-16 mx-4" />
-          <img src={"/logos/Manasi Engineering.png"} alt="AEP Logo" className="h-16 mx-4" />
-          <img src={"/logos/manasi-engineering.png"} alt="AEP Logo" className="h-16 mx-4" />
-          <img src={"/logos/MHE Bazar.png"} alt="AEP Logo" className="h-16 mx-4" />
-          <img src={"/logos/PHL.png"} alt="AEP Logo" className="h-16 mx-4" />
-          <img src={"/logos/Speciality Urethanes Pvt Ltd.png"} alt="AEP Logo" className="h-16 mx-4" />
-          <img src={"/logos/Stackon.png"} alt="AEP Logo" className="h-16 mx-4" />
-          <img src={"/logos/STW.png"} alt="AEP Logo" className="h-16 mx-4" />
-          <img src={"/logos/Tallboy.png"} alt="AEP Logo" className="h-16 mx-4" />
-          <img src={"/logos/Troax.png"} alt="AEP Logo" className="h-16 mx-4" />
-          <img src={"/logos/Unik.png"} alt="AEP Logo" className="h-16 mx-4" />
-        </Marquee>
-
-        <TestimonialsCarousel />
-
-        {/* <ProductCards />
-        <MheWriteAReview  /> */}
-
-        {/* <h1 className="mb-10 text-center">Category</h1>
-        <CategoryForm />
-
-        <h1 className="mb-10 text-center">Subcategory</h1>
-        <SubcategoryForm />
-
-        <h1 className="mb-10 text-center">Product</h1>
-        <ProductForm /> */}
+      <div ref={bannerRef} style={{ y, opacity }}>
+        <HomeBanner />
       </div>
 
+      <SectionWrapper className="max-w-[90vw] mx-auto py-6 md:py-8">
+        <CategoryButtons />
+      </SectionWrapper>
+
+      <div className="w-full bg-gray-50 py-10 md:py-12">
+        <div className="max-w-[90vw] mx-auto grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-10 justify-center items-start px-4 md:px-0">
+          <SectionWrapper>
+            <MostPopular />
+          </SectionWrapper>
+          <SectionWrapper>
+            <NewArrivalsAndTopSearches />
+          </SectionWrapper>
+        </div>
+      </div>
+
+      <div className="max-w-[95vw] mx-auto">
+        <SectionWrapper className="my-10 md:my-12">
+          <SpareParts />
+        </SectionWrapper>
+
+        <SectionWrapper className="my-10 md:my-12">
+          <VendorProductsFeatured />
+        </SectionWrapper>
+
+        <SectionWrapper className="my-10 md:my-12">
+          <ExportProductsFeatured />
+        </SectionWrapper>
+
+        <SectionWrapper className="my-10 md:my-12">
+          <BlogCarousel />
+        </SectionWrapper>
+
+        <SectionWrapper className="my-8 md:my-10">
+          <Marquee className="my-8">
+            <Image src={"/logos/AEPL.png"} alt="AEP Logo" width={100} height={64} className="h-16 w-auto mx-4" />
+            <Image src={"/logos/Asmita.png"} alt="Asmita Logo" width={100} height={64} className="h-16 w-auto mx-4" />
+            <Image src={"/logos/Bolzoni1.png"} alt="Bolzoni Logo" width={100} height={64} className="h-16 w-auto mx-4" />
+            <Image src={"/logos/BYD Forklift.png"} alt="BYD Forklift Logo" width={100} height={64} className="h-16 w-auto mx-4" />
+            <Image src={"/logos/Cascade.png"} alt="Cascade Logo" width={100} height={64} className="h-16 w-auto mx-4" />
+            <Image src={"/logos/Godrej.png"} alt="Godrej Logo" width={100} height={64} className="h-16 w-auto mx-4" />
+            <Image src={"/logos/Greentech India.png"} alt="Greentech India Logo" width={100} height={64} className="h-16 w-auto mx-4" />
+            <Image src={"/logos/Logisnext.png"} alt="Logisnext Logo" width={100} height={64} className="h-16 w-auto mx-4" />
+            <Image src={"/logos/Logisnext-1.png"} alt="Logisnext-1 Logo" width={100} height={64} className="h-16 w-auto mx-4" />
+            <Image src={"/logos/Logisnext-2.png"} alt="Logisnext-2 Logo" width={100} height={64} className="h-16 w-auto mx-4" />
+            <Image src={"/logos/Logisnext-3.png"} alt="Logisnext-3 Logo" width={100} height={64} className="h-16 w-auto mx-4" />
+            <Image src={"/logos/Manasi Engineering.png"} alt="Manasi Engineering Logo" width={100} height={64} className="h-16 w-auto mx-4" />
+            <Image src={"/logos/manasi-engineering.png"} alt="Manasi Engineering Logo" width={100} height={64} className="h-16 w-auto mx-4" />
+            <Image src={"/logos/MHE Bazar.png"} alt="MHE Bazar Logo" width={100} height={64} className="h-16 w-auto mx-4" />
+            <Image src={"/logos/PHL.png"} alt="PHL Logo" width={100} height={64} className="h-16 w-auto mx-4" />
+            <Image src={"/logos/Speciality Urethanes Pvt Ltd.png"} alt="Speciality Urethanes Pvt Ltd Logo" width={100} height={64} className="h-16 w-auto mx-4" />
+            <Image src={"/logos/Stackon.png"} alt="Stackon Logo" width={100} height={64} className="h-16 w-auto mx-4" />
+            <Image src={"/logos/STW.png"} alt="STW Logo" width={100} height={64} className="h-16 w-auto mx-4" />
+            <Image src={"/logos/Tallboy.png"} alt="Tallboy Logo" width={100} height={64} className="h-16 w-auto mx-4" />
+            <Image src={"/logos/Troax.png"} alt="Troax Logo" width={100} height={64} className="h-16 w-auto mx-4" />
+            <Image src={"/logos/Unik.png"} alt="Unik Logo" width={100} height={64} className="h-16 w-auto mx-4" />
+          </Marquee>
+        </SectionWrapper>
+
+        <SectionWrapper className="my-10 md:my-12">
+          <TestimonialsCarousel />
+        </SectionWrapper>
+      </div>
     </>
   );
 }

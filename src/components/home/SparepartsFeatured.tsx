@@ -1,11 +1,9 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import Image from "next/image";
 import api from "@/lib/api";
 import ProductCard from "@/components/elements/Product";
-
-// Import shadcn/ui carousel components
 import {
   Carousel,
   CarouselContent,
@@ -13,8 +11,10 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
+import { motion, useInView } from "framer-motion";
 
 interface SparePart {
+  type: string;
   images: { image: string }[];
   is_active: boolean;
   hide_price: boolean;
@@ -29,14 +29,33 @@ interface SparePart {
   image: string;
 }
 
+const sectionVariants = {
+  hidden: { opacity: 0, y: 50 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.6,
+      ease: "easeOut"
+    }
+  }
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, scale: 0.8 },
+  visible: { opacity: 1, scale: 1, transition: { duration: 0.5 } }
+};
+
 export default function SparePartsFeatured() {
   const [spareParts, setSpareParts] = useState<SparePart[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const sectionRef = useRef(null);
+  const inView = useInView(sectionRef, { once: true, amount: 0.3 });
+
   useEffect(() => {
     const fetchSpareParts = async () => {
       try {
-        // Fetch products specifically from category 18
         const res = await api.get(`/products/`, {
           params: {
             category: 18,
@@ -44,7 +63,6 @@ export default function SparePartsFeatured() {
         });
 
         console.log("Fetched spare parts:", res.data);
-        // Correctly access data from the response
         setSpareParts(res.data?.results || []);
       } catch (error) {
         console.error("Failed to fetch spare parts:", error);
@@ -57,16 +75,21 @@ export default function SparePartsFeatured() {
   }, []);
 
   return (
-    <section className="w-full mx-auto px-4 py-10">
-      <h2 className="text-2xl sm:text-3xl font-bold mb-8 text-gray-900">
+    <motion.section
+      ref={sectionRef}
+      initial="hidden"
+      animate={inView ? "visible" : "hidden"}
+      variants={sectionVariants}
+      className="w-full mx-auto px-4 py-10"
+    >
+      <motion.h2 variants={itemVariants} className="text-2xl sm:text-3xl font-bold mb-8 text-gray-900">
         Spare Parts
-      </h2>
+      </motion.h2>
       {loading ? (
         <div className="w-full flex justify-center items-center py-16 text-gray-500 text-lg">
           Loading...
         </div>
       ) : spareParts.length > 0 ? (
-        // Replaced the grid with the Carousel component
         <div className="relative px-4 sm:px-6">
           <Carousel
             opts={{
@@ -81,20 +104,22 @@ export default function SparePartsFeatured() {
                   key={spare.id}
                   className="pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/5"
                 >
-                  {/* <div className="bg-white rounded-2xl shadow-[0_4px_16px_0_rgba(0,0,0,0.04)] hover:shadow-lg transition p-4 flex flex-col h-full"> */}
-                  <ProductCard
-                    id={Number(spare.id)}
-                    image={spare.images[0].image}
-                    title={spare.name}
-                    subtitle={spare.subtitle}
-                    price={spare.price}
-                    currency={spare.currency}
-                    directSale={spare.direct_sale}
-                    is_active={spare.is_active}
-                    hide_price={spare.hide_price}
-                    stock_quantity={spare.stock_quantity}
-                  />
-                  {/* </div> */}
+                  <motion.div variants={itemVariants}>
+                    <ProductCard
+                      id={Number(spare.id)}
+                      image={spare.images[0].image}
+                      title={spare.name}
+                      subtitle={spare.subtitle}
+                      price={spare.price}
+                      currency={spare.currency}
+                      directSale={spare.direct_sale}
+                      is_active={spare.is_active}
+                      hide_price={spare.hide_price}
+                      stock_quantity={spare.stock_quantity} 
+                      type={spare.type} 
+                      category_image={spare.image}   
+                                       />
+                  </motion.div>
                 </CarouselItem>
               ))}
             </CarouselContent>
@@ -103,7 +128,6 @@ export default function SparePartsFeatured() {
           </Carousel>
         </div>
       ) : (
-        // No products available message
         <div className="col-span-full flex flex-col items-center justify-center py-16 bg-white rounded-2xl shadow-[0_4px_16px_0_rgba(0,0,0,0.04)]">
           <Image
             src="/no-product.png"
@@ -120,6 +144,6 @@ export default function SparePartsFeatured() {
           </div>
         </div>
       )}
-    </section>
+    </motion.section>
   );
 }
