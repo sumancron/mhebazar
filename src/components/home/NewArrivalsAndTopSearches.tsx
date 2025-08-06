@@ -148,8 +148,7 @@ export default function NewArrivalsAndTopSearches() {
   const handleScroll = () => {
     if (scrollContainerRef.current) {
       const scrollLeft = scrollContainerRef.current.scrollLeft;
-      // You may need to adjust this logic based on how many items are visible at once
-      const itemWidth = scrollContainerRef.current.children[0].clientWidth + 16; 
+      const itemWidth = scrollContainerRef.current.children[0].clientWidth + 16;
       const newIndex = Math.round(scrollLeft / itemWidth);
       setScrollIndex(newIndex);
     }
@@ -182,8 +181,12 @@ export default function NewArrivalsAndTopSearches() {
           <div className="relative">
             <div
               ref={scrollContainerRef}
-              className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide"
+              className="flex gap-4 overflow-x-auto pb-2"
               onScroll={handleScroll}
+              style={{
+                msOverflowStyle: 'none',  // Internet Explorer 10+
+                scrollbarWidth: 'none',   // Firefox
+              }}
             >
               {isLoadingNewArrivals ? (
                 [...Array(5)].map((_, i) => <LoadingBoxSkeleton key={i} />)

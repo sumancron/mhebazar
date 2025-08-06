@@ -131,32 +131,28 @@
 
 /* styles/globals.css or similar */
 
-/* Hide scrollbar for Chrome, Safari and Opera */
-.custom-scrollbar::-webkit-scrollbar {
-  display: none;
+/* globals.css */
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
 }
 
-/* Hide scrollbar for IE, Edge and Firefox */
-.custom-scrollbar {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
+::-webkit-scrollbar-thumb {
+  background-color: #5CA131;
+  border-radius: 10px;
 }
 
-/* Optional: If you want a thin, track-less scrollbar for webkit browsers */
-.custom-scrollbar-visible::-webkit-scrollbar {
-  width: 6px; /* width of the scrollbar */
+::-webkit-scrollbar-track {
+  background-color: transparent;
 }
 
-.custom-scrollbar-visible::-webkit-scrollbar-track {
-  background: transparent; /* color of the tracking area */
+::-webkit-scrollbar-corner {
+  background-color: transparent;
 }
 
-.custom-scrollbar-visible::-webkit-scrollbar-thumb {
-  background-color: rgba(156, 163, 175, 0.5); /* color of the scroll thumb (gray-400 with 50% opacity) */
-  border-radius: 20px; /* roundness of the scroll thumb */
-  border: 1px solid transparent; /* creates padding around scroll thumb */
-}
-
-.custom-scrollbar-visible::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(249, 115, 22, 0.8); /* Orange-600 on hover */
+/* Firefox (optional) */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #5CA131 transparent;
 }
