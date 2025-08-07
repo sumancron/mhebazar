@@ -24,7 +24,9 @@ export default function BannerCarousel({ className }: BannerCarouselProps) {
 
   const [banners, setBanners] = useState<{ image: string; alt: string }[]>([
     { image: "/Banner1.png", alt: "Default 1" },
-    { image: "/Banner2.png", alt: "Default 3" },
+    { image: "/Banner2.png", alt: "Default 2" },
+    { image: "/Banner3.png", alt: "Default 3" },
+
   ]);
   const [isDefault, setIsDefault] = useState(true);
   const [loaded, setLoaded] = useState<boolean[]>([false, false]);

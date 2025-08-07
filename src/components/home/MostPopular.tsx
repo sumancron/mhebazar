@@ -131,15 +131,15 @@ export default function MostPopular() {
     }
 
     return (
-      <CarouselItem key={idx} className="pl-2 basis-1/2 sm:basis-1/3">
+      <CarouselItem key={idx} className="pl-2 basis-1/2 sm:basis-1/3 md:basis-1/4">
         <div className="p-1">
           <Card className="p-3 flex flex-col items-center text-center shadow-sm hover:shadow-lg transition-shadow duration-200 h-full">
-            <div className="relative w-32 h-32 mb-3">
+            <div className="relative w-28 h-28 mb-3">
               <Image
                 src={product.image}
                 alt={product.label}
                 fill
-                sizes="128px"
+                sizes="112px"
                 className="object-contain"
                 onError={() => setItemImageError(true)} // Set error state if image fails
               />
@@ -155,21 +155,21 @@ export default function MostPopular() {
 
 
   return (
-    <section className="w-full sm:px-6">
+    <section className="w-full">
       {/* Header */}
       <div className="flex justify-between items-center mb-8">
-        <h2 className="text-lg sm:text-xl md:text-2xl font-bold">
-          Top Selling Products
+        <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">
+          Most Popular
         </h2>
-        <a href="/products" className="text-green-600 text-sm hover:text-green-700">
+        <a href="/products" className="text-green-600 text-sm font-medium hover:underline">
           View more
         </a>
       </div>
 
       {/* Main Container */}
-      <div className="p-4 sm:p-6 border border-gray-200 rounded-lg bg-white shadow-sm">
+      <div className="p-4 sm:p-6 border border-gray-200 rounded-xl bg-white shadow-sm">
 
-        {/* --- Top Fixed Product --- */}
+        {/* --- Top Fixed Product (Two-column layout) --- */}
         <div className="flex flex-col md:flex-row items-center justify-center gap-6 md:gap-12 mb-8 p-4 bg-gray-50 rounded-lg">
           {/* Main Image */}
           <div className="relative w-48 h-48 sm:w-56 sm:h-56 flex-shrink-0">
@@ -183,12 +183,12 @@ export default function MostPopular() {
             />
           </div>
           {/* Main Details */}
-          <div className="text-center md:text-left">
-            <p className="text-gray-500 text-sm">{popularData.subtitle}</p>
-            <h3 className="text-2xl sm:text-3xl font-bold text-gray-800 my-2">
+          <div className="text-center md:text-left flex-1">
+            <h3 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">
               {popularData.mainLabel}
             </h3>
-            <p className="text-xs text-gray-500 mt-2">{popularData.note}</p>
+            <p className="text-md sm:text-lg text-gray-500 font-medium">{popularData.subtitle}</p>
+            <p className="text-xs text-gray-500 mt-4">{popularData.note}</p>
           </div>
         </div>
 

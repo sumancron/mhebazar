@@ -10,7 +10,7 @@ import api from "@/lib/api";
 // --- Type Definitions (Refined) ---
 interface ProductApiResponse {
   id: string | number;
-  image: string | null;
+  images?: { image: string }[];
   name?: string;
   title?: string;
 }
@@ -165,12 +165,12 @@ export default function NewArrivalsAndTopSearches() {
   };
 
   return (
-    <div className="space-y-8 w-full max-w-md mx-auto sm:max-w-xl md:max-w-2xl lg:max-w-4xl xl:max-w-6xl">
+    <div className="space-y-8 w-full max-w-md mx-auto sm:max-w-xl md:max-w-full">
       {/* New Arrivals Section */}
       <div>
         <div className="flex justify-between items-center mb-8">
-          <h2 className="text-lg sm:text-xl md:text-2xl font-bold">New Arrivals</h2>
-          <Link href="/products/battery" className="text-green-600 text-sm font-medium hover:text-green-700">View more ({newArrivalsCount})</Link>
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">New Arrivals</h2>
+          <Link href="/products/battery" className="text-green-600 text-sm font-medium hover:underline">View more ({newArrivalsCount})</Link>
         </div>
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
           <div className="pb-6">
@@ -184,8 +184,8 @@ export default function NewArrivalsAndTopSearches() {
               className="flex gap-4 overflow-x-auto pb-2"
               onScroll={handleScroll}
               style={{
-                msOverflowStyle: 'none',  // Internet Explorer 10+
-                scrollbarWidth: 'none',   // Firefox
+                msOverflowStyle: 'none',
+                scrollbarWidth: 'none',
               }}
             >
               {isLoadingNewArrivals ? (
@@ -196,7 +196,6 @@ export default function NewArrivalsAndTopSearches() {
                 ))
               )}
             </div>
-            {/* Green dots as a scroll indicator */}
             <div className="flex justify-center space-x-2 mt-4">
               {newArrivals.map((_, idx) => (
                 <span
@@ -204,8 +203,8 @@ export default function NewArrivalsAndTopSearches() {
                   onClick={() => handleDotClick(idx)}
                   className={`cursor-pointer w-3 h-3 rounded-full transition-colors duration-300 ${
                     idx === scrollIndex
-                      ? "bg-[#42a856] scale-110" // Active dot: darker green
-                      : "bg-[#b5e0c0] hover:bg-[#a5d8b2]" // Inactive dot: lighter green
+                      ? "bg-[#42a856] scale-110"
+                      : "bg-[#b5e0c0] hover:bg-[#a5d8b2]"
                   }`}
                 ></span>
               ))}
@@ -217,11 +216,10 @@ export default function NewArrivalsAndTopSearches() {
       {/* Top Searched Products Section */}
       <div className="p-4 sm:p-6 bg-white rounded-xl shadow-sm border border-gray-100">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="font-semibold text-lg text-gray-900">Top Searched Products</h2>
-          <Link href="/products/battery" className="text-green-600 text-sm font-medium hover:text-green-700">View more</Link>
+          <h2 className="font-semibold text-2xl text-gray-900">Top Searched Products</h2>
+          <Link href="/products/battery" className="text-green-600 text-sm font-medium hover:underline">View more</Link>
         </div>
 
-        {/* MODIFIED: Added a wrapper div with custom scrollbar styling */}
         <div className="max-h-96 overflow-y-auto pr-2 custom-scrollbar">
           {isLoadingTopRated ? (
             <div className="space-y-4">

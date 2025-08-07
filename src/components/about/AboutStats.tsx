@@ -1,36 +1,39 @@
 "use client";
+
 import { motion, useAnimation } from "framer-motion";
 import { useEffect, useRef } from "react";
+import { useInView } from "react-intersection-observer";
+import Image from "next/image";
 
 const stats = [
   {
-    value: 20,
+    value: 240,
     label: "Countries Reached",
-    color: "#56B13E",
+    color: "#3B82F6",
     suffix: "+",
   },
   {
-    value: 30,
-    label: "No. Of Categories",
-    color: "#F2C94C",
+    value: 25,
+    label: "No. of Categories",
+    color: "#F59E0B",
     suffix: "+",
   },
   {
-    value: 2500,
-    label: "Customer",
-    color: "#56B13E",
+    value: 25000,
+    label: "Customers Served",
+    color: "#22C55E",
     suffix: "",
   },
   {
-    value: 99,
-    label: "Solution Provided",
-    color: "#56B13E",
+    value: 99.9,
+    label: "Solutions Delivered",
+    color: "#10B981",
     suffix: "%",
   },
   {
     value: 1,
     label: "MHE Solution Provider",
-    color: "#FF6333",
+    color: "#264775", // Custom professional shade
     suffix: "st",
   },
 ];
@@ -55,15 +58,16 @@ const AnimatedCircle = ({
   const stroke = 13;
   const circumference = 2 * Math.PI * radius;
   const valueRef = useRef<HTMLSpanElement>(null);
+  const [ref, inView] = useInView({ triggerOnce: false, threshold: 0.3 });
 
-  // For numbers > 100, always show full ring
   const percent = value > 100 ? 1 : value / 100;
+  const isSpecial = value === 1 && suffix === "st";
 
   useEffect(() => {
+    if (!inView || isSpecial) return;
+
     controls.start({ strokeDashoffset: circumference * (1 - percent) });
 
-    // Animate number counting up
-    const start = 0;
     let startTimestamp: number | null = null;
     let raf: number;
 
@@ -73,8 +77,7 @@ const AnimatedCircle = ({
         (timestamp - startTimestamp) / (duration * 1000),
         1
       );
-      const current =
-        value > 100 ? value : Math.floor(progress * (value - start) + start);
+      const current = value > 100 ? value : Math.floor(progress * value);
 
       if (valueRef.current) {
         valueRef.current.textContent =
@@ -89,15 +92,20 @@ const AnimatedCircle = ({
     };
 
     raf = requestAnimationFrame(animateValue);
-
     return () => cancelAnimationFrame(raf);
-  }, [controls, circumference, percent, value, suffix, duration]);
+  }, [controls, circumference, percent, value, suffix, duration, inView, isSpecial]);
 
   return (
-    <div className="flex flex-col items-center w-40 min-w-[140px] mx-auto group transition-all duration-300 hover:scale-105">
+    <div
+      ref={ref}
+      className={`flex flex-col items-center w-40 min-w-[140px] mx-auto transition-transform duration-300 ${
+        isSpecial
+          ? "hover:scale-[1.1] hover:shadow-[0_8px_30px_rgba(38,71,117,0.4)]"
+          : "hover:scale-[1.05] hover:shadow-md"
+      }`}
+    >
       <div className="relative flex items-center justify-center">
         <svg width={140} height={140} className="mb-2 block">
-          {/* Background ring */}
           <circle
             cx={70}
             cy={70}
@@ -106,35 +114,62 @@ const AnimatedCircle = ({
             stroke="#E5ECE3"
             strokeWidth={stroke}
           />
-          {/* Animated colored ring */}
-          <motion.circle
-            cx={70}
-            cy={70}
-            r={radius}
-            fill="none"
-            stroke={color}
-            strokeWidth={stroke}
-            strokeLinecap="round"
-            strokeDasharray={circumference}
-            strokeDashoffset={circumference}
-            transform="rotate(-90 70 70)"
-            style={{
-              transition: "filter 0.3s",
-            }}
-            animate={controls}
-            transition={{ duration, ease: "easeInOut" }}
-          />
+          {isSpecial ? (
+            <circle
+              cx={70}
+              cy={70}
+              r={radius}
+              fill="none"
+              stroke="#264775"
+              strokeWidth={stroke}
+              strokeLinecap="round"
+              transform="rotate(-90 70 70)"
+              strokeDasharray={circumference}
+              strokeDashoffset={0}
+            />
+          ) : (
+            <motion.circle
+              cx={70}
+              cy={70}
+              r={radius}
+              fill="none"
+              stroke={color}
+              strokeWidth={stroke}
+              strokeLinecap="round"
+              strokeDasharray={circumference}
+              strokeDashoffset={circumference}
+              transform="rotate(-90 70 70)"
+              animate={controls}
+              transition={{ duration, ease: "easeInOut" }}
+            />
+          )}
         </svg>
-        {/* Centered value */}
-        <span
-          ref={valueRef}
-          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-[1.7rem] md:text-3xl font-extrabold"
-          style={{ color }}
-        >
-          0{suffix}
-        </span>
+
+        {isSpecial ? (
+          <div className="absolute left-1/2 top-1/2 w-[80px] h-[80px] -translate-x-1/2 -translate-y-1/2 rounded-full overflow-hidden flex items-center justify-center">
+            <Image
+              src="/first.png"
+              alt="1st Badge"
+              width={70}
+              height={70}
+              className="object-contain"
+            />
+          </div>
+        ) : (
+          <span
+            ref={valueRef}
+            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-[1.8rem] md:text-3xl font-extrabold"
+            style={{ color }}
+          >
+            0{suffix}
+          </span>
+        )}
       </div>
-      <span className="text-base md:text-lg text-gray-900 text-center mt-2 font-medium leading-tight">
+      <span
+        className={`text-base md:text-lg text-gray-900 text-center mt-2 font-medium leading-tight ${
+          isSpecial ? "text-[#264775] font-semibold" : ""
+        }`}
+      >
         {label}
       </span>
     </div>
@@ -142,14 +177,14 @@ const AnimatedCircle = ({
 };
 
 const AboutStats = () => (
-  <section className="w-full py-12 bg-white">
+  <section className="w-full py-16 bg-white">
     <div className="max-w-7xl mx-auto px-4">
-      <h2 className="text-2xl md:text-3xl font-bold mb-10 text-gray-900">
+      <h2 className="text-3xl md:text-4xl font-extrabold mb-14 text-center text-gray-900 tracking-tight">
         Brand Presence Globally
       </h2>
-      <div className="flex flex-wrap justify-center gap-8 md:gap-12">
+      <div className="flex flex-wrap justify-center gap-10 md:gap-14">
         {stats.map((stat, i) => (
-          <AnimatedCircle key={i} {...stat} duration={1.2 + i * 0.18} />
+          <AnimatedCircle key={i} {...stat} duration={1.2 + i * 0.2} />
         ))}
       </div>
     </div>

@@ -22,6 +22,9 @@ interface ApiProduct {
   stock_quantity: number;
   manufacturer: string;
   average_rating: number | null;
+  category_details?: {
+    cat_image: string | null;
+  };
 }
 
 interface ApiResponse<T> {
@@ -85,18 +88,19 @@ export default function RelatedProducts() {
           relatedProducts.map((item) => (
             // Directly render ProductCardContainer without an extra div wrapper if not needed for specific styling
             <ProductCardContainer
-                key={item.id}
-                id={item.id}
-                image={item.images?.[0]?.image || "/no-product.png"}
-                title={item.name}
-                subtitle={item.description}
-                price={item.price}
-                currency={"₹"} // Assuming currency is Indian Rupee
-                directSale={item.direct_sale}
-                is_active={item.is_active}
-                hide_price={item.hide_price}
-                stock_quantity={item.stock_quantity}
-            />
+              key={item.id}
+              id={item.id}
+              image={item.images?.[0]?.image || "/no-product.png"}
+              title={item.name}
+              subtitle={item.description}
+              price={item.price}
+              currency={"₹"} // Assuming currency is Indian Rupee
+              directSale={item.direct_sale}
+              is_active={item.is_active}
+              hide_price={item.hide_price}
+              stock_quantity={item.stock_quantity}
+               type={item.type}
+               category_image={null}            />
           ))
         ) : (
           <div className="col-span-full flex flex-col items-center justify-center py-16">

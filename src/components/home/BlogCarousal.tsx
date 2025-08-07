@@ -92,6 +92,9 @@ export function BlogCarousel() {
 
   return (
     <div className="w-full px-4 py-8">
+      <h2 className="text-2xl sm:text-3xl font-bold mb-8 text-gray-900">
+        Our Blogs
+      </h2>
       <Carousel
         opts={{
           align: 'start',
@@ -99,9 +102,9 @@ export function BlogCarousel() {
         }}
         className="w-full max-w-none"
       >
-        <CarouselContent className="-ml-8">
+        <CarouselContent className="-ml-4">
           {blogs.map((blog) => (
-            <CarouselItem key={blog.id} className="pl-8 md:basis-1/2 lg:basis-1/3 xl:basis-1/4">
+            <CarouselItem key={blog.id} className="pl-4 basis-full sm:basis-1/2 lg:basis-1/3 xl:basis-1/4">
               <Card className="bg-white border-0 rounded-2xl overflow-hidden h-full flex flex-col shadow-sm hover:shadow-lg transition-shadow duration-300 mx-2">
                 <CardContent className="flex flex-col p-0 flex-grow">
                   <div className="relative w-full h-48 overflow-hidden rounded-t-2xl">
