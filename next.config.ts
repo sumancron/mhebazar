@@ -5,7 +5,7 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "mheback.onrender.com",
+        hostname: "api.mhebazar.in",
         pathname: "/media/**", // This is important for dynamic media paths
       },
       {
@@ -16,10 +16,10 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "mhebazar.in",
       },
-      {
-        protocol: "https",
-        hostname: "mheback.onrender.com",
-      },
+      // {
+      //   protocol: "https",
+      //   hostname: "mheback.onrender.com",
+      // },
       {
         protocol: "https",
         hostname: "www.mhebazar.in",
